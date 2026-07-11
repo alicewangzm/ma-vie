@@ -82,11 +82,11 @@ That's it. Vite code-splits each block into its own lazy chunk automatically.
 git commit ──► husky pre-commit (eslint --fix + prettier via lint-staged)
      │
      └─ push ──► GitHub Actions: lint ──► test (vitest) ──► build   (correctness gate)
-           └──► Cloudflare Pages: npm run build ──► dist ──► edge   (delivery)
-                      └─ every push gets its own preview URL
+           └──► Cloudflare Workers Builds: npm run build ──► wrangler deploy dist/  (delivery)
+                      └─ non-production branches: wrangler versions upload ──► preview URL
 ```
 
-**Why Cloudflare Pages over GitHub Pages:** the build is fully static (zero server
+**Why Cloudflare over GitHub Pages:** the build is fully static (zero server
 runtime), so the host is purely a delivery question. Cloudflare serves from its edge
 CDN with proper cache-control for the heavy payloads this project ships (GLB cat
 model, cloud/texture atlases) — GitHub Pages sits behind a single-tier cache with
@@ -94,6 +94,11 @@ model, cloud/texture atlases) — GitHub Pages sits behind a single-tier cache w
 deployments** give every commit a shareable URL, which is how visual changes get
 reviewed here: look at the preview, then promote. GitHub Pages deploys one branch
 to one URL — no preview gating.
+
+Concretely this ships as a **static-assets-only Worker** (`wrangler.jsonc` with an
+`assets` block, no script) rather than a Pages project: Cloudflare consolidated
+Pages into Workers, and as of 2026 Workers static assets is the recommended target
+with full feature parity. Same edge delivery, same per-push previews.
 
 ## Credits & inspiration
 
