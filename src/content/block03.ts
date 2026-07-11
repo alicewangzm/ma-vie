@@ -1,35 +1,27 @@
-/**
- * Block 03 "Three Paths" — story copy.
- * PLACEHOLDER TEXT ONLY: Alice pastes the real copy herself.
- * PawHearth screenshots: drop image files in /assets and list them below.
- */
-export const block03Content = {
-  title: '[placeholder] Chapter Three — Three Paths',
-  /** The gold path — reality. */
-  teaching: {
-    label: '[placeholder] Teaching',
-    lines: [
-      '[placeholder] The gold path is the one under her feet: teaching.',
-      '[placeholder] Real, warm, full color.',
-    ],
-  },
-  /** Faded-blue envisioned path #1. */
-  pilot: {
-    label: '[placeholder] Pilot',
-    lines: [
-      '[placeholder] Medical test — done.',
-      '[placeholder] A faded vision: flying over the US and Canada with her parents.',
-    ],
-  },
-  /** Faded-blue envisioned path #2. */
-  pawhearth: {
-    label: '[placeholder] PawHearth',
-    lines: [
-      '[placeholder] A startup dream on floating panels.',
-      '[placeholder] Screenshots of what could be.',
-    ],
-    /** Filenames under /assets once Alice drops them in (Stage 3 wiring). */
-    screenshots: [] as string[],
-  },
-  continueHint: '[placeholder] every path stays visible from here',
+/** Block 03 "The Storm Before Sunrise" (Google) — copy from STORY-SCRIPT.md. */
+export const stormContent = {
+  title: 'Chapter Two — The Storm Before Sunrise',
+  date: 'Spring 2024',
+  intro: ['After graduation, a door appeared with a familiar name.', 'She reached for it.'],
+  /** One glowing milestone each — reached by walking to them, in order. */
+  milestones: [
+    'The written test — passed.',
+    'Interview one — passed.',
+    'Interview two — passed. Interview three — passed.',
+  ],
+  preStorm: [
+    'The sun was almost up.',
+    'She could almost feel the warmth on her face.',
+    'Then — interview four.',
+  ],
+  stormLine: 'Not this time.',
+  /** Quiet self-talk at the edge of the frame while it rains. */
+  sideLog: [
+    "it's okay, Alice.",
+    'life has sunny days and rainy days.',
+    'one is what makes the other mean something.',
+    "the sun didn't leave.",
+    'it just stepped behind a cloud.',
+  ],
+  continueHint: 'walk on through the rain',
 } as const;

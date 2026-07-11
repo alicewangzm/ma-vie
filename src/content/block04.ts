@@ -1,16 +1,19 @@
-/**
- * Block 04 "Connecting the Dots" — story copy.
- * PLACEHOLDER TEXT ONLY: Alice pastes the real copy herself.
- */
-export const block04Content = {
-  title: '[placeholder] Chapter Four — Connecting the Dots',
-  /** One gratitude beat per constellation link, revealed as lines draw. */
-  gratitudeBeats: [
-    '[placeholder] The letter that started it.',
-    '[placeholder] The island where she learned to wander.',
-    '[placeholder] The storm that did not stop her.',
-    '[placeholder] The paths she can still see.',
-    '[placeholder] Looking back, the dots were always connected.',
+/** Block 04 "Building in the Rain" (Alethea Medical) — copy from STORY-SCRIPT.md. */
+export const aletheaContent = {
+  title: 'Chapter Three — Building in the Rain',
+  date: '2025',
+  lines: [
+    "The sky didn't clear all at once.",
+    'But she kept building anyway.',
+    'A medical-software team in Calgary.',
+    'Stripe payments, wired end to end.',
+    'A whole UI rebuilt in React and TypeScript —',
+    'hot-reload that cut the test cycle by three quarters.',
+    'Data taught to stay honest across two systems.',
+    'Tests for everything —',
+    "because she'd learned that careful is a kind of kindness.",
+    'Quiet, solid work.',
+    'The kind that never trends, but always holds.',
   ],
-  continueHint: '[placeholder] one more chapter',
+  continueHint: 'follow the gold light',
 } as const;

@@ -1,14 +1,23 @@
-/**
- * Block 00 "The Letter" — story copy.
- * PLACEHOLDER TEXT ONLY: Alice pastes the real copy here herself.
- */
-export const block00Content = {
+/** Block 00 "The Letter" — copy from STORY-SCRIPT.md (Alice's voice). */
+export const letterContent = {
   lines: [
-    '[placeholder] A letter drifts down from somewhere above the clouds.',
-    '[placeholder] It has your name on it.',
-    '[placeholder] An invitation — to wander through a life, chapter by chapter.',
-    '[placeholder] Sometimes the road ahead is clear. Sometimes the view is blocked.',
+    'Dear traveler,',
+    "You've wandered into Alice's Wonderland —",
+    'a small kingdom stitched together from clouds.',
+    'Here, the road ahead is sometimes clear…',
+    'and sometimes the mist swallows it whole.',
+    'Your task is simple:',
+    'find out who Alice is.',
+    "Where she's been. How far she's come.",
+    "What she's chasing, right now.",
+    'One thing before you go —',
+    'Alice is a dreamer. She sees futures before they arrive.',
+    "When the color is full, it's real.",
+    "When it fades and flickers, it's a wish still on its way.",
+    'Follow the light. Take your time.',
+    "There's a small reward waiting at the end.",
+    '(Maybe a smile. Maybe a little more.)',
   ],
-  acceptLabel: '[placeholder] Accept the invitation',
-  clickHint: '[placeholder] click the letter',
+  acceptLabel: 'Accept',
+  clickHint: 'click the letter',
 } as const;

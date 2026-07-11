@@ -25,10 +25,39 @@ export function ensureOverlayStyles(): void {
     }
     .story-line {
       opacity: 0;
-      transition: opacity 1.1s ease;
+      transition: opacity 1.1s ease, max-height 0.9s ease, margin 0.9s ease;
+      max-height: 6em;
+      overflow: hidden;
     }
     .story-line.visible {
       opacity: 1;
+    }
+    .story-line.collapsed {
+      max-height: 0;
+      margin: 0;
+    }
+    .wl-notice {
+      position: absolute;
+      left: 50%;
+      top: 14px;
+      transform: translateX(-50%);
+      color: rgba(74, 63, 92, 0.85);
+      background: rgba(255, 250, 240, 0.85);
+      border: 1px solid rgba(74, 63, 92, 0.25);
+      border-radius: 999px;
+      font-size: 0.85rem;
+      padding: 0.4em 1.2em;
+      pointer-events: auto;
+      cursor: pointer;
+    }
+    .wl-dot {
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      pointer-events: none;
+      transition: transform 1.6s cubic-bezier(0.4, 0, 0.3, 1), opacity 0.5s ease 1.4s;
+      z-index: 20;
     }
     .wl-button {
       pointer-events: auto;
@@ -64,7 +93,7 @@ export function ensureOverlayStyles(): void {
       opacity: 1;
     }
     .wl-mute { right: 14px; }
-    .wl-skip { right: 110px; }
+    .wl-skip { right: 130px; }
     .wl-hint {
       position: absolute;
       left: 50%;
@@ -124,7 +153,7 @@ export function ensureOverlayStyles(): void {
     .wl-everything {
       position: absolute;
       left: 50%;
-      top: 56%;
+      top: 48%;
       transform: translateX(-50%);
       width: min(36rem, 90vw);
       text-align: center;
@@ -194,11 +223,17 @@ export interface TypewriterHandle {
   destroy(): void;
 }
 
-/** Reveal lines one at a time with a soft fade — typewriter-with-fade. */
+/**
+ * Reveal lines one at a time with a soft fade — typewriter-with-fade.
+ * Older lines fade back out so long passages breathe instead of stacking
+ * into a wall of text (Sky-style: short lines, lots of breath).
+ */
 export function typewriterLines(
   parent: HTMLElement,
   lines: readonly string[],
   msPerLine = 1400,
+  maxVisible = 4,
+  onLine?: (index: number) => void,
 ): TypewriterHandle {
   ensureOverlayStyles();
   const root = document.createElement('div');
@@ -220,6 +255,12 @@ export function typewriterLines(
   const revealNext = () => {
     if (i < els.length) {
       els[i].classList.add('visible');
+      onLine?.(i);
+      const old = i - maxVisible;
+      if (old >= 0) {
+        els[old].classList.remove('visible');
+        els[old].classList.add('collapsed');
+      }
       i += 1;
     }
     if (i >= els.length) {
@@ -234,7 +275,10 @@ export function typewriterLines(
   return {
     done,
     skip() {
-      els.forEach((el) => el.classList.add('visible'));
+      els.forEach((el, idx) => {
+        if (idx >= els.length - maxVisible) el.classList.add('visible');
+        else el.classList.add('collapsed');
+      });
       i = els.length;
       if (timer) clearInterval(timer);
       timer = null;

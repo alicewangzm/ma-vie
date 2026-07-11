@@ -18,7 +18,9 @@ Browser 3D app (Three.js). Surface = pixels + interactions in a real browser.
    guarded by `import.meta.env.DEV`). Use it to:
    - wait on real state, never fixed sleeps:
      `w.wipe.progress < 0.05`, `w.director.currentId === 'block0X-…'`
-   - step chapters: `w.director.next()`
+   - step chapters: `w.director.next()` — but it returns `false` while the
+     Director is still `busy` (a hair after the wipe reads open), so always
+     retry in a loop: `while (!(await w.director.next())) await sleep(250)`
    - read cat position to assert walking worked
 4. Click the letter by projecting its world pos (0, 11, 4) through
    `ctx.camera` to screen px — don't guess pixel coords.

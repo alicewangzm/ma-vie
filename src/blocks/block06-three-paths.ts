@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+﻿import * as THREE from 'three';
 import type { StoryBlock } from '../core/StoryBlock';
 import type { WorldContext } from '../core/WorldContext';
 import { WalkController } from '../core/walk';
@@ -10,7 +10,7 @@ import {
   type TypewriterHandle,
   type OverlayHandle,
 } from '../ui/overlay';
-import { block03Content } from '../content/block03';
+import { pathsContent } from '../content/block06';
 
 const WALK_CENTER = new THREE.Vector3(0, 1.1, -6);
 const WALK_RADIUS = 16;
@@ -48,12 +48,12 @@ function panelTexture(label: string): THREE.CanvasTexture {
 }
 
 /**
- * Block 03 — "Three Paths". The gold trail underfoot is teaching — reality,
+ * Block 06 — "Three Roads From Here". The gold trail underfoot is teaching — reality,
  * full color. Two faded-blue trails branch toward envisioned futures: pilot
  * and the PawHearth startup. Standing at a vision raises dreamFactor.
  */
-class Block03ThreePaths implements StoryBlock {
-  readonly id = 'block03-three-paths';
+class Block06ThreePaths implements StoryBlock {
+  readonly id = 'block06-three-paths';
 
   private ctx!: WorldContext;
   private walk: WalkController | null = null;
@@ -90,7 +90,7 @@ class Block03ThreePaths implements StoryBlock {
       WALK_RADIUS,
     );
 
-    const c = block03Content;
+    const c = pathsContent;
     this.paths = [
       {
         key: 'teaching',
@@ -151,12 +151,13 @@ class Block03ThreePaths implements StoryBlock {
       this.panelMats.push(mat);
       const panel = new THREE.Mesh(panelGeo, mat);
       panel.position.set(11 + i * 3.4, 4.6 + i * 1.6, -16 - i * 1.5);
-      panel.lookAt(0, 3, -6);
+      panel.lookAt(ctx.camera.position);
       this.ctx.scene.add(panel);
       this.panels.push(panel);
     }
 
     this.title = chapterTitle(ctx.overlay, c.title);
+    this.typewriter = typewriterLines(ctx.overlay, [c.intro], 2200);
   }
 
   private visit(path: PathDef & { visited: boolean }): void {
@@ -166,15 +167,26 @@ class Block03ThreePaths implements StoryBlock {
     this.typewriter = typewriterLines(this.ctx.overlay, [...path.lines]);
 
     if (this.visitedCount === this.paths.length) {
-      this.beacon = createWisp(GOLD, 5, 1);
-      this.beacon.sprite.position.set(0, 3, 11);
-      this.ctx.scene.add(this.beacon.sprite);
-      const hint = document.createElement('p');
-      hint.className = 'wl-hint';
-      hint.textContent = block03Content.continueHint;
-      this.ctx.overlay.appendChild(hint);
-      this.hintEl = hint;
+      // last path's lines land → closing beats → beacon
+      const pathLines = this.typewriter;
+      void pathLines.done.then(() => {
+        if (this.typewriter !== pathLines) return; // superseded by teardown
+        this.typewriter.destroy();
+        this.typewriter = typewriterLines(this.ctx.overlay, [...pathsContent.closing], 2600);
+        void this.typewriter.done.then(() => this.showBeacon());
+      });
     }
+  }
+
+  private showBeacon(): void {
+    this.beacon = createWisp(GOLD, 5, 1);
+    this.beacon.sprite.position.set(0, 3, 11);
+    this.ctx.scene.add(this.beacon.sprite);
+    const hint = document.createElement('p');
+    hint.className = 'wl-hint';
+    hint.textContent = pathsContent.continueHint;
+    this.ctx.overlay.appendChild(hint);
+    this.hintEl = hint;
   }
 
   update(dt: number, t: number): void {
@@ -241,6 +253,6 @@ class Block03ThreePaths implements StoryBlock {
   }
 }
 
-export function createBlock(): Block03ThreePaths {
-  return new Block03ThreePaths();
+export function createBlock(): Block06ThreePaths {
+  return new Block06ThreePaths();
 }

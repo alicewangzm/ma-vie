@@ -99,25 +99,37 @@ director.register({
   load: async () => wire((await import('./blocks/block01-who-is-alice')).createBlock()),
 });
 director.register({
-  id: 'block02-journey-storm',
-  load: async () => wire((await import('./blocks/block02-journey-storm')).createBlock()),
+  id: 'block02-university',
+  load: async () => wire((await import('./blocks/block02-university')).createBlock()),
 });
 director.register({
-  id: 'block03-three-paths',
-  load: async () => wire((await import('./blocks/block03-three-paths')).createBlock()),
+  id: 'block03-storm',
+  load: async () => wire((await import('./blocks/block03-storm')).createBlock()),
 });
 director.register({
-  id: 'block04-connecting-dots',
-  load: async () => wire((await import('./blocks/block04-connecting-dots')).createBlock()),
+  id: 'block04-alethea',
+  load: async () => wire((await import('./blocks/block04-alethea')).createBlock()),
 });
 director.register({
-  id: 'block05-finale',
-  load: async () => wire((await import('./blocks/block05-finale')).createBlock()),
+  id: 'block05-teaching',
+  load: async () => wire((await import('./blocks/block05-teaching')).createBlock()),
+});
+director.register({
+  id: 'block06-three-paths',
+  load: async () => wire((await import('./blocks/block06-three-paths')).createBlock()),
+});
+director.register({
+  id: 'block07-connecting-dots',
+  load: async () => wire((await import('./blocks/block07-connecting-dots')).createBlock()),
+});
+director.register({
+  id: 'block08-finale',
+  load: async () => wire((await import('./blocks/block08-finale')).createBlock()),
 });
 
 // skippable intro (accessibility requirement)
 let skipTarget: { skipIntro(): void } | null = null;
-const skipBtn = createButton(overlay, 'Skip intro', 'wl-corner wl-skip', () => {
+const skipBtn = createButton(overlay, 'Skip →', 'wl-corner wl-skip', () => {
   skipTarget?.skipIntro();
   skipBtn.remove();
 });
@@ -127,12 +139,21 @@ ctx.progress.subscribe((s) => {
 });
 
 // mute toggle — always visible
-const muteBtn = createButton(overlay, '🔊', 'wl-corner wl-mute', () => {
+const muteBtn = createButton(overlay, 'sound on', 'wl-corner wl-mute', () => {
   audio.start();
-  muteBtn.textContent = audio.toggleMute() ? '🔇' : '🔊';
+  muteBtn.textContent = audio.toggleMute() ? 'sound off' : 'sound on';
 });
 muteBtn.classList.add('visible');
 muteBtn.setAttribute('aria-label', 'toggle sound');
+
+// reduced-motion notice (first load, dismissable)
+if (reducedMotion) {
+  const notice = document.createElement('button');
+  notice.className = 'wl-notice';
+  notice.textContent = 'Motion softened for you. Same story, gentler sky. ×';
+  notice.addEventListener('click', () => notice.remove());
+  overlay.appendChild(notice);
+}
 
 void director.start();
 

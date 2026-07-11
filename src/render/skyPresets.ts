@@ -47,6 +47,26 @@ export const skyPresets = {
     fogDensity: 0.0038,
     sunIntensity: 0.5,
   },
+  /** After the storm: rain easing, light coming back, not sunny yet. */
+  afterRain: {
+    top: '#7b86a0',
+    middle: '#9d9ab4',
+    bottom: '#c8b6c4',
+    sunTint: '#e8dccc',
+    fogColor: '#b0aab8',
+    fogDensity: 0.0026,
+    sunIntensity: 0.9,
+  },
+  /** Clouds thicken; the road forward goes soft and white. */
+  whiteout: {
+    top: '#cfd6e4',
+    middle: '#ded8e2',
+    bottom: '#efe4e6',
+    sunTint: '#fff4e0',
+    fogColor: '#e8dee6',
+    fogDensity: 0.0055,
+    sunIntensity: 0.8,
+  },
   /** Constellation chapter: deep dusk, stars readable. */
   dusk: {
     top: '#2c3560',

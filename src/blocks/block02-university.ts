@@ -1,0 +1,205 @@
+import * as THREE from 'three';
+import type { StoryBlock } from '../core/StoryBlock';
+import type { WorldContext } from '../core/WorldContext';
+import { WalkController } from '../core/walk';
+import { createWisp, pulseWisp, type Wisp } from '../render/wisp';
+import { makePanel } from '../render/panels';
+import { skyPresets, lerpEnvToPreset } from '../render/skyPresets';
+import {
+  typewriterLines,
+  chapterTitle,
+  type TypewriterHandle,
+  type OverlayHandle,
+} from '../ui/overlay';
+import { universityContent, type UniversityCue } from '../content/block02';
+import { hillY } from './block01-who-is-alice';
+
+const WALK_RADIUS = 15;
+const MS_PER_BEAT = 2600;
+
+type Panel = ReturnType<typeof makePanel> & { targetY: number };
+
+/**
+ * Block 02 — "One Road, Two Sides" (University). Diploma letters drift up
+ * like glowing cards, project panels and the co-op logo float past, gold
+ * award motes rise — all cued off the story beats.
+ */
+class Block02University implements StoryBlock {
+  readonly id = 'block02-university';
+
+  private ctx!: WorldContext;
+  private walk: WalkController | null = null;
+  private title: OverlayHandle | null = null;
+  private typewriter: TypewriterHandle | null = null;
+  private hintEl: HTMLElement | null = null;
+  private panels: Panel[] = [];
+  private motes: Wisp[] = [];
+  private beacon: Wisp | null = null;
+  private advanced = false;
+  private onAdvance: (() => void) | null = null;
+
+  setAdvanceHandler(fn: () => void): void {
+    this.onAdvance = fn;
+  }
+
+  async preload(): Promise<void> {}
+
+  enter(ctx: WorldContext): void {
+    this.ctx = ctx;
+    const cat = ctx.cat.object3D;
+    cat.visible = true;
+    cat.position.y = hillY(cat.position.x, cat.position.z) + 0.1;
+    ctx.rig.follow(cat);
+    this.walk = new WalkController(
+      cat,
+      ctx.camera,
+      ctx.renderer.domElement,
+      new THREE.Vector3(0, cat.position.y, -6),
+      WALK_RADIUS,
+    );
+
+    this.title = chapterTitle(ctx.overlay, universityContent.title);
+    const beats = universityContent.beats;
+    this.typewriter = typewriterLines(
+      ctx.overlay,
+      beats.map((b) => b.text),
+      MS_PER_BEAT,
+      3,
+      (i) => {
+        const cue = beats[i].cue;
+        if (cue) this.trigger(cue);
+      },
+    );
+    void this.typewriter.done.then(() => this.showBeacon());
+  }
+
+  private addPanel(title: string, subtitle: string, pos: THREE.Vector3, accent?: string): void {
+    const panel = makePanel(title, subtitle, accent) as Panel;
+    panel.targetY = pos.y;
+    panel.mesh.position.copy(pos).setY(pos.y - 4); // rises into place
+    panel.mesh.scale.setScalar(1.7); // readable against the bright sky
+    panel.mesh.lookAt(this.ctx.camera.position);
+    this.ctx.scene.add(panel.mesh);
+    this.panels.push(panel);
+  }
+
+  private trigger(cue: UniversityCue): void {
+    switch (cue) {
+      case 'waterloo':
+        this.addPanel(
+          'University of Waterloo',
+          'Computer Science — with Distinction',
+          new THREE.Vector3(-14, 6, -14),
+          '#8a6d3b',
+        );
+        break;
+      case 'laurier':
+        this.addPanel(
+          'Wilfrid Laurier University',
+          'Business — Finance, minor in Economics',
+          new THREE.Vector3(14, 6.5, -14),
+          '#5b3b8a',
+        );
+        break;
+      case 'projects':
+        this.addPanel('Banking APIs', 'Java + Spring Boot', new THREE.Vector3(-17, 3.5, -4));
+        this.addPanel('Supplier Upload', 'React + Google Maps', new THREE.Vector3(0, 9, -20));
+        this.addPanel(
+          'Finance Research',
+          '14,000 SEC files · Python',
+          new THREE.Vector3(17, 3.5, -4),
+        );
+        break;
+      case 'coop':
+        this.addPanel(
+          'Replicant',
+          'co-op · San Francisco',
+          new THREE.Vector3(0, 12.5, -26),
+          '#b3552d',
+        );
+        break;
+      case 'awards':
+        // gold award motes drifting up around the crest
+        for (let i = 0; i < 8; i++) {
+          const w = createWisp('#ffd76a', 1.2 + Math.random() * 0.8, 0.8);
+          w.sprite.position.set(
+            (Math.random() - 0.5) * 18,
+            2 + Math.random() * 3,
+            -6 + (Math.random() - 0.5) * 14,
+          );
+          this.ctx.scene.add(w.sprite);
+          this.motes.push(w);
+        }
+        break;
+    }
+  }
+
+  private showBeacon(): void {
+    this.beacon = createWisp('#ffd76a', 5, 1);
+    this.beacon.sprite.position.set(0, hillY(0, 6) + 2, 8);
+    this.ctx.scene.add(this.beacon.sprite);
+    const hint = document.createElement('p');
+    hint.className = 'wl-hint';
+    hint.textContent = universityContent.continueHint;
+    this.ctx.overlay.appendChild(hint);
+    this.hintEl = hint;
+  }
+
+  update(dt: number, t: number): void {
+    const cat = this.ctx.cat.object3D;
+    this.walk?.update(dt);
+    cat.position.y = hillY(cat.position.x, cat.position.z) + 0.1;
+    this.ctx.cat.update(dt);
+    lerpEnvToPreset(this.ctx.env, skyPresets.dawn, 1 - Math.exp(-dt * 0.7));
+
+    for (const p of this.panels) {
+      // rise + fade in, then bob gently
+      p.material.opacity = Math.min(p.material.opacity + dt * 0.7, 0.92);
+      const rise = p.targetY - p.mesh.position.y;
+      p.mesh.position.y += rise * Math.min(dt * 1.8, 1);
+      if (Math.abs(rise) < 0.05)
+        p.mesh.position.y = p.targetY + Math.sin(t * 0.8 + p.targetY) * 0.15;
+    }
+    for (const m of this.motes) {
+      m.sprite.position.y += dt * 0.9;
+      pulseWisp(m, t);
+      m.baseOpacity = Math.max(m.baseOpacity - dt * 0.045, 0);
+    }
+
+    if (this.beacon) {
+      pulseWisp(this.beacon, t, 0.2);
+      if (!this.advanced && this.beacon.sprite.position.distanceTo(cat.position) < 4.2) {
+        this.advanced = true;
+        this.onAdvance?.();
+      }
+    }
+  }
+
+  async exit(): Promise<void> {}
+
+  dispose(): void {
+    this.walk?.dispose();
+    this.typewriter?.destroy();
+    this.title?.destroy();
+    this.hintEl?.remove();
+    for (const p of this.panels) {
+      this.ctx.scene.remove(p.mesh);
+      p.dispose();
+    }
+    this.panels = [];
+    for (const m of this.motes) {
+      this.ctx.scene.remove(m.sprite);
+      m.dispose();
+    }
+    this.motes = [];
+    if (this.beacon) {
+      this.ctx.scene.remove(this.beacon.sprite);
+      this.beacon.dispose();
+    }
+    this.ctx.rig.follow(null);
+  }
+}
+
+export function createBlock(): Block02University {
+  return new Block02University();
+}

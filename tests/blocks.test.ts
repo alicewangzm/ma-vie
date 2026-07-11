@@ -8,10 +8,13 @@ import type { StoryBlock } from '../src/core/StoryBlock';
 const chapterModules: Record<string, () => Promise<{ createBlock(): StoryBlock }>> = {
   'block00-letter': () => import('../src/blocks/block00-letter'),
   'block01-who-is-alice': () => import('../src/blocks/block01-who-is-alice'),
-  'block02-journey-storm': () => import('../src/blocks/block02-journey-storm'),
-  'block03-three-paths': () => import('../src/blocks/block03-three-paths'),
-  'block04-connecting-dots': () => import('../src/blocks/block04-connecting-dots'),
-  'block05-finale': () => import('../src/blocks/block05-finale'),
+  'block02-university': () => import('../src/blocks/block02-university'),
+  'block03-storm': () => import('../src/blocks/block03-storm'),
+  'block04-alethea': () => import('../src/blocks/block04-alethea'),
+  'block05-teaching': () => import('../src/blocks/block05-teaching'),
+  'block06-three-paths': () => import('../src/blocks/block06-three-paths'),
+  'block07-connecting-dots': () => import('../src/blocks/block07-connecting-dots'),
+  'block08-finale': () => import('../src/blocks/block08-finale'),
 };
 
 describe('story block contract', () => {
@@ -41,22 +44,29 @@ describe('story block contract', () => {
 });
 
 describe('content data', () => {
-  it('block02 milestones carry date slots for Alice to fill', async () => {
-    const { block02Content } = await import('../src/content/block02');
-    expect(block02Content.milestones).toHaveLength(3);
-    for (const m of block02Content.milestones) {
-      expect(m.date.length).toBeGreaterThan(0);
-      expect(m.label.length).toBeGreaterThan(0);
+  it('storm chapter carries its date slot and full milestone/self-talk copy', async () => {
+    const { stormContent } = await import('../src/content/block03');
+    expect(stormContent.date.length).toBeGreaterThan(0);
+    expect(stormContent.milestones).toHaveLength(3);
+    expect(stormContent.sideLog.length).toBeGreaterThanOrEqual(4);
+  });
+
+  it('university beats reference only known visual cues', async () => {
+    const { universityContent } = await import('../src/content/block02');
+    const known = new Set(['waterloo', 'laurier', 'projects', 'coop', 'awards']);
+    for (const beat of universityContent.beats) {
+      if (beat.cue) expect(known.has(beat.cue), beat.cue).toBe(true);
     }
   });
 
-  it('block05 hobbies are colored clickable words with notes', async () => {
-    const { block05Content } = await import('../src/content/block05');
-    expect(block05Content.hobbies.length).toBeGreaterThanOrEqual(3);
-    for (const h of block05Content.hobbies) {
+  it('finale hobbies are colored clickable words and goodbyes span languages', async () => {
+    const { finaleContent } = await import('../src/content/block08');
+    expect(finaleContent.hobbies.length).toBeGreaterThanOrEqual(3);
+    for (const h of finaleContent.hobbies) {
       expect(h.color).toMatch(/^#[0-9a-f]{6}$/i);
-      expect(h.note.length).toBeGreaterThan(0);
+      expect(h.word.length).toBeGreaterThan(0);
     }
-    expect(block05Content.goodbyes).toContain('再见');
+    expect(finaleContent.goodbyes).toContain('再见');
+    expect(finaleContent.email).toMatch(/@gmail\.com$/);
   });
 });

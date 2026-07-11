@@ -1,19 +1,14 @@
-/**
- * Block 01 "Who is Alice" — story copy.
- * PLACEHOLDER TEXT ONLY: Alice pastes the real copy here herself.
- */
-export const block01Content = {
-  title: '[placeholder] Chapter One — Who is Alice',
-  tutorialHints: [
-    '[placeholder] drag to look around',
-    '[placeholder] WASD / arrows — or tap the ground — to walk',
-    '[placeholder] walk to the glowing lights',
+/** Block 01 "Who Is Alice" (intro island) — copy from STORY-SCRIPT.md. */
+export const islandContent = {
+  lines: [
+    "You're a small cat with a big task.",
+    'Wander wherever you like — the sky is yours to roam.',
+    'Somewhere in it is Alice,',
+    'making her way through the mist —',
+    'and making every second count.',
+    'Go find her. Follow the glow.',
   ],
-  /** Each wisp the cat reaches reveals one of these beats. */
-  wisps: [
-    '[placeholder] Alice grew up curious about everything.',
-    '[placeholder] She learned to build things — small at first, then bigger.',
-    '[placeholder] Somewhere along the way, the clouds became a map.',
-  ],
-  continueHint: '[placeholder] follow the gold light when you are ready',
+  /** Fades after the first move. */
+  hint: 'drag to look · follow the light',
+  continueHint: 'follow the gold light',
 } as const;

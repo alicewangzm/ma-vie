@@ -1,10 +1,12 @@
-import * as THREE from 'three';
+﻿import * as THREE from 'three';
 import { theme } from '../theme';
 import type { StoryBlock } from '../core/StoryBlock';
 import type { WorldContext } from '../core/WorldContext';
 import { radialTexture } from '../render/textures';
 import { typewriterLines, createButton, type TypewriterHandle } from '../ui/overlay';
-import { block00Content } from '../content/block00';
+import { letterContent } from '../content/block00';
+
+const MS_PER_LINE = 1900; // unhurried — letter copy is the longest passage
 
 const FLOAT_POS = new THREE.Vector3(0, 11, 4);
 const FALL_FROM_Y = 60;
@@ -122,7 +124,7 @@ class Block00Letter implements StoryBlock {
   private showHint(): void {
     const hint = document.createElement('p');
     hint.className = 'wl-hint';
-    hint.textContent = block00Content.clickHint;
+    hint.textContent = letterContent.clickHint;
     this.ctx.overlay.appendChild(hint);
     this.hintEl = hint;
   }
@@ -134,10 +136,10 @@ class Block00Letter implements StoryBlock {
     this.hintEl = null;
     this.ctx.audio.start(); // first user gesture — safe spot to boot audio
 
-    this.typewriter = typewriterLines(this.ctx.overlay, block00Content.lines);
+    this.typewriter = typewriterLines(this.ctx.overlay, letterContent.lines, MS_PER_LINE);
     void this.typewriter.done.then(() => {
       if (this.phase !== 'reading') return;
-      this.acceptBtn = createButton(this.ctx.overlay, block00Content.acceptLabel, 'wl-accept', () =>
+      this.acceptBtn = createButton(this.ctx.overlay, letterContent.acceptLabel, 'wl-accept', () =>
         this.accept(),
       );
       requestAnimationFrame(() => this.acceptBtn?.classList.add('visible'));
