@@ -192,6 +192,7 @@ class Block06ThreePaths implements StoryBlock {
   update(dt: number, t: number): void {
     const cat = this.ctx.cat.object3D;
     this.walk?.update(dt);
+    this.ctx.cat.setMoving(this.walk?.moving ?? false);
     this.ctx.cat.update(dt);
     lerpEnvToPreset(this.ctx.env, skyPresets.dawn, 1 - Math.exp(-dt * 0.7));
 

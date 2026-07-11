@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+﻿import * as THREE from 'three';
 import type { StoryBlock } from '../core/StoryBlock';
 import type { WorldContext } from '../core/WorldContext';
 import { WalkController } from '../core/walk';
@@ -148,6 +148,7 @@ class Block02University implements StoryBlock {
   update(dt: number, t: number): void {
     const cat = this.ctx.cat.object3D;
     this.walk?.update(dt);
+    this.ctx.cat.setMoving(this.walk?.moving ?? false);
     cat.position.y = hillY(cat.position.x, cat.position.z) + 0.1;
     this.ctx.cat.update(dt);
     lerpEnvToPreset(this.ctx.env, skyPresets.dawn, 1 - Math.exp(-dt * 0.7));

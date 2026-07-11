@@ -1,4 +1,4 @@
-import * as THREE from 'three';
+﻿import * as THREE from 'three';
 import type { StoryBlock } from '../core/StoryBlock';
 import type { WorldContext } from '../core/WorldContext';
 import { WalkController } from '../core/walk';
@@ -104,6 +104,7 @@ class Block01WhoIsAlice implements StoryBlock {
   update(dt: number, t: number): void {
     const cat = this.ctx.cat.object3D;
     this.walk?.update(dt);
+    this.ctx.cat.setMoving(this.walk?.moving ?? false);
     cat.position.y = hillY(cat.position.x, cat.position.z) + 0.1;
     this.ctx.cat.update(dt);
 
