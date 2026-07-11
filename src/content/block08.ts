@@ -76,6 +76,5 @@ export const finaleContent = {
   resumeLabel: 'Résumé',
   helloLabel: 'Say hello →',
   resumeUrl: '#', // [placeholder] Alice pastes the real resume link
-  // Script says alicewang0089@gmail.com — using the account address; confirm.
-  email: 'alicewang0022@gmail.com',
+  email: 'alicewang0089@gmail.com', // per STORY-SCRIPT.md, confirmed by Alice
 } as const;
