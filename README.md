@@ -81,11 +81,26 @@ That's it. Vite code-splits each block into its own lazy chunk automatically.
 ```
 git commit ──► husky pre-commit (eslint --fix + prettier via lint-staged)
      │
-     └─ push ──► GitHub Actions: lint ──► test (vitest) ──► build ──► deploy (Pages)
+     └─ push ──► GitHub Actions: lint ──► test (vitest) ──► build   (correctness gate)
+           └──► Cloudflare Pages: npm run build ──► dist ──► edge   (delivery)
+                      └─ every push gets its own preview URL
 ```
+
+**Why Cloudflare Pages over GitHub Pages:** the build is fully static (zero server
+runtime), so the host is purely a delivery question. Cloudflare serves from its edge
+CDN with proper cache-control for the heavy payloads this project ships (GLB cat
+model, cloud/texture atlases) — GitHub Pages sits behind a single-tier cache with
+`max-age=600` and no per-asset tuning. And Cloudflare's per-push **preview
+deployments** give every commit a shareable URL, which is how visual changes get
+reviewed here: look at the preview, then promote. GitHub Pages deploys one branch
+to one URL — no preview gating.
 
 ## Credits & inspiration
 
 - _Sky: Children of the Light_ (thatgamecompany) — tonal inspiration only; every asset
   here is procedural or original, zero copied assets.
 - Story & copy: Alice Wang. Engineering: built pair-programming with Claude.
+
+---
+
+_Envisioned by a human. Accelerated by AI. Every decision deliberate._

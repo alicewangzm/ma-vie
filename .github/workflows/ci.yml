@@ -1,5 +1,8 @@
 name: CI
 
+# Deployment is handled by Cloudflare Pages (connected to this repo):
+# it builds `npm run build` → `dist` on every push, with per-push preview
+# URLs. This workflow is the correctness gate: lint → test → build.
 on:
   push:
     branches: [master, main]
@@ -7,8 +10,6 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 jobs:
   verify:
@@ -23,18 +24,3 @@ jobs:
       - run: npm run lint
       - run: npm run test
       - run: npm run build
-      - uses: actions/upload-pages-artifact@v3
-        if: github.event_name == 'push'
-        with:
-          path: dist
-
-  deploy:
-    if: github.event_name == 'push'
-    needs: verify
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - id: deployment
-        uses: actions/deploy-pages@v4
