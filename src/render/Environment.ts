@@ -23,6 +23,7 @@ export class Environment {
   private sunCore: THREE.Mesh;
   private depthTarget: THREE.WebGLRenderTarget;
   private baseFogDensity = theme.fog.density;
+  private sunVisible = true;
   private dreamFactor: { value: number };
   private disposables: (THREE.Texture | THREE.Material | THREE.BufferGeometry)[] = [];
 
@@ -96,6 +97,30 @@ export class Environment {
     this.depthTarget.depthTexture = new THREE.DepthTexture(1, 1);
   }
 
+  /** Fog density before the dreamFactor lift is applied each frame. */
+  getBaseFogDensity(): number {
+    return this.baseFogDensity;
+  }
+
+  setBaseFogDensity(d: number): void {
+    this.baseFogDensity = d;
+  }
+
+  getSunIntensity(): number {
+    return this.sunLight.intensity;
+  }
+
+  setSunIntensity(v: number): void {
+    this.sunLight.intensity = v;
+  }
+
+  /** Sun sprite + hot core visibility (the storm hides the sun). */
+  setSunVisible(v: boolean): void {
+    this.sunVisible = v;
+    this.sunHalo.visible = v;
+    this.sunCore.visible = v;
+  }
+
   setSunAngles(azimuthDeg: number, elevationDeg: number): void {
     const az = THREE.MathUtils.degToRad(azimuthDeg);
     const el = THREE.MathUtils.degToRad(elevationDeg);
@@ -122,7 +147,7 @@ export class Environment {
     renderer.render(this.scene, camera);
     renderer.setRenderTarget(null);
     this.clouds.mesh.visible = true;
-    this.sunHalo.visible = true;
+    this.sunHalo.visible = this.sunVisible;
     this.clouds.setDepthTexture(this.depthTarget.depthTexture!, size.x, size.y);
   }
 

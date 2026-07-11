@@ -47,6 +47,47 @@ export class AudioBus {
     src.start();
   }
 
+  /**
+   * One thunder clap: a noise burst through a falling lowpass + a low sine
+   * thump. Fully procedural — no sample to load. No-op before start().
+   */
+  thunder(intensity = 1): void {
+    if (!this.ctx || !this.master) return;
+    const t0 = this.ctx.currentTime;
+    const dur = 2.6;
+
+    const buffer = this.ctx.createBuffer(1, this.ctx.sampleRate * dur, this.ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+    const src = this.ctx.createBufferSource();
+    src.buffer = buffer;
+
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(900, t0);
+    filter.frequency.exponentialRampToValueAtTime(90, t0 + dur);
+
+    const gain = this.ctx.createGain();
+    gain.gain.setValueAtTime(0, t0);
+    gain.gain.linearRampToValueAtTime(0.5 * intensity, t0 + 0.06);
+    gain.gain.exponentialRampToValueAtTime(0.001, t0 + dur);
+
+    src.connect(filter).connect(gain).connect(this.master);
+    src.start(t0);
+    src.stop(t0 + dur);
+
+    const thump = this.ctx.createOscillator();
+    thump.type = 'sine';
+    thump.frequency.setValueAtTime(52, t0);
+    thump.frequency.exponentialRampToValueAtTime(30, t0 + 1.2);
+    const thumpGain = this.ctx.createGain();
+    thumpGain.gain.setValueAtTime(0.25 * intensity, t0);
+    thumpGain.gain.exponentialRampToValueAtTime(0.001, t0 + 1.4);
+    thump.connect(thumpGain).connect(this.master);
+    thump.start(t0);
+    thump.stop(t0 + 1.5);
+  }
+
   toggleMute(): boolean {
     this.muted = !this.muted;
     if (this.master && this.ctx) {

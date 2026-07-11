@@ -75,8 +75,113 @@ export function ensureOverlayStyles(): void {
       pointer-events: none;
       transition: opacity 1s ease;
     }
+    .wl-chapter-title {
+      position: absolute;
+      left: 50%;
+      top: 16%;
+      transform: translateX(-50%);
+      width: min(38rem, 90vw);
+      text-align: center;
+      color: #4a3f5c;
+      text-shadow: 0 1px 8px rgba(255, 255, 255, 0.7);
+      font-size: clamp(1.2rem, 3vw, 1.7rem);
+      letter-spacing: 0.06em;
+      opacity: 0;
+      transition: opacity 1.4s ease;
+      pointer-events: none;
+    }
+    .wl-chapter-title.visible { opacity: 1; }
+    .wl-sidelog {
+      position: absolute;
+      left: 3%;
+      top: 50%;
+      transform: translateY(-50%);
+      width: min(17rem, 40vw);
+      color: rgba(255, 252, 245, 0.92);
+      text-shadow: 0 1px 6px rgba(30, 30, 50, 0.55);
+      font-size: 0.95rem;
+      font-style: italic;
+      line-height: 1.8;
+      pointer-events: none;
+    }
+    .wl-sidelog p { opacity: 0; transition: opacity 1.2s ease; margin: 0 0 0.6em; }
+    .wl-sidelog p.visible { opacity: 1; }
+    .wl-title-card {
+      position: absolute;
+      left: 50%;
+      top: 40%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      color: #4a3f5c;
+      text-shadow: 0 1px 8px rgba(255, 255, 255, 0.7);
+      font-size: clamp(1.6rem, 4.5vw, 2.6rem);
+      letter-spacing: 0.08em;
+      opacity: 0;
+      transition: opacity 0.45s ease;
+      pointer-events: none;
+    }
+    .wl-title-card.visible { opacity: 1; }
+    .wl-everything {
+      position: absolute;
+      left: 50%;
+      top: 56%;
+      transform: translateX(-50%);
+      width: min(36rem, 90vw);
+      text-align: center;
+      color: #4a3f5c;
+      text-shadow: 0 1px 6px rgba(255, 255, 255, 0.65);
+      font-size: clamp(1rem, 2.2vw, 1.2rem);
+      line-height: 2.1;
+    }
+    .wl-hobby {
+      pointer-events: auto;
+      cursor: pointer;
+      border: none;
+      background: none;
+      font: inherit;
+      font-weight: 600;
+      padding: 0 0.15em;
+      transition: transform 0.25s ease;
+    }
+    .wl-hobby:hover { transform: translateY(-2px) scale(1.06); }
+    .wl-hobby-note {
+      position: absolute;
+      left: 50%;
+      top: 68%;
+      transform: translateX(-50%);
+      color: rgba(74, 63, 92, 0.85);
+      font-size: 0.95rem;
+      font-style: italic;
+      pointer-events: none;
+      transition: opacity 0.6s ease;
+    }
+    .wl-links {
+      position: absolute;
+      left: 50%;
+      bottom: 8%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 1.2rem;
+      opacity: 0;
+      transition: opacity 1.2s ease;
+    }
+    .wl-links.visible { opacity: 1; }
+    .wl-links a {
+      pointer-events: auto;
+      color: #4a3f5c;
+      background: rgba(255, 250, 240, 0.82);
+      border: 1px solid rgba(74, 63, 92, 0.35);
+      border-radius: 999px;
+      padding: 0.55em 1.8em;
+      text-decoration: none;
+      font-size: 0.95rem;
+      transition: background 0.3s ease, transform 0.3s ease;
+    }
+    .wl-links a:hover { background: rgba(255, 244, 214, 0.95); transform: translateY(-1px); }
     @media (prefers-reduced-motion: reduce) {
-      .story-line, .wl-button { transition-duration: 0.01s; }
+      .story-line, .wl-button, .wl-chapter-title, .wl-sidelog p, .wl-title-card {
+        transition-duration: 0.01s;
+      }
     }
   `;
   document.head.appendChild(style);
@@ -139,6 +244,52 @@ export function typewriterLines(
       if (timer) clearInterval(timer);
       root.remove();
     },
+  };
+}
+
+export interface OverlayHandle {
+  el: HTMLElement;
+  destroy(): void;
+}
+
+/** Chapter title that fades in at the top of the frame. */
+export function chapterTitle(parent: HTMLElement, text: string): OverlayHandle {
+  ensureOverlayStyles();
+  const el = document.createElement('h2');
+  el.className = 'wl-chapter-title';
+  el.textContent = text;
+  parent.appendChild(el);
+  requestAnimationFrame(() => el.classList.add('visible'));
+  return { el, destroy: () => el.remove() };
+}
+
+export interface SideLogHandle extends OverlayHandle {
+  /** Reveal the next line; returns false when exhausted. */
+  next(): boolean;
+}
+
+/** Left-side italic log (storm self-talk). Lines reveal on demand. */
+export function sideLog(parent: HTMLElement, lines: readonly string[]): SideLogHandle {
+  ensureOverlayStyles();
+  const el = document.createElement('div');
+  el.className = 'wl-sidelog';
+  const els = lines.map((text) => {
+    const p = document.createElement('p');
+    p.textContent = text;
+    el.appendChild(p);
+    return p;
+  });
+  parent.appendChild(el);
+  let i = 0;
+  return {
+    el,
+    next() {
+      if (i >= els.length) return false;
+      els[i].classList.add('visible');
+      i += 1;
+      return true;
+    },
+    destroy: () => el.remove(),
   };
 }
 
