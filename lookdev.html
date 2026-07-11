@@ -39,10 +39,11 @@ import GUI from 'lil-gui';
 
 // ---------------------------------------------------------------- params
 // Everything tunable lives here so "copy values" can dump one object.
+// Values below are Alice-approved (2026-07-11 tuning session).
 const P = {
   sky: {
     top:    '#a8c8f0',   // powder blue
-    middle: '#ffd9c2',   // peach
+    middle: '#8c83b9',   // dusk lavender
     bottom: '#ffc2d4',   // soft pink
     sunTint: '#fff0d0',
     sunTintFalloff: 3.0, // higher = tighter warm glow around sun
@@ -57,10 +58,10 @@ const P = {
   },
   fog: {
     color: '#ecd8e4',
-    density: 0.0055,
+    density: 0.0018,
   },
   clouds: {
-    opacity: 0.85,
+    opacity: 0.26,
     driftSpeed: 1.2,
     scale: 1.0,
     tint: '#ffffff',
@@ -71,13 +72,13 @@ const P = {
     threshold: 0.82,
   },
   letter: {
-    glowIntensity: 1.0,
-    bobAmplitude: 0.6,
-    bobSpeed: 1.0,
+    glowIntensity: 0.23,
+    bobAmplitude: 1.41,
+    bobSpeed: 1.21,
   },
   hill: {
-    color: '#9cc48c',
-    fade: 0.45,      // 0 = full green, 1 = melts into the fog color
+    color: '#c3e1b7',
+    fade: 0.0,       // 0 = full green, 1 = melts into the fog color
   },
 };
 
