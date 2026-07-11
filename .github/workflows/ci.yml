@@ -1,8 +1,9 @@
 name: CI
 
-# Deployment is handled by Cloudflare Pages (connected to this repo):
-# it builds `npm run build` → `dist` on every push, with per-push preview
-# URLs. This workflow is the correctness gate: lint → test → build.
+# Deployment is handled by Cloudflare Workers Builds (connected to this
+# repo): it runs `npm run build` then `wrangler deploy` on every push,
+# with preview URLs for non-production branches. This workflow is the
+# correctness gate: lint → test → build.
 on:
   push:
     branches: [master, main]
@@ -18,7 +19,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version-file: .nvmrc
           cache: npm
       - run: npm ci
       - run: npm run lint
