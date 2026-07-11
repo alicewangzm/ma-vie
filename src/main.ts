@@ -88,9 +88,31 @@ director.register({
     return block;
   },
 });
+// Each chapter advances itself (beacon walk-in or button) via director.next().
+// Import paths stay literal so Vite code-splits one lazy chunk per chapter.
+const wire = <T extends { setAdvanceHandler(fn: () => void): void }>(block: T): T => {
+  block.setAdvanceHandler(() => void director.next());
+  return block;
+};
 director.register({
   id: 'block01-who-is-alice',
-  load: async () => (await import('./blocks/block01-who-is-alice')).createBlock(),
+  load: async () => wire((await import('./blocks/block01-who-is-alice')).createBlock()),
+});
+director.register({
+  id: 'block02-journey-storm',
+  load: async () => wire((await import('./blocks/block02-journey-storm')).createBlock()),
+});
+director.register({
+  id: 'block03-three-paths',
+  load: async () => wire((await import('./blocks/block03-three-paths')).createBlock()),
+});
+director.register({
+  id: 'block04-connecting-dots',
+  load: async () => wire((await import('./blocks/block04-connecting-dots')).createBlock()),
+});
+director.register({
+  id: 'block05-finale',
+  load: async () => wire((await import('./blocks/block05-finale')).createBlock()),
 });
 
 // skippable intro (accessibility requirement)
@@ -113,6 +135,11 @@ muteBtn.classList.add('visible');
 muteBtn.setAttribute('aria-label', 'toggle sound');
 
 void director.start();
+
+// dev-only hook so e2e smoke tests can step the chain and read world state
+if (import.meta.env.DEV) {
+  (window as unknown as Record<string, unknown>).__wonderland = { director, ctx, wipe };
+}
 
 // ---------------------------------------------------------------- loop
 // Adaptive DPR: if frame times sag below ~50fps, step pixel ratio down.

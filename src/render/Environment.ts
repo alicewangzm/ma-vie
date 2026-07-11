@@ -22,7 +22,7 @@ export class Environment {
   private sunHalo: THREE.Sprite;
   private sunCore: THREE.Mesh;
   private depthTarget: THREE.WebGLRenderTarget;
-  private baseFogDensity = theme.fog.density;
+  private baseFogDensity: number = theme.fog.density;
   private sunVisible = true;
   private dreamFactor: { value: number };
   private disposables: (THREE.Texture | THREE.Material | THREE.BufferGeometry)[] = [];
