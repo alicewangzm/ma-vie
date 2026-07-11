@@ -29,6 +29,8 @@ export class CatController {
 
   private stateTime = 0;
   private moving = false;
+  private walkTime = 0;
+  private poseGroup = new THREE.Group();
   private placeholder = new THREE.Group();
   private materials: THREE.Material[] = [];
   private geometries: THREE.BufferGeometry[] = [];
@@ -79,7 +81,10 @@ export class CatController {
       model.position.z -= center.z;
       model.position.y -= scaled.min.y;
 
-      this.object3D.add(model);
+      // pose group: procedural walk/sit motion animates this wrapper so it
+      // never fights the normalization transform on the model itself
+      this.poseGroup.add(model);
+      this.object3D.add(this.poseGroup);
       this.object3D.remove(this.placeholder);
       this.modelRoot = model;
       this.modelLoaded = true;
@@ -156,11 +161,60 @@ export class CatController {
 
     if (this.mixer) {
       this.mixer.update(dt);
+    } else if (this.modelLoaded) {
+      this.updateProceduralPose(dt);
     } else {
       // placeholder breathing so the capsule reads as alive
       const breathe = 1 + Math.sin(this.stateTime * 2.2) * 0.015;
       this.object3D.scale.set(1, breathe, 1);
     }
+  }
+
+  /**
+   * The model ships without a rig, so the walk/sit poses are faked on the
+   * pose wrapper: a hop-bob + waddle while walking, a settle-back sit, a
+   * grooming nod, a slow tail-sway — all eased so states melt into each
+   * other instead of snapping.
+   */
+  private updateProceduralPose(dt: number): void {
+    this.walkTime = this.moving ? this.walkTime + dt : 0;
+    const s = this.stateTime;
+
+    let y = 0;
+    let pitch = 0; // x: nose up (-) / down (+)
+    let roll = 0; // z: waddle / tail sway
+
+    if (this.moving) {
+      const step = this.walkTime * 7;
+      y = Math.abs(Math.sin(step)) * 0.07; // hop-bob
+      roll = Math.sin(step) * 0.05; // waddle
+      pitch = 0.03 * Math.sin(step * 2);
+    } else {
+      switch (this.state) {
+        case 'sit':
+          y = -0.12;
+          pitch = -0.22; // nose up, settled back
+          break;
+        case 'paw-lick':
+          y = -0.04;
+          pitch = 0.1 + 0.06 * Math.sin(s * 6); // grooming nod
+          break;
+        case 'tail-curl':
+          y = -0.06;
+          roll = 0.08 * Math.sin(s * 1.8); // slow sway
+          break;
+      }
+    }
+
+    const k = 1 - Math.exp(-dt * 6);
+    const p = this.poseGroup;
+    p.position.y += (y - p.position.y) * k;
+    p.rotation.x += (pitch - p.rotation.x) * k;
+    p.rotation.z += (roll - p.rotation.z) * k;
+
+    // breathing, always
+    const breathe = 1 + Math.sin(s * 2.2) * 0.012;
+    p.scale.set(1, breathe, 1);
   }
 
   dispose(): void {
