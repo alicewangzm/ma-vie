@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Alice's Wonderland — Look Dev</title>
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #cfd8ec; }
+  #app { position: fixed; inset: 0; }
+  #hint {
+    position: fixed; left: 16px; bottom: 14px; z-index: 10;
+    font: 12px/1.5 ui-sans-serif, system-ui, sans-serif;
+    color: rgba(60, 50, 70, 0.75); pointer-events: none;
+    text-shadow: 0 1px 2px rgba(255,255,255,0.5);
+  }
+</style>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/",
+    "lil-gui": "https://cdn.jsdelivr.net/npm/lil-gui@0.19.2/+esm"
+  }
+}
+</script>
+</head>
+<body>
+<div id="app"></div>
+<div id="hint">drag to orbit · scroll to zoom · tune in the panel · “copy values” dumps JSON</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import GUI from 'lil-gui';
+
+// ---------------------------------------------------------------- params
+// Everything tunable lives here so "copy values" can dump one object.
+const P = {
+  sky: {
+    top:    '#a8c8f0',   // powder blue
+    middle: '#ffd9c2',   // peach
+    bottom: '#ffc2d4',   // soft pink
+    sunTint: '#fff0d0',
+    sunTintFalloff: 3.0, // higher = tighter warm glow around sun
+  },
+  sun: {
+    azimuth: 25,         // degrees around Y
+    elevation: 12,       // degrees above horizon
+    haloSize: 140,
+    haloIntensity: 1.0,
+    lightIntensity: 1.6,
+    lightColor: '#ffe8c8',
+  },
+  fog: {
+    color: '#ecd8e4',
+    density: 0.0055,
+  },
+  clouds: {
+    opacity: 0.85,
+    driftSpeed: 1.2,
+    scale: 1.0,
+    tint: '#ffffff',
+  },
+  bloom: {
+    strength: 0.55,
+    radius: 0.5,
+    threshold: 0.82,
+  },
+  letter: {
+    glowIntensity: 1.0,
+    bobAmplitude: 0.6,
+    bobSpeed: 1.0,
+  },
+  hill: {
+    color: '#8fbf7a',
+  },
+};
+
+// ---------------------------------------------------------------- renderer
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.0;
+document.getElementById('app').appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(new THREE.Color(P.fog.color), P.fog.density);
+
+const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 2000);
+camera.position.set(0, 10, 46);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 9, 0);
+controls.enableDamping = true;
+controls.dampingFactor = 0.06;
+controls.minDistance = 12;
+controls.maxDistance = 140;
+controls.maxPolarAngle = Math.PI * 0.55;
+
+// ---------------------------------------------------------------- sky dome
+const sunDir = new THREE.Vector3(); // unit vector, updated from azimuth/elevation
+
+const skyUniforms = {
+  uTop:            { value: new THREE.Color(P.sky.top) },
+  uMiddle:         { value: new THREE.Color(P.sky.middle) },
+  uBottom:         { value: new THREE.Color(P.sky.bottom) },
+  uSunTint:        { value: new THREE.Color(P.sky.sunTint) },
+  uSunTintFalloff: { value: P.sky.sunTintFalloff },
+  uSunDir:         { value: sunDir },
+};
+
+const skyMat = new THREE.ShaderMaterial({
+  uniforms: skyUniforms,
+  side: THREE.BackSide,
+  depthWrite: false,
+  fog: false,
+  vertexShader: /* glsl */`
+    varying vec3 vDir;
+    void main() {
+      vDir = normalize(position);
+      vec4 mv = modelViewMatrix * vec4(position, 1.0);
+      gl_Position = projectionMatrix * mv;
+    }
+  `,
+  fragmentShader: /* glsl */`
+    uniform vec3 uTop, uMiddle, uBottom, uSunTint;
+    uniform float uSunTintFalloff;
+    uniform vec3 uSunDir;
+    varying vec3 vDir;
+    void main() {
+      float h = normalize(vDir).y;
+      vec3 col = mix(uBottom, uMiddle, smoothstep(-0.08, 0.22, h));
+      col = mix(col, uTop, smoothstep(0.22, 0.85, h));
+      // warm glow toward the sun, baked into the sky itself
+      float s = max(dot(normalize(vDir), uSunDir), 0.0);
+      col = mix(col, uSunTint, pow(s, uSunTintFalloff) * 0.6);
+      gl_FragColor = vec4(col, 1.0);
+    }
+  `,
+});
+scene.add(new THREE.Mesh(new THREE.SphereGeometry(900, 32, 24), skyMat));
+
+// ---------------------------------------------------------------- lights
+const hemi = new THREE.HemisphereLight(0xdfe8ff, 0xead0c8, 0.9);
+scene.add(hemi);
+
+const sunLight = new THREE.DirectionalLight(new THREE.Color(P.sun.lightColor), P.sun.lightIntensity);
+scene.add(sunLight);
+
+// ---------------------------------------------------------------- sun halo
+function radialTexture(stops, size = 256) {
+  const c = document.createElement('canvas');
+  c.width = c.height = size;
+  const ctx = c.getContext('2d');
+  const g = ctx.createRadialGradient(size/2, size/2, 0, size/2, size/2, size/2);
+  for (const [t, col] of stops) g.addColorStop(t, col);
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, size, size);
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
+const haloTex = radialTexture([
+  [0.0, 'rgba(255,248,230,1.0)'],
+  [0.15, 'rgba(255,236,200,0.85)'],
+  [0.45, 'rgba(255,214,180,0.30)'],
+  [1.0, 'rgba(255,200,170,0.0)'],
+]);
+const sunHalo = new THREE.Sprite(new THREE.SpriteMaterial({
+  map: haloTex,
+  blending: THREE.AdditiveBlending,
+  depthWrite: false,
+  fog: false,
+  opacity: P.sun.haloIntensity,
+}));
+scene.add(sunHalo);
+
+// small bright core so bloom has something hot to catch
+const sunCore = new THREE.Mesh(
+  new THREE.SphereGeometry(8, 16, 12),
+  new THREE.MeshBasicMaterial({ color: 0xfff6e0, fog: false })
+);
+scene.add(sunCore);
+
+function updateSun() {
+  const az = THREE.MathUtils.degToRad(P.sun.azimuth);
+  const el = THREE.MathUtils.degToRad(P.sun.elevation);
+  sunDir.set(Math.sin(az) * Math.cos(el), Math.sin(el), -Math.cos(az) * Math.cos(el));
+  const R = 750;
+  sunCore.position.copy(sunDir).multiplyScalar(R);
+  sunHalo.position.copy(sunDir).multiplyScalar(R * 0.98);
+  sunHalo.scale.setScalar(P.sun.haloSize * 4);
+  sunHalo.material.opacity = P.sun.haloIntensity;
+  sunLight.position.copy(sunDir).multiplyScalar(100);
+  sunLight.intensity = P.sun.lightIntensity;
+  sunLight.color.set(P.sun.lightColor);
+}
+updateSun();
+
+// ---------------------------------------------------------------- clouds
+// Procedural soft cloud sprites: clusters of blurred radial blobs.
+function cloudTexture(seed, size = 512) {
+  const c = document.createElement('canvas');
+  c.width = c.height = size;
+  const ctx = c.getContext('2d');
+  let s = seed;
+  const rand = () => (s = (s * 16807) % 2147483647) / 2147483647;
+  const blobs = 10 + Math.floor(rand() * 6);
+  for (let i = 0; i < blobs; i++) {
+    const bx = size * (0.28 + rand() * 0.44);
+    const by = size * (0.42 + rand() * 0.22);
+    const br = size * (0.10 + rand() * 0.14);
+    const a = 0.5 + rand() * 0.35;
+    const g = ctx.createRadialGradient(bx, by, 0, bx, by, br);
+    g.addColorStop(0, `rgba(255,255,255,${a})`);
+    g.addColorStop(0.6, `rgba(255,255,255,${a * 0.45})`);
+    g.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(bx, by, br, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
+const cloudMats = [11, 47, 83].map(seed => new THREE.SpriteMaterial({
+  map: cloudTexture(seed),
+  transparent: true,
+  depthWrite: false,
+  opacity: P.clouds.opacity,
+  color: new THREE.Color(P.clouds.tint),
+  fog: true,
+}));
+
+const CLOUD_COUNT = 260;
+const clouds = [];
+{
+  const rng = (() => { let s = 7; return () => (s = (s * 16807) % 2147483647) / 2147483647; })();
+  for (let i = 0; i < CLOUD_COUNT; i++) {
+    const spr = new THREE.Sprite(cloudMats[i % cloudMats.length]);
+    const angle = rng() * Math.PI * 2;
+    const radius = 55 + rng() * 320;
+    spr.position.set(
+      Math.cos(angle) * radius,
+      -22 + rng() * 75,
+      Math.sin(angle) * radius
+    );
+    const w = 40 + rng() * 90;
+    spr.userData.baseScale = new THREE.Vector2(w, w * (0.35 + rng() * 0.2));
+    spr.userData.drift = 0.5 + rng() * 1.0;
+    spr.userData.phase = rng() * Math.PI * 2;
+    clouds.push(spr);
+    scene.add(spr);
+  }
+}
+
+function applyCloudScale() {
+  for (const spr of clouds) {
+    const b = spr.userData.baseScale;
+    spr.scale.set(b.x * P.clouds.scale, b.y * P.clouds.scale, 1);
+  }
+}
+applyCloudScale();
+
+// ---------------------------------------------------------------- hill
+const hillMat = new THREE.MeshStandardMaterial({ color: new THREE.Color(P.hill.color), roughness: 1.0 });
+const hill = new THREE.Mesh(new THREE.SphereGeometry(30, 48, 32), hillMat);
+hill.scale.set(1.4, 0.5, 1.4);
+hill.position.set(0, -14, -6);
+scene.add(hill);
+
+// ---------------------------------------------------------------- letter
+// A floating envelope: thin white body + flap, warm emissive, glow sprite.
+const letter = new THREE.Group();
+{
+  const paper = new THREE.MeshStandardMaterial({
+    color: 0xfffaf0, roughness: 0.85,
+    emissive: 0xffe9c0, emissiveIntensity: 0.35,
+  });
+  const body = new THREE.Mesh(new THREE.BoxGeometry(3.2, 2.2, 0.12), paper);
+  letter.add(body);
+
+  // flap: triangle folded over the top face
+  const flapShape = new THREE.Shape();
+  flapShape.moveTo(-1.6, 0); flapShape.lineTo(1.6, 0); flapShape.lineTo(0, -1.15); flapShape.closePath();
+  const flap = new THREE.Mesh(new THREE.ShapeGeometry(flapShape), paper);
+  flap.position.set(0, 1.1, 0.075);
+  letter.add(flap);
+
+  // small warm seal
+  const seal = new THREE.Mesh(
+    new THREE.CircleGeometry(0.28, 24),
+    new THREE.MeshStandardMaterial({ color: 0xe8a87c, roughness: 0.6, emissive: 0xd88a55, emissiveIntensity: 0.4 })
+  );
+  seal.position.set(0, -0.05, 0.08);
+  letter.add(seal);
+
+  const glow = new THREE.Sprite(new THREE.SpriteMaterial({
+    map: radialTexture([
+      [0.0, 'rgba(255,240,210,0.9)'],
+      [0.4, 'rgba(255,225,180,0.35)'],
+      [1.0, 'rgba(255,215,170,0.0)'],
+    ]),
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    opacity: 0.8,
+  }));
+  glow.scale.setScalar(9);
+  glow.name = 'glow';
+  letter.add(glow);
+
+  letter.position.set(0, 11, 4);
+  scene.add(letter);
+}
+
+function applyLetterGlow() {
+  const glow = letter.getObjectByName('glow');
+  glow.material.opacity = 0.8 * P.letter.glowIntensity;
+  letter.children.forEach(ch => {
+    if (ch.material && 'emissiveIntensity' in ch.material) {
+      ch.material.emissiveIntensity = (ch.material.emissive.getHex() === 0xd88a55 ? 0.4 : 0.35) * P.letter.glowIntensity;
+    }
+  });
+}
+
+// ---------------------------------------------------------------- post
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+const bloomPass = new UnrealBloomPass(
+  new THREE.Vector2(window.innerWidth, window.innerHeight),
+  P.bloom.strength, P.bloom.radius, P.bloom.threshold
+);
+composer.addPass(bloomPass);
+composer.addPass(new OutputPass());
+
+// ---------------------------------------------------------------- gui
+const gui = new GUI({ title: 'Wonderland Look Dev' });
+
+const fSky = gui.addFolder('Sky');
+fSky.addColor(P.sky, 'top').onChange(v => skyUniforms.uTop.value.set(v));
+fSky.addColor(P.sky, 'middle').onChange(v => skyUniforms.uMiddle.value.set(v));
+fSky.addColor(P.sky, 'bottom').onChange(v => skyUniforms.uBottom.value.set(v));
+fSky.addColor(P.sky, 'sunTint').onChange(v => skyUniforms.uSunTint.value.set(v));
+fSky.add(P.sky, 'sunTintFalloff', 1, 12, 0.1).onChange(v => skyUniforms.uSunTintFalloff.value = v);
+
+const fSun = gui.addFolder('Sun');
+fSun.add(P.sun, 'azimuth', -180, 180, 1).onChange(updateSun);
+fSun.add(P.sun, 'elevation', 0, 60, 0.5).onChange(updateSun);
+fSun.add(P.sun, 'haloSize', 40, 300, 1).onChange(updateSun);
+fSun.add(P.sun, 'haloIntensity', 0, 2, 0.01).onChange(updateSun);
+fSun.add(P.sun, 'lightIntensity', 0, 4, 0.05).onChange(updateSun);
+fSun.addColor(P.sun, 'lightColor').onChange(updateSun);
+
+const fFog = gui.addFolder('Fog');
+fFog.addColor(P.fog, 'color').onChange(v => scene.fog.color.set(v));
+fFog.add(P.fog, 'density', 0, 0.02, 0.0001).onChange(v => scene.fog.density = v);
+
+const fClouds = gui.addFolder('Clouds');
+fClouds.add(P.clouds, 'opacity', 0, 1, 0.01).onChange(v => cloudMats.forEach(m => m.opacity = v));
+fClouds.add(P.clouds, 'driftSpeed', 0, 5, 0.05);
+fClouds.add(P.clouds, 'scale', 0.4, 2.5, 0.05).onChange(applyCloudScale);
+fClouds.addColor(P.clouds, 'tint').onChange(v => cloudMats.forEach(m => m.color.set(v)));
+
+const fBloom = gui.addFolder('Bloom');
+fBloom.add(P.bloom, 'strength', 0, 2, 0.01).onChange(v => bloomPass.strength = v);
+fBloom.add(P.bloom, 'radius', 0, 1.5, 0.01).onChange(v => bloomPass.radius = v);
+fBloom.add(P.bloom, 'threshold', 0, 1, 0.01).onChange(v => bloomPass.threshold = v);
+
+const fLetter = gui.addFolder('Letter');
+fLetter.add(P.letter, 'glowIntensity', 0, 2, 0.01).onChange(applyLetterGlow);
+fLetter.add(P.letter, 'bobAmplitude', 0, 2, 0.01);
+fLetter.add(P.letter, 'bobSpeed', 0, 3, 0.01);
+
+const fHill = gui.addFolder('Hill');
+fHill.addColor(P.hill, 'color').onChange(v => hillMat.color.set(v));
+
+gui.add({
+  copyValues() {
+    const json = JSON.stringify(P, null, 2);
+    navigator.clipboard?.writeText(json).catch(() => {});
+    console.log('LOOK VALUES:\n' + json);
+  }
+}, 'copyValues').name('📋 copy values (clipboard + console)');
+
+// ---------------------------------------------------------------- loop
+const clock = new THREE.Clock();
+
+function tick() {
+  requestAnimationFrame(tick);
+  const dt = Math.min(clock.getDelta(), 0.05);
+  const t = clock.elapsedTime;
+
+  // slow cloud drift, wrapped so the field never empties
+  for (const spr of clouds) {
+    spr.position.x += dt * P.clouds.driftSpeed * spr.userData.drift;
+    if (spr.position.x > 420) spr.position.x = -420;
+    spr.position.y += Math.sin(t * 0.3 + spr.userData.phase) * dt * 0.4;
+  }
+
+  // letter bob + gentle sway
+  letter.position.y = 11 + Math.sin(t * P.letter.bobSpeed) * P.letter.bobAmplitude;
+  letter.rotation.z = Math.sin(t * P.letter.bobSpeed * 0.7) * 0.06;
+  letter.rotation.y = Math.sin(t * P.letter.bobSpeed * 0.4) * 0.15;
+
+  controls.update();
+  composer.render();
+}
+tick();
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  composer.setSize(window.innerWidth, window.innerHeight);
+});
+</script>
+</body>
+</html>
