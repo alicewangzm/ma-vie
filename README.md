@@ -6,7 +6,7 @@
 
 <!-- TODO(stage-3): hero GIF -->
 
-**Live:** _preview link coming after first deploy_
+**Live:** [ma-vie.alicewang0022.workers.dev](https://ma-vie.alicewang0022.workers.dev)
 
 Built in 2 days with Vite + TypeScript + vanilla Three.js. No React, no frameworks.
 
