@@ -102,8 +102,12 @@ with full feature parity. Same edge delivery, same per-push previews.
 
 ## Credits & inspiration
 
-- _Sky: Children of the Light_ (thatgamecompany) — tonal inspiration only; every asset
-  here is procedural or original, zero copied assets.
+- _Sky: Children of the Light_ (thatgamecompany) — tonal inspiration only; zero copied
+  assets. Everything except the cat model is procedural or original.
+- The cat: this work is based on
+  ["Cute Cartoon Cat Low Poly Game Ready)"](https://sketchfab.com/3d-models/cute-cartoon-cat-low-poly-game-ready-3946a29606ca4f2aa207a5b1c1cbdfff)
+  by [3Dima](https://sketchfab.com/Hdjusj), licensed under
+  [CC-BY-4.0](http://creativecommons.org/licenses/by/4.0/).
 - Story & copy: Alice Wang. Engineering: built pair-programming with Claude.
 
 ---
