@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import type { StoryBlock } from '../core/StoryBlock';
 import type { WorldContext } from '../core/WorldContext';
 import { createWisp, pulseWisp, type Wisp } from '../render/wisp';
+import { radialTexture } from '../render/textures';
 import { skyPresets, lerpEnvToPreset } from '../render/skyPresets';
 import {
   typewriterLines,
@@ -15,6 +16,53 @@ import { dotsContent } from '../content/block07';
 const POINTS_PER_LINK = 28;
 const MS_PER_BEAT = 3200;
 
+/** A dome of far stars + a tilted milky-way band — the galaxy night. */
+function makeGalaxy(count: number): {
+  points: THREE.Points;
+  dispose(): void;
+} {
+  const positions = new Float32Array(count * 3);
+  const band = new THREE.Vector3(1, 0.45, -0.3).normalize(); // milky-way tilt
+  const v = new THREE.Vector3();
+  for (let i = 0; i < count; i++) {
+    const inBand = i < count * 0.55;
+    do {
+      v.set(Math.random() * 2 - 1, Math.random(), Math.random() * 2 - 1).normalize();
+    } while (inBand && Math.abs(v.dot(band)) > 0.22); // cluster near the band plane
+    const r = 640 + Math.random() * 120;
+    positions[i * 3] = v.x * r;
+    positions[i * 3 + 1] = Math.max(v.y, 0.03) * r;
+    positions[i * 3 + 2] = v.z * r;
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  const tex = radialTexture([
+    [0.0, 'rgba(255,255,255,1)'],
+    [0.4, 'rgba(220,225,255,0.5)'],
+    [1.0, 'rgba(200,210,255,0)'],
+  ]);
+  const mat = new THREE.PointsMaterial({
+    size: 6,
+    map: tex,
+    transparent: true,
+    opacity: 0.9,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    fog: false,
+    sizeAttenuation: false,
+  });
+  const points = new THREE.Points(geo, mat);
+  points.frustumCulled = false;
+  return {
+    points,
+    dispose() {
+      geo.dispose();
+      mat.dispose();
+      tex.dispose();
+    },
+  };
+}
+
 /**
  * Block 07 — "Connecting the Dots". Dusk falls; one star per chapter hangs
  * in the sky and a gold thread draws between them Sky-style while the
@@ -25,6 +73,7 @@ class Block07ConnectingDots implements StoryBlock {
 
   private ctx!: WorldContext;
   private stars: Wisp[] = [];
+  private galaxy: ReturnType<typeof makeGalaxy> | null = null;
   private line: THREE.Line | null = null;
   private lineGeo: THREE.BufferGeometry | null = null;
   private lineMat: THREE.LineBasicMaterial | null = null;
@@ -51,6 +100,10 @@ class Block07ConnectingDots implements StoryBlock {
     cat.position.set(0, 1.2, -6);
     ctx.rig.follow(null);
     ctx.rig.lookAt(new THREE.Vector3(0, 26, -40));
+
+    ctx.env.setSunVisible(false); // no sun in the galaxy night
+    this.galaxy = makeGalaxy(ctx.quality === 'low' ? 400 : 900);
+    ctx.scene.add(this.galaxy.points);
 
     // one star per chapter walked so far
     const starPos = [
@@ -124,7 +177,7 @@ class Block07ConnectingDots implements StoryBlock {
 
   update(dt: number, t: number): void {
     this.ctx.cat.update(dt);
-    lerpEnvToPreset(this.ctx.env, skyPresets.dusk, 1 - Math.exp(-dt * 0.6));
+    lerpEnvToPreset(this.ctx.env, skyPresets.galaxyNight, 1 - Math.exp(-dt * 0.6));
 
     for (const s of this.stars) pulseWisp(s, t, 0.08);
 
@@ -136,7 +189,9 @@ class Block07ConnectingDots implements StoryBlock {
     }
   }
 
-  async exit(): Promise<void> {}
+  async exit(): Promise<void> {
+    this.ctx.env.setSunVisible(true); // dawn returns for the finale
+  }
 
   dispose(): void {
     this.typewriter?.destroy();
@@ -147,6 +202,10 @@ class Block07ConnectingDots implements StoryBlock {
       s.dispose();
     }
     this.stars = [];
+    if (this.galaxy) {
+      this.ctx.scene.remove(this.galaxy.points);
+      this.galaxy.dispose();
+    }
     if (this.line) this.ctx.scene.remove(this.line);
     this.lineGeo?.dispose();
     this.lineMat?.dispose();

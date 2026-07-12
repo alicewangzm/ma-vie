@@ -40,7 +40,7 @@ export class CameraRig {
    * Chapter-start framing: camera close behind the cat (tail toward the
    * viewer, cat facing into the world), then keep following.
    */
-  frameCat(cat: THREE.Object3D, distance = 12): void {
+  frameCat(cat: THREE.Object3D, distance = 8): void {
     cat.rotation.set(0, Math.PI, 0); // face away — tail to the user
     this.camera.position.set(
       cat.position.x,

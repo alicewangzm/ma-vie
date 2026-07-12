@@ -88,7 +88,7 @@ export class Environment {
 
     // meadow + the road ahead (Sky-style tiny-planet dressing)
     this.grass = new Grass(quality === 'low' ? 550 : 1700, dreamFactor);
-    scene.add(this.grass.mesh);
+    scene.add(this.grass.group);
     this.road = createStonePath(new THREE.Vector3(0, 0, -8), new THREE.Vector3(0, 0, 14));
     scene.add(this.road.mesh);
 

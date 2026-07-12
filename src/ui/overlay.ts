@@ -11,10 +11,11 @@ export function ensureOverlayStyles(): void {
   const style = document.createElement('style');
   style.textContent = /* css */ `
     .story-lines {
+      /* narrative flows right below the chapter title */
       position: absolute;
       left: 50%;
-      top: 46%;
-      transform: translate(-50%, -50%);
+      top: calc(max(12px, env(safe-area-inset-top, 0px)) + 108px);
+      transform: translateX(-50%);
       width: min(36rem, 86vw);
       text-align: center;
       color: #3a3050;
@@ -121,9 +122,10 @@ export function ensureOverlayStyles(): void {
       white-space: nowrap;
     }
     .wl-chapter-title {
+      /* right below the star tracker */
       position: absolute;
       left: 50%;
-      top: 16%;
+      top: calc(max(12px, env(safe-area-inset-top, 0px)) + 46px);
       transform: translateX(-50%);
       width: min(38rem, 90vw);
       text-align: center;

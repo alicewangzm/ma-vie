@@ -32,8 +32,17 @@ interface PortraitData {
   pixels: [number, number, number][];
   /** Which hobby-cluster each cell belongs to. */
   clusterOf: number[];
-  /** Mean color of each cluster — becomes the hobby word's color. */
+  /** Mean color of each cluster — used for the flying light dots. */
   clusterCss: string[];
+  /** Same colors, darkened until they read against the bright sky. */
+  clusterTextCss: string[];
+}
+
+/** Darken a cluster mean until it's legible as text on a pale sky. */
+function readableCss([r, g, b]: [number, number, number]): string {
+  const luma = 0.299 * r + 0.587 * g + 0.114 * b;
+  const k = luma > 130 ? 130 / luma : 1;
+  return `rgb(${Math.round(r * k)}, ${Math.round(g * k)}, ${Math.round(b * k)})`;
 }
 
 /**
@@ -109,7 +118,8 @@ async function loadPortrait(seeds: string[]): Promise<PortraitData | null> {
     const clusterCss = means.map(
       ([r, g2, b]) => `rgb(${Math.round(r)}, ${Math.round(g2)}, ${Math.round(b)})`,
     );
-    return { pixels, clusterOf, clusterCss };
+    const clusterTextCss = means.map(readableCss);
+    return { pixels, clusterOf, clusterCss, clusterTextCss };
   } catch {
     return null; // no alice.jpg (or decode failed) — fall back to seed colors
   }
@@ -142,8 +152,10 @@ class Block08Finale implements StoryBlock {
   private linksEl: HTMLElement | null = null;
   private signoffEl: HTMLElement | null = null;
   private portraitCanvas: HTMLCanvasElement | null = null;
+  private portraitPhoto: HTMLImageElement | null = null;
   private portrait: PortraitData | null = null;
   private revealQueue: number[] = []; // grid cells waiting to be painted
+  private clustersQueued = 0;
   private clickedCount = 0;
   private tipEl: HTMLElement | null = null;
   private disposables: (THREE.BufferGeometry | THREE.Material | THREE.Texture)[] = [];
@@ -251,8 +263,9 @@ class Block08Finale implements StoryBlock {
       const btn = document.createElement('button');
       btn.className = 'wl-hobby';
       btn.textContent = h.word;
-      // each word wears the real color of its region of alice.jpg
-      const color = this.portrait?.clusterCss[i] ?? h.color;
+      // each word wears the real color of its region of alice.jpg,
+      // darkened just enough to stay readable against the bright sky
+      const color = this.portrait?.clusterTextCss[i] ?? h.color;
       btn.style.color = color;
       btn.addEventListener('click', () => {
         openCloudModal(this.ctx.overlay, h.modal);
@@ -316,6 +329,7 @@ class Block08Finale implements StoryBlock {
       this.everythingEl?.remove();
       this.everythingEl = null;
       for (let k = 0; k < hobbies.length; k++) this.revealQueue.push(...this.clusterCells(k));
+      this.clustersQueued = hobbies.length;
     } else {
       this.hobbyButtons.forEach((btn, i) => {
         const color = this.portrait?.clusterCss[i] ?? hobbies[i].color;
@@ -346,6 +360,7 @@ class Block08Finale implements StoryBlock {
           dot.remove();
           // the hobby's color lands exactly where it was sampled from
           this.revealQueue.push(...this.clusterCells(i));
+          this.clustersQueued += 1;
         });
       });
       // the word row fades once its words have flown
@@ -362,8 +377,26 @@ class Block08Finale implements StoryBlock {
     void this.typewriter.done.then(() => this.setPhase('reward'));
   }
 
+  /** Once every pixel has landed, the pixel art resolves into the photo. */
+  private revealPhoto(): void {
+    if (this.portraitPhoto || !this.portraitCanvas || !this.portrait) return;
+    const img = document.createElement('img');
+    img.src = PORTRAIT_URL;
+    img.alt = 'Alice';
+    img.style.cssText =
+      this.portraitCanvas.style.cssText +
+      'object-fit:cover;aspect-ratio:1/1;opacity:0;transition:opacity 2.4s ease;';
+    this.ctx.overlay.appendChild(img);
+    this.portraitPhoto = img;
+    requestAnimationFrame(() => (img.style.opacity = '1'));
+  }
+
   private drawPortrait(dt: number): void {
-    if (!this.portraitCanvas || this.revealQueue.length === 0) return;
+    if (!this.portraitCanvas) return;
+    if (this.revealQueue.length === 0) {
+      if (this.clustersQueued >= finaleContent.hobbies.length) this.revealPhoto();
+      return;
+    }
     const g = this.portraitCanvas.getContext('2d')!;
     const cell = this.portraitCanvas.width / PORTRAIT_DOTS;
     // paint incrementally — a handful of pixels per frame, no clearing
@@ -499,6 +532,7 @@ class Block08Finale implements StoryBlock {
     this.signoffEl?.remove();
     this.linksEl?.remove();
     this.portraitCanvas?.remove();
+    this.portraitPhoto?.remove();
     for (const d of this.flyingDots) d.remove();
     this.flyingDots = [];
     if (this.skyline) this.ctx.scene.remove(this.skyline);

@@ -67,15 +67,15 @@ export const skyPresets = {
     fogDensity: 0.0055,
     sunIntensity: 0.8,
   },
-  /** Constellation chapter: deep dusk, stars readable. */
-  dusk: {
-    top: '#2c3560',
-    middle: '#4a4a7d',
-    bottom: '#8c6a96',
-    sunTint: '#d3b3d9',
-    fogColor: '#5c5878',
-    fogDensity: 0.0014,
-    sunIntensity: 0.6,
+  /** Constellation chapter: galaxy night — deep space, stars everywhere. */
+  galaxyNight: {
+    top: '#0b1030',
+    middle: '#1c2150',
+    bottom: '#3a2f63',
+    sunTint: '#8f7fc4',
+    fogColor: '#241f42',
+    fogDensity: 0.001,
+    sunIntensity: 0.25,
   },
   /** Finale: warm golden send-off. */
   goldenHour: {
