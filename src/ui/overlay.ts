@@ -85,15 +85,20 @@ export function ensureOverlayStyles(): void {
       bottom: 12%;
       transform: translateX(-50%);
     }
-    .wl-corner {
+    .wl-corner-bar {
       position: absolute;
-      top: 14px;
+      top: max(14px, env(safe-area-inset-top, 0px));
+      right: max(14px, env(safe-area-inset-right, 0px));
+      display: flex;
+      gap: 10px;
+      z-index: 16;
+    }
+    .wl-corner {
       font-size: 0.85rem;
       padding: 0.4em 1.1em;
       opacity: 1;
+      white-space: nowrap;
     }
-    .wl-mute { right: 14px; }
-    .wl-skip { right: 130px; }
     .wl-hint {
       position: absolute;
       left: 50%;

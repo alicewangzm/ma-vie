@@ -28,4 +28,6 @@ export interface WorldContext {
   reducedMotion: boolean;
   /** 'low' on touch/small screens: fewer particles, lower DPR. */
   quality: 'low' | 'high';
+  /** Left joystick vector (y = forward, x = strafe) — shared with WalkController. */
+  moveInput: { x: number; y: number };
 }

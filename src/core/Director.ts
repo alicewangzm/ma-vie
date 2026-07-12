@@ -43,14 +43,28 @@ export class Director {
     return this.index + 1 < this.registrations.length;
   }
 
-  /** Enter the first block (no wipe on the way in — we boot behind clouds). */
-  async start(): Promise<void> {
+  get currentIndex(): number {
+    return this.index;
+  }
+
+  get chapterIds(): string[] {
+    return this.registrations.map((r) => r.id);
+  }
+
+  /** The live block (for opt-in extras like skipInteraction). */
+  get currentBlock(): StoryBlock | null {
+    return this.current;
+  }
+
+  /** Enter a block directly (no wipe on the way in — we boot behind clouds). */
+  async start(atIndex = 0): Promise<void> {
     if (this.index !== -1 || this.registrations.length === 0) return;
+    const i = Math.min(Math.max(atIndex, 0), this.registrations.length - 1);
     this.busy = true;
-    const reg = this.registrations[0];
+    const reg = this.registrations[i];
     const block = await reg.load();
     await block.preload();
-    this.index = 0;
+    this.index = i;
     block.enter(this.ctx);
     this.current = block;
     this.ctx.progress.beginBlock(reg.id);
@@ -59,12 +73,18 @@ export class Director {
   }
 
   /** Advance to the next block with a cloud-wipe. Resolves when open again. */
-  async next(): Promise<boolean> {
-    if (this.busy || !this.hasNext || !this.current) return false;
+  next(): Promise<boolean> {
+    return this.jumpTo(this.index + 1);
+  }
+
+  /** Jump to any chapter (tracker navigation) with a cloud-wipe. */
+  async jumpTo(i: number): Promise<boolean> {
+    if (this.busy || !this.current || i === this.index) return false;
+    if (i < 0 || i >= this.registrations.length) return false;
     this.busy = true;
 
-    const reg = this.registrations[this.index + 1];
-    // load + preload the next block while the clouds close in
+    const reg = this.registrations[i];
+    // load + preload the target block while the clouds close in
     const [nextBlock] = await Promise.all([
       reg.load().then(async (b) => {
         await b.preload();
@@ -78,7 +98,7 @@ export class Director {
     await old.exit();
     old.dispose();
 
-    this.index += 1;
+    this.index = i;
     nextBlock.enter(this.ctx);
     this.current = nextBlock;
     this.ctx.progress.beginBlock(reg.id);

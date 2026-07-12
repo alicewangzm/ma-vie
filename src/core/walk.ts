@@ -32,6 +32,8 @@ export class WalkController {
     private center: THREE.Vector3,
     private radius: number,
     private speed = 6,
+    /** Analog input from the left joystick (y = forward, x = strafe). */
+    private stick: { x: number; y: number } | null = null,
   ) {
     this.plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -center.y);
     window.addEventListener('keydown', this.onKeyDown);
@@ -66,11 +68,15 @@ export class WalkController {
   update(dt: number): void {
     this.moveDir.set(0, 0, 0);
     const k = this.keys;
-    const fwd =
+    let fwd =
       (k.has('KeyW') || k.has('ArrowUp') ? 1 : 0) - (k.has('KeyS') || k.has('ArrowDown') ? 1 : 0);
-    const side =
+    let side =
       (k.has('KeyD') || k.has('ArrowRight') ? 1 : 0) -
       (k.has('KeyA') || k.has('ArrowLeft') ? 1 : 0);
+    if (this.stick && (Math.abs(this.stick.x) > 0.12 || Math.abs(this.stick.y) > 0.12)) {
+      fwd += this.stick.y;
+      side += this.stick.x;
+    }
 
     if (fwd !== 0 || side !== 0) {
       // camera-relative on the ground plane

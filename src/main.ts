@@ -14,6 +14,8 @@ import type { WorldContext } from './core/WorldContext';
 import { Environment } from './render/Environment';
 import { CloudWipe } from './render/CloudWipe';
 import { ensureOverlayStyles, createButton } from './ui/overlay';
+import { createJoysticks } from './ui/joysticks';
+import { createTracker } from './ui/tracker';
 
 // ---------------------------------------------------------------- setup
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -47,6 +49,10 @@ const audio = new AudioBus();
 const overlay = document.getElementById('overlay')!;
 ensureOverlayStyles();
 
+// Sky:CotL-style twin handles: left = move, right = camera angle
+const joysticks = createJoysticks(overlay);
+joysticks.setVisible(false); // shown in walkable chapters only
+
 const ctx: WorldContext = {
   scene,
   renderer,
@@ -60,6 +66,7 @@ const ctx: WorldContext = {
   overlay,
   reducedMotion,
   quality,
+  moveInput: joysticks.move,
 };
 
 // ---------------------------------------------------------------- post
@@ -127,24 +134,70 @@ director.register({
   load: async () => wire((await import('./blocks/block08-finale')).createBlock()),
 });
 
+// star tracker: click a star to revisit / jump ahead to any chapter
+const chapterLabels: Record<string, string> = {
+  'block00-letter': 'The Letter',
+  'block01-who-is-alice': 'Who Is Alice',
+  'block02-university': 'One Road, Two Sides',
+  'block03-storm': 'The Storm Before Sunrise',
+  'block04-alethea': 'Building in the Rain',
+  'block05-teaching': 'Where She Is Now',
+  'block06-three-paths': 'Three Roads From Here',
+  'block07-connecting-dots': 'Connecting the Dots',
+  'block08-finale': 'To Be Continued',
+};
+createTracker(
+  overlay,
+  director.chapterIds.map((id) => ({ id, label: chapterLabels[id] ?? id })),
+  ctx.progress,
+  (i) => void director.jumpTo(i),
+);
+
+// corner controls live in one bar so nothing hangs off the screen edge
+const cornerBar = document.createElement('div');
+cornerBar.className = 'wl-corner-bar';
+overlay.appendChild(cornerBar);
+
 // skippable intro (accessibility requirement)
 let skipTarget: { skipIntro(): void } | null = null;
-const skipBtn = createButton(overlay, 'Skip →', 'wl-corner wl-skip', () => {
+const skipBtn = createButton(cornerBar, 'Skip →', 'wl-corner', () => {
   skipTarget?.skipIntro();
   skipBtn.remove();
 });
 skipBtn.classList.add('visible');
-ctx.progress.subscribe((s) => {
-  if (s.currentBlock !== 'block00-letter') skipBtn.remove();
+
+// skip the walking objective of the current chapter (text still plays)
+const skipStepBtn = createButton(cornerBar, 'skip step ⏭', 'wl-corner', () => {
+  const block = director.currentBlock as { skipInteraction?: () => void } | null;
+  block?.skipInteraction?.();
 });
+skipStepBtn.setAttribute('aria-label', 'skip the current walking objective');
+skipStepBtn.style.display = 'none';
 
 // mute toggle — always visible
-const muteBtn = createButton(overlay, 'sound on', 'wl-corner wl-mute', () => {
+const muteBtn = createButton(cornerBar, 'sound on', 'wl-corner', () => {
   audio.start();
   muteBtn.textContent = audio.toggleMute() ? 'sound off' : 'sound on';
 });
 muteBtn.classList.add('visible');
 muteBtn.setAttribute('aria-label', 'toggle sound');
+
+// per-chapter chrome: joysticks + skip-step in walkable chapters only
+const WALKABLE = new Set([
+  'block01-who-is-alice',
+  'block02-university',
+  'block03-storm',
+  'block04-alethea',
+  'block05-teaching',
+  'block06-three-paths',
+]);
+ctx.progress.subscribe((s) => {
+  if (s.currentBlock !== 'block00-letter') skipBtn.remove();
+  const walkable = WALKABLE.has(s.currentBlock ?? '');
+  joysticks.setVisible(walkable);
+  skipStepBtn.style.display = walkable ? '' : 'none';
+  skipStepBtn.classList.add('visible');
+});
 
 // reduced-motion notice (first load, dismissable)
 if (reducedMotion) {
@@ -155,7 +208,9 @@ if (reducedMotion) {
   overlay.appendChild(notice);
 }
 
-void director.start();
+// resume where the traveler left off (progress survives refresh)
+const savedIndex = director.chapterIds.indexOf(ctx.progress.get().currentBlock ?? '');
+void director.start(Math.max(savedIndex, 0));
 
 // dev-only hook so e2e smoke tests can step the chain and read world state
 if (import.meta.env.DEV) {
@@ -177,6 +232,10 @@ function tick(): void {
 
   director.update(dt, t);
   env.update(dt, t);
+  // right joystick steers the camera angle
+  if (Math.abs(joysticks.cam.x) > 0.1 || Math.abs(joysticks.cam.y) > 0.1) {
+    rig.nudgeOrbit(joysticks.cam.x * dt * 2.4, -joysticks.cam.y * dt * 1.6);
+  }
   rig.update(dt);
   wipe.update(dt, t);
 
