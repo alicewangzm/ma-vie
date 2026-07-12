@@ -2,6 +2,8 @@ import * as THREE from 'three';
 import { theme } from '../theme';
 import { Sky } from './Sky';
 import { Clouds } from './Clouds';
+import { Grass } from './grass';
+import { createStonePath, type StonePath } from './stones';
 import { radialTexture } from './textures';
 
 /**
@@ -17,6 +19,8 @@ export class Environment {
 
   private hill: THREE.Mesh;
   private hillMat: THREE.MeshStandardMaterial;
+  private grass: Grass;
+  private road: StonePath;
   private sunLight: THREE.DirectionalLight;
   private hemi: THREE.HemisphereLight;
   private sunHalo: THREE.Sprite;
@@ -81,6 +85,12 @@ export class Environment {
     this.sunCore = new THREE.Mesh(coreGeo, coreMat);
     this.sunCore.position.copy(this.sunDir).multiplyScalar(750);
     scene.add(this.sunHalo, this.sunCore);
+
+    // meadow + the road ahead (Sky-style tiny-planet dressing)
+    this.grass = new Grass(quality === 'low' ? 550 : 1700, dreamFactor);
+    scene.add(this.grass.mesh);
+    this.road = createStonePath(new THREE.Vector3(0, 0, -8), new THREE.Vector3(0, 0, 14));
+    scene.add(this.road.mesh);
 
     // hill
     const hillGeo = new THREE.SphereGeometry(30, 48, 32);
@@ -158,11 +168,14 @@ export class Environment {
     const dream = this.dreamFactor.value;
     this.fog.density = this.baseFogDensity * (1 - dream * 0.6);
     this.clouds.uniforms.uFogDensity.value = this.fog.density;
+    this.grass.update(t, this.fog.color, this.fog.density);
   }
 
   dispose(): void {
     this.sky.dispose();
     this.clouds.dispose();
+    this.grass.dispose();
+    this.road.dispose();
     this.depthTarget.depthTexture?.dispose();
     this.depthTarget.dispose();
     this.disposables.forEach((d) => d.dispose());

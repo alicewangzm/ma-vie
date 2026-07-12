@@ -8,7 +8,11 @@ export const islandContent = {
     'and making every second count.',
     'Go find her. Follow the glow.',
   ],
-  /** Fades after the first move. */
-  hint: 'drag to look · follow the light',
+  /** Tutorial prompts, shown in order as the traveler completes each one. */
+  tutorial: [
+    'left circle (or WASD) — walk',
+    'right circle (or drag) — look around',
+    'now — chase the two lights ✦',
+  ],
   continueHint: 'follow the gold light',
 } as const;

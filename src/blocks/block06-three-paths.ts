@@ -10,7 +10,11 @@ import {
   type TypewriterHandle,
   type OverlayHandle,
 } from '../ui/overlay';
+import { createStonePath, type StonePath } from '../render/stones';
+import { createQMark, type QMark } from '../ui/qmark';
+import { openCloudModal } from '../ui/cloudModal';
 import { pathsContent } from '../content/block06';
+import { stageCat } from './block01-who-is-alice';
 
 const WALK_CENTER = new THREE.Vector3(0, 1.1, -6);
 const WALK_RADIUS = 16;
@@ -58,6 +62,8 @@ class Block06ThreePaths implements StoryBlock {
   private ctx!: WorldContext;
   private walk: WalkController | null = null;
   private trails: Wisp[] = [];
+  private roads: StonePath[] = [];
+  private qmarks: QMark[] = [];
   private paths: (PathDef & { visited: boolean })[] = [];
   private panels: THREE.Mesh[] = [];
   private panelMats: THREE.MeshBasicMaterial[] = [];
@@ -79,15 +85,16 @@ class Block06ThreePaths implements StoryBlock {
 
   enter(ctx: WorldContext): void {
     this.ctx = ctx;
+    stageCat(ctx); // the cat sits at the node where the branches split
     const cat = ctx.cat.object3D;
-    cat.visible = true;
-    ctx.rig.follow(cat);
     this.walk = new WalkController(
       cat,
       ctx.camera,
       ctx.renderer.domElement,
       WALK_CENTER.clone().setY(cat.position.y),
       WALK_RADIUS,
+      6,
+      ctx.moveInput,
     );
 
     const c = pathsContent;
@@ -118,9 +125,16 @@ class Block06ThreePaths implements StoryBlock {
       },
     ];
 
-    // trails: rows of small wisps from center toward each end
+    // three stone roads branch from the node like tree limbs; wisps float
+    // above each to color-code reality (gold) vs envisioned (faded blue)
     const start = new THREE.Vector3(0, 1.6, -6);
     for (const path of this.paths) {
+      const road = createStonePath(start, path.end.clone(), {
+        color: path.key === 'teaching' ? 0xcbb98e : 0xa9b4cc,
+      });
+      this.ctx.scene.add(road.mesh);
+      this.roads.push(road);
+
       const steps = 7;
       for (let i = 1; i <= steps; i++) {
         const p = start.clone().lerp(path.end, i / steps);
@@ -134,6 +148,16 @@ class Block06ThreePaths implements StoryBlock {
         this.trails.push(w);
       }
     }
+
+    // ? buttons on the envisioned roads — the visions open in clouds
+    this.qmarks.push(
+      createQMark(ctx.overlay, new THREE.Vector3(-13, 4.2, -14), c.modals.pilot.title, () =>
+        openCloudModal(ctx.overlay, c.modals.pilot),
+      ),
+      createQMark(ctx.overlay, new THREE.Vector3(13, 4.2, -14), c.modals.pawhearth.title, () =>
+        openCloudModal(ctx.overlay, c.modals.pawhearth),
+      ),
+    );
 
     // PawHearth: floating "screenshot" panels near its vision end
     const panelGeo = new THREE.PlaneGeometry(4.4, 2.75);
@@ -211,6 +235,7 @@ class Block06ThreePaths implements StoryBlock {
     d.value += (targetDream - d.value) * Math.min(dt * 1.5, 1);
 
     for (const w of this.trails) pulseWisp(w, t);
+    for (const q of this.qmarks) q.update(this.ctx.camera);
 
     // envisioned panels bob and gently blink (faded futures)
     this.panels.forEach((panel, i) => {
@@ -225,6 +250,19 @@ class Block06ThreePaths implements StoryBlock {
         this.onAdvance?.();
       }
     }
+  }
+
+  /** Skip the walking objective: visit every road's end at once. */
+  skipInteraction(): void {
+    if (this.beacon) {
+      if (!this.advanced) {
+        this.advanced = true;
+        this.onAdvance?.();
+      }
+      return;
+    }
+    for (const path of this.paths) if (!path.visited) this.visit(path);
+    this.typewriter?.skip();
   }
 
   async exit(): Promise<void> {
@@ -244,6 +282,13 @@ class Block06ThreePaths implements StoryBlock {
     this.trails = [];
     for (const p of this.panels) this.ctx.scene.remove(p);
     this.panels = [];
+    for (const r of this.roads) {
+      this.ctx.scene.remove(r.mesh);
+      r.dispose();
+    }
+    this.roads = [];
+    for (const q of this.qmarks) q.dispose();
+    this.qmarks = [];
     if (this.beacon) {
       this.ctx.scene.remove(this.beacon.sprite);
       this.beacon.dispose();

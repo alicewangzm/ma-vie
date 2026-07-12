@@ -21,16 +21,68 @@ export const finaleContent = {
     'Not a traditional UX designer —',
     'but a little bit of a lot of things.',
   ],
-  rotatingTitles: ['builder', 'programmer', 'vibe coder', 'teacher', 'future pilot (manifesting)'],
+  rotatingTitles: [
+    'builder',
+    'programmer',
+    'prompt engineer',
+    'teacher',
+    'future pilot (manifesting)',
+  ],
   revealOutro: 'and a little bit of everything.',
-  /** Part C — clickable colored words. */
+  /**
+   * Part C — clickable colored words. `color` is a seed: at runtime each
+   * hobby takes the real color of its region of alice.jpg (cloth, skin,
+   * hair…), and clicking sends that color back into the portrait exactly
+   * where it was sampled from.
+   */
   everythingLead: 'a little bit of a…',
+  everythingTip: 'click each colored word',
   hobbies: [
-    { word: 'musician', color: '#e8734a' },
-    { word: 'baker', color: '#d9a441' },
-    { word: 'artist', color: '#7a9e6b' },
-    { word: 'athlete', color: '#5b8bd9' },
-    { word: 'incurable optimist', color: '#9b6bb3' },
+    {
+      word: 'musician',
+      color: '#e8734a',
+      modal: {
+        title: 'musician',
+        body: ['[placeholder] What Alice plays, since when, and for whom.'],
+        images: [{ src: 'assets/hobby-musician.jpg', alt: 'Alice and music' }],
+      },
+    },
+    {
+      word: 'baker',
+      color: '#d9a441',
+      modal: {
+        title: 'baker',
+        body: ['[placeholder] The kitchen story — what she bakes on rainy days.'],
+        images: [{ src: 'assets/hobby-baker.jpg', alt: 'something fresh from the oven' }],
+      },
+    },
+    {
+      word: 'artist',
+      color: '#7a9e6b',
+      modal: {
+        title: 'artist',
+        body: ['[placeholder] Small watercolors, big feelings.'],
+        images: [{ src: 'assets/hobby-artist.jpg', alt: 'a piece Alice made' }],
+      },
+    },
+    {
+      word: 'athlete',
+      color: '#5b8bd9',
+      modal: {
+        title: 'athlete',
+        body: ['[placeholder] The sport that clears her head.'],
+        images: [{ src: 'assets/hobby-athlete.jpg', alt: 'Alice in motion' }],
+      },
+    },
+    {
+      word: 'incurable optimist',
+      color: '#9b6bb3',
+      modal: {
+        title: 'incurable optimist',
+        body: ['[placeholder] Exhibit A: this entire website.'],
+        images: [{ src: 'assets/hobby-optimist.jpg', alt: 'proof of optimism' }],
+      },
+    },
   ],
   /** Part D — RGB portrait beats (hobby words become light, become her). */
   rgb: [
@@ -75,6 +127,7 @@ export const finaleContent = {
   ],
   resumeLabel: 'Résumé',
   helloLabel: 'Say hello →',
-  resumeUrl: '#', // [placeholder] Alice pastes the real resume link
+  // served as a static file — drop resume.pdf into public/ and it deploys
+  resumeUrl: 'resume.pdf',
   email: 'alicewang0089@gmail.com', // per STORY-SCRIPT.md, confirmed by Alice
 } as const;

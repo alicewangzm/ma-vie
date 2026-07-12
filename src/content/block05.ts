@@ -13,4 +13,17 @@ export const teachingContent = {
     'It might be the point.',
   ],
   continueHint: 'follow the gold light',
+  /** Cloud modal behind the ? button — what she teaches now. */
+  modal: {
+    title: 'What Alice teaches',
+    body: [
+      '[placeholder] The course / subjects Alice teaches at school.',
+      '[placeholder] The science projects her students built.',
+      '[placeholder] Why handing people tools feels like magic.',
+    ],
+    images: [
+      { src: 'assets/teaching-1.jpg', alt: 'teaching photo 1' },
+      { src: 'assets/teaching-2.jpg', alt: 'science project photo' },
+    ],
+  },
 } as const;

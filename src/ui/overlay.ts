@@ -13,14 +13,17 @@ export function ensureOverlayStyles(): void {
     .story-lines {
       position: absolute;
       left: 50%;
-      top: 58%;
-      transform: translateX(-50%);
-      width: min(34rem, 84vw);
+      top: 46%;
+      transform: translate(-50%, -50%);
+      width: min(36rem, 86vw);
       text-align: center;
-      color: #4a3f5c;
-      text-shadow: 0 1px 6px rgba(255, 255, 255, 0.65);
-      font-size: clamp(1rem, 2.2vw, 1.25rem);
-      line-height: 1.9;
+      color: #3a3050;
+      text-shadow:
+        0 1px 10px rgba(255, 255, 255, 0.95),
+        0 0 26px rgba(255, 255, 255, 0.7);
+      font-size: clamp(1.05rem, 2.5vw, 1.4rem);
+      font-weight: 500;
+      line-height: 1.85;
       pointer-events: none;
     }
     .story-line {
@@ -82,7 +85,7 @@ export function ensureOverlayStyles(): void {
     .wl-accept {
       position: absolute;
       left: 50%;
-      bottom: 12%;
+      bottom: max(6%, env(safe-area-inset-bottom, 0px));
       transform: translateX(-50%);
     }
     .wl-corner-bar {
@@ -100,14 +103,22 @@ export function ensureOverlayStyles(): void {
       white-space: nowrap;
     }
     .wl-hint {
+      /* tips read as UI, distinct from narrative: small caps in a pill */
       position: absolute;
       left: 50%;
-      bottom: 6%;
+      bottom: max(15%, calc(env(safe-area-inset-bottom, 0px) + 12%));
       transform: translateX(-50%);
-      color: rgba(74, 63, 92, 0.7);
-      font-size: 0.9rem;
+      color: rgba(74, 63, 92, 0.85);
+      background: rgba(255, 250, 240, 0.75);
+      border: 1px solid rgba(74, 63, 92, 0.2);
+      border-radius: 999px;
+      padding: 0.35em 1.3em;
+      font-size: 0.82rem;
+      font-variant: small-caps;
+      letter-spacing: 0.14em;
       pointer-events: none;
       transition: opacity 1s ease;
+      white-space: nowrap;
     }
     .wl-chapter-title {
       position: absolute;
@@ -280,6 +291,7 @@ export function typewriterLines(
   return {
     done,
     skip() {
+      for (let j = i; j < els.length; j++) onLine?.(j); // cues still fire
       els.forEach((el, idx) => {
         if (idx >= els.length - maxVisible) el.classList.add('visible');
         else el.classList.add('collapsed');

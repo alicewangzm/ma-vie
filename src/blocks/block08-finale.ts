@@ -9,6 +9,7 @@ import {
   type TypewriterHandle,
   type OverlayHandle,
 } from '../ui/overlay';
+import { openCloudModal } from '../ui/cloudModal';
 import { finaleContent } from '../content/block08';
 
 type Phase =
@@ -22,8 +23,97 @@ type Phase =
   | 'goodbye'; // F — thanks, goodbyes, signoff, links
 
 const GOOGLE_COLORS = ['#4285f4', '#ea4335', '#fbbc05', '#4285f4', '#34a853', '#ea4335'];
-const PORTRAIT_DOTS = 14; // 14×14 grid
+const PORTRAIT_DOTS = 24; // 24×24 pixel-art grid of alice.jpg
+const PORTRAIT_URL = 'assets/alice.jpg';
 const CARD_SECONDS = 2;
+
+interface PortraitData {
+  /** RGB per grid cell, sampled from alice.jpg. */
+  pixels: [number, number, number][];
+  /** Which hobby-cluster each cell belongs to. */
+  clusterOf: number[];
+  /** Mean color of each cluster — becomes the hobby word's color. */
+  clusterCss: string[];
+}
+
+/**
+ * Pixelate alice.jpg to the dot grid and cluster the cells around the hobby
+ * seed palette (k-means, a few rounds). Each hobby takes the real color of
+ * its region — cloth, skin, hair — and clicking it later sends that color
+ * back into the portrait exactly where it was sampled from.
+ */
+async function loadPortrait(seeds: string[]): Promise<PortraitData | null> {
+  try {
+    const img = new Image();
+    img.src = PORTRAIT_URL;
+    await img.decode();
+    const c = document.createElement('canvas');
+    c.width = c.height = PORTRAIT_DOTS;
+    const g = c.getContext('2d')!;
+    // cover-crop the center square
+    const s = Math.min(img.width, img.height);
+    g.drawImage(
+      img,
+      (img.width - s) / 2,
+      (img.height - s) / 2,
+      s,
+      s,
+      0,
+      0,
+      PORTRAIT_DOTS,
+      PORTRAIT_DOTS,
+    );
+    const data = g.getImageData(0, 0, PORTRAIT_DOTS, PORTRAIT_DOTS).data;
+    const pixels: [number, number, number][] = [];
+    for (let i = 0; i < PORTRAIT_DOTS * PORTRAIT_DOTS; i++) {
+      pixels.push([data[i * 4], data[i * 4 + 1], data[i * 4 + 2]]);
+    }
+
+    const means = seeds.map((hex) => {
+      const n = parseInt(hex.slice(1), 16);
+      return [(n >> 16) & 255, (n >> 8) & 255, n & 255] as [number, number, number];
+    });
+    const clusterOf = new Array<number>(pixels.length).fill(0);
+    for (let round = 0; round < 5; round++) {
+      for (let i = 0; i < pixels.length; i++) {
+        let best = 0;
+        let bestD = Infinity;
+        for (let k = 0; k < means.length; k++) {
+          const d =
+            (pixels[i][0] - means[k][0]) ** 2 +
+            (pixels[i][1] - means[k][1]) ** 2 +
+            (pixels[i][2] - means[k][2]) ** 2;
+          if (d < bestD) {
+            bestD = d;
+            best = k;
+          }
+        }
+        clusterOf[i] = best;
+      }
+      for (let k = 0; k < means.length; k++) {
+        let r = 0;
+        let gr = 0;
+        let b = 0;
+        let n = 0;
+        for (let i = 0; i < pixels.length; i++) {
+          if (clusterOf[i] === k) {
+            r += pixels[i][0];
+            gr += pixels[i][1];
+            b += pixels[i][2];
+            n += 1;
+          }
+        }
+        if (n > 0) means[k] = [r / n, gr / n, b / n];
+      }
+    }
+    const clusterCss = means.map(
+      ([r, g2, b]) => `rgb(${Math.round(r)}, ${Math.round(g2)}, ${Math.round(b)})`,
+    );
+    return { pixels, clusterOf, clusterCss };
+  } catch {
+    return null; // no alice.jpg (or decode failed) — fall back to seed colors
+  }
+}
 
 /**
  * Block 08 — "To Be Continued" (Finale). The lights reappear, faded and
@@ -52,15 +142,18 @@ class Block08Finale implements StoryBlock {
   private linksEl: HTMLElement | null = null;
   private signoffEl: HTMLElement | null = null;
   private portraitCanvas: HTMLCanvasElement | null = null;
-  private portraitTarget = 0; // 0..1, fraction of dots that have arrived
-  private portraitShown = 0; // dots currently drawn
+  private portrait: PortraitData | null = null;
+  private revealQueue: number[] = []; // grid cells waiting to be painted
   private clickedCount = 0;
+  private tipEl: HTMLElement | null = null;
   private disposables: (THREE.BufferGeometry | THREE.Material | THREE.Texture)[] = [];
 
   /** Finale is the last block — no advance handler needed. */
   setAdvanceHandler(_fn: () => void): void {}
 
-  async preload(): Promise<void> {}
+  async preload(): Promise<void> {
+    this.portrait = await loadPortrait(finaleContent.hobbies.map((h) => h.color));
+  }
 
   enter(ctx: WorldContext): void {
     this.ctx = ctx;
@@ -154,24 +247,33 @@ class Block08Finale implements StoryBlock {
     lead.textContent = c.everythingLead;
     root.appendChild(lead);
     const row = document.createElement('p');
-    for (const h of c.hobbies) {
+    c.hobbies.forEach((h, i) => {
       const btn = document.createElement('button');
       btn.className = 'wl-hobby';
       btn.textContent = h.word;
-      btn.style.color = h.color;
+      // each word wears the real color of its region of alice.jpg
+      const color = this.portrait?.clusterCss[i] ?? h.color;
+      btn.style.color = color;
       btn.addEventListener('click', () => {
+        openCloudModal(this.ctx.overlay, h.modal);
         if (btn.dataset.clicked) return;
         btn.dataset.clicked = '1';
-        btn.style.textShadow = `0 0 14px ${h.color}`;
+        btn.style.textShadow = `0 0 14px ${color}`;
         this.clickedCount += 1;
       });
       row.appendChild(btn);
       row.append(' ');
       this.hobbyButtons.push(btn);
-    }
+    });
     root.appendChild(row);
     this.ctx.overlay.appendChild(root);
     this.everythingEl = root;
+
+    const tip = document.createElement('p');
+    tip.className = 'wl-hint';
+    tip.textContent = c.everythingTip;
+    this.ctx.overlay.appendChild(tip);
+    this.tipEl = tip;
   }
 
   /**
@@ -179,17 +281,33 @@ class Block08Finale implements StoryBlock {
    * glowing dot that drifts to the bottom-right corner; as the dots land,
    * the portrait fills in.
    */
+  /** Cells whose color came from hobby-cluster k, shuffled for a soft fill. */
+  private clusterCells(k: number): number[] {
+    const total = PORTRAIT_DOTS * PORTRAIT_DOTS;
+    const cells: number[] = [];
+    for (let i = 0; i < total; i++) {
+      if (this.portrait ? this.portrait.clusterOf[i] === k : i % finaleContent.hobbies.length === k)
+        cells.push(i);
+    }
+    for (let i = cells.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [cells[i], cells[j]] = [cells[j], cells[i]];
+    }
+    return cells;
+  }
+
   private buildPortrait(): void {
+    this.tipEl?.remove();
+    this.tipEl = null;
     const canvas = document.createElement('canvas');
-    canvas.width = canvas.height = 180;
+    canvas.width = canvas.height = PORTRAIT_DOTS * 8;
     canvas.style.cssText =
-      'position:absolute;right:3%;bottom:6%;width:min(180px,26vw);border-radius:12px;' +
+      'position:absolute;right:3%;bottom:6%;width:min(192px,26vw);border-radius:12px;' +
       'background:rgba(255,250,240,0.35);backdrop-filter:blur(2px);pointer-events:none;';
     this.ctx.overlay.appendChild(canvas);
     this.portraitCanvas = canvas;
 
     const hobbies = finaleContent.hobbies;
-    const total = hobbies.length;
     const corner = canvas.getBoundingClientRect();
     const cx = corner.left + corner.width / 2;
     const cy = corner.top + corner.height / 2;
@@ -197,16 +315,17 @@ class Block08Finale implements StoryBlock {
     if (this.ctx.reducedMotion) {
       this.everythingEl?.remove();
       this.everythingEl = null;
-      this.portraitTarget = 1;
+      for (let k = 0; k < hobbies.length; k++) this.revealQueue.push(...this.clusterCells(k));
     } else {
       this.hobbyButtons.forEach((btn, i) => {
+        const color = this.portrait?.clusterCss[i] ?? hobbies[i].color;
         const r = btn.getBoundingClientRect();
         const dot = document.createElement('div');
         dot.className = 'wl-dot';
         dot.style.left = `${r.left + r.width / 2 - 7}px`;
         dot.style.top = `${r.top + r.height / 2 - 7}px`;
-        dot.style.background = hobbies[i].color;
-        dot.style.boxShadow = `0 0 18px 6px ${hobbies[i].color}`;
+        dot.style.background = color;
+        dot.style.boxShadow = `0 0 18px 6px ${color}`;
         this.ctx.overlay.appendChild(dot);
         this.flyingDots.push(dot);
         btn.style.transition = 'opacity 0.6s ease';
@@ -225,7 +344,8 @@ class Block08Finale implements StoryBlock {
         dot.addEventListener('transitionend', (e) => {
           if (e.propertyName !== 'transform') return;
           dot.remove();
-          this.portraitTarget = Math.min(this.portraitTarget + 1 / total, 1);
+          // the hobby's color lands exactly where it was sampled from
+          this.revealQueue.push(...this.clusterCells(i));
         });
       });
       // the word row fades once its words have flown
@@ -234,7 +354,7 @@ class Block08Finale implements StoryBlock {
           this.everythingEl?.remove();
           this.everythingEl = null;
         },
-        250 + total * 420 + 700,
+        250 + hobbies.length * 420 + 700,
       );
     }
 
@@ -243,27 +363,24 @@ class Block08Finale implements StoryBlock {
   }
 
   private drawPortrait(dt: number): void {
-    if (!this.portraitCanvas) return;
-    const total = PORTRAIT_DOTS * PORTRAIT_DOTS;
-    const target = Math.floor(this.portraitTarget * total);
-    if (this.portraitShown >= target) return;
-    this.portraitShown = Math.min(this.portraitShown + Math.max(1, Math.round(dt * 90)), target);
-
+    if (!this.portraitCanvas || this.revealQueue.length === 0) return;
     const g = this.portraitCanvas.getContext('2d')!;
     const cell = this.portraitCanvas.width / PORTRAIT_DOTS;
-    g.clearRect(0, 0, this.portraitCanvas.width, this.portraitCanvas.height);
-    for (let i = 0; i < this.portraitShown; i++) {
+    // paint incrementally — a handful of pixels per frame, no clearing
+    let budget = Math.max(2, Math.round(dt * 220));
+    while (budget > 0 && this.revealQueue.length > 0) {
+      budget -= 1;
+      const i = this.revealQueue.shift()!;
       const x = i % PORTRAIT_DOTS;
       const y = Math.floor(i / PORTRAIT_DOTS);
-      // PLACEHOLDER portrait: soft radial pastel pattern (real photo → stage 3)
-      const px = x - PORTRAIT_DOTS / 2 + 0.5;
-      const py = y - PORTRAIT_DOTS / 2 + 0.5;
-      const r = Math.sqrt(px * px + py * py) / (PORTRAIT_DOTS / 2);
-      const hue = 340 - r * 120 + Math.sin(x * 1.7 + y * 2.3) * 14;
-      g.fillStyle = `hsl(${hue}, 65%, ${72 - r * 18}%)`;
-      g.beginPath();
-      g.arc((x + 0.5) * cell, (y + 0.5) * cell, cell * 0.36, 0, Math.PI * 2);
-      g.fill();
+      if (this.portrait) {
+        const [r, gr, b] = this.portrait.pixels[i];
+        g.fillStyle = `rgb(${r}, ${gr}, ${b})`;
+      } else {
+        // no alice.jpg — soft pastel placeholder in the hobby's seed color
+        g.fillStyle = finaleContent.hobbies[i % finaleContent.hobbies.length].color;
+      }
+      g.fillRect(x * cell + 0.5, y * cell + 0.5, cell - 1, cell - 1);
     }
   }
 
@@ -363,7 +480,8 @@ class Block08Finale implements StoryBlock {
     }
     if (this.phase === 'everything') {
       const allClicked = this.clickedCount >= finaleContent.hobbies.length;
-      if (allClicked || this.phaseTime > 18) this.setPhase('portrait');
+      // give time to open and read the hobby clouds before the words fly
+      if ((allClicked && this.phaseTime > 6) || this.phaseTime > 45) this.setPhase('portrait');
     }
     if (this.phase === 'goodbye' && this.titleCard) {
       this.rotateCard(finaleContent.goodbyes, true);
@@ -376,6 +494,7 @@ class Block08Finale implements StoryBlock {
     this.typewriter?.destroy();
     this.title?.destroy();
     this.titleCard?.remove();
+    this.tipEl?.remove();
     this.everythingEl?.remove();
     this.signoffEl?.remove();
     this.linksEl?.remove();

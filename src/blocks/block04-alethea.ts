@@ -13,9 +13,9 @@ import {
   type OverlayHandle,
 } from '../ui/overlay';
 import { aletheaContent } from '../content/block04';
-import { hillY } from './block01-who-is-alice';
+import { hillY, stageCat } from './block01-who-is-alice';
 
-const WALK_RADIUS = 15;
+const WALK_RADIUS = 22;
 const DRIZZLE_OPACITY = 0.35; // rain eases but doesn't fully clear
 
 /**
@@ -45,16 +45,16 @@ class Block04Alethea implements StoryBlock {
 
   enter(ctx: WorldContext): void {
     this.ctx = ctx;
+    stageCat(ctx);
     const cat = ctx.cat.object3D;
-    cat.visible = true;
-    cat.position.y = hillY(cat.position.x, cat.position.z) + 0.1;
-    ctx.rig.follow(cat);
     this.walk = new WalkController(
       cat,
       ctx.camera,
       ctx.renderer.domElement,
       new THREE.Vector3(0, cat.position.y, -6),
       WALK_RADIUS,
+      6,
+      ctx.moveInput,
     );
 
     this.rain = makeRain(ctx.quality === 'low' ? 250 : 700);
@@ -108,6 +108,18 @@ class Block04Alethea implements StoryBlock {
         this.onAdvance?.();
       }
     }
+  }
+
+  /** Skip the walking objective; the beats still land. */
+  skipInteraction(): void {
+    if (this.beacon) {
+      if (!this.advanced) {
+        this.advanced = true;
+        this.onAdvance?.();
+      }
+      return;
+    }
+    this.typewriter?.skip();
   }
 
   async exit(): Promise<void> {}

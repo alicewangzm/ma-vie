@@ -54,6 +54,33 @@ changes.
 - **Sky** — gradient shader on an inverted sphere; colors are uniforms, so blocks lerp
   time-of-day (the Google block goes pre-sunrise pink → storm grey).
 
+## Design details
+
+- **Lightning before thunder.** Light outruns sound: every strike flashes the frame
+  first and the thunder clap (procedural Web Audio — filtered noise burst + a low
+  sine thump) arrives 0.6–1.6 s later, placing the storm a few hundred meters away
+  instead of on top of you.
+- **Non-euclidean ground.** The world is a tiny spherical planet, Sky:CotL-style:
+  the horizon curves away in every direction, the grass and stone road follow the
+  sphere's surface, and the cat's walkable space is a cap of the sphere rather
+  than a flat plane — the "road ahead" literally disappears over the curve.
+- **The portrait is the palette.** In the finale, each hobby word wears a color
+  k-means-sampled from a region of Alice's actual photo (cloth, skin, hair…);
+  clicking sends that color back into the pixel-art portrait at exactly the
+  cells it was sampled from.
+
+## Accessibility
+
+Shipped: skippable intro and per-chapter objective skip; `prefers-reduced-motion`
+respected everywhere (crossfades replace rolling clouds, flights and pulses go
+still) with a dismissable notice; every interactive control is a real `<button>`
+/ `<a>` with an `aria-label` (chapter stars, joysticks, ? markers, sound toggle);
+the story is fully playable with keyboard (WASD/arrows) or touch (twin handles).
+
+Planned (v1.x): color-blind-safe variants of the gold/blue "reality vs envisioned"
+coding (shape + label redundancy), voice control experiments, and a text-first
+reading mode so screen readers get the whole story without the 3D scene.
+
 ## Performance budget & results
 
 | Budget                      | Target | Measured       |

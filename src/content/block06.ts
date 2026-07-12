@@ -32,4 +32,26 @@ export const pathsContent = {
   },
   closing: ['Two of these three are wishes.', 'Watch which ones flicker.'],
   continueHint: 'follow the gold light',
+  /** Cloud modals behind the ? buttons on the envisioned roads. */
+  modals: {
+    pilot: {
+      title: 'The sky, from the other side of the glass',
+      body: [
+        '[placeholder] Medical exam — passed. Ground school — next.',
+        '[placeholder] The vision: a small plane, her parents in the back, the map going gold beneath the wings.',
+      ],
+      images: [{ src: 'assets/pilot-vision.jpg', alt: 'flying with her parents — envisioned' }],
+    },
+    pawhearth: {
+      title: 'PawHearth — a company for small, warm creatures',
+      body: [
+        '[placeholder] What PawHearth is, in one warm sentence.',
+        '[placeholder] Where it stands today, and what comes next.',
+      ],
+      images: [
+        { src: 'assets/pawhearth-1.jpg', alt: 'PawHearth design screenshot 1' },
+        { src: 'assets/pawhearth-2.jpg', alt: 'PawHearth design screenshot 2' },
+      ],
+    },
+  },
 } as const;

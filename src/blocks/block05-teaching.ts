@@ -10,10 +10,12 @@ import {
   type TypewriterHandle,
   type OverlayHandle,
 } from '../ui/overlay';
+import { createQMark, type QMark } from '../ui/qmark';
+import { openCloudModal } from '../ui/cloudModal';
 import { teachingContent } from '../content/block05';
-import { hillY } from './block01-who-is-alice';
+import { hillY, stageCat } from './block01-who-is-alice';
 
-const WALK_RADIUS = 15;
+const WALK_RADIUS = 22;
 /** Beat index of "Today, Alice teaches." — full color returns here. */
 const WARMTH_BEAT = 4;
 
@@ -31,6 +33,7 @@ class Block05Teaching implements StoryBlock {
   private typewriter: TypewriterHandle | null = null;
   private hintEl: HTMLElement | null = null;
   private lanterns: Wisp[] = [];
+  private qmark: QMark | null = null;
   private beacon: Wisp | null = null;
   private warm = false;
   private advanced = false;
@@ -44,16 +47,16 @@ class Block05Teaching implements StoryBlock {
 
   enter(ctx: WorldContext): void {
     this.ctx = ctx;
+    stageCat(ctx);
     const cat = ctx.cat.object3D;
-    cat.visible = true;
-    cat.position.y = hillY(cat.position.x, cat.position.z) + 0.1;
-    ctx.rig.follow(cat);
     this.walk = new WalkController(
       cat,
       ctx.camera,
       ctx.renderer.domElement,
       new THREE.Vector3(0, cat.position.y, -6),
       WALK_RADIUS,
+      6,
+      ctx.moveInput,
     );
 
     this.title = chapterTitle(ctx.overlay, teachingContent.title);
@@ -66,6 +69,13 @@ class Block05Teaching implements StoryBlock {
   /** Full color returns; small warm lights kindle in a ring. */
   private kindle(): void {
     this.warm = true;
+    // "look closer": what she actually teaches, in a cloud
+    this.qmark = createQMark(
+      this.ctx.overlay,
+      new THREE.Vector3(4.5, hillY(4.5, -12) + 3, -12),
+      teachingContent.modal.title,
+      () => openCloudModal(this.ctx.overlay, teachingContent.modal),
+    );
     for (let i = 0; i < 9; i++) {
       const a = (i / 9) * Math.PI * 2;
       const x = Math.cos(a) * 9;
@@ -104,6 +114,7 @@ class Block05Teaching implements StoryBlock {
       w.baseOpacity = Math.min(w.baseOpacity + dt * 0.25, 0.85);
       pulseWisp(w, t);
     }
+    this.qmark?.update(this.ctx.camera);
 
     if (this.beacon) {
       pulseWisp(this.beacon, t, 0.2);
@@ -114,9 +125,22 @@ class Block05Teaching implements StoryBlock {
     }
   }
 
+  /** Skip the walking objective; the beats still land. */
+  skipInteraction(): void {
+    if (this.beacon) {
+      if (!this.advanced) {
+        this.advanced = true;
+        this.onAdvance?.();
+      }
+      return;
+    }
+    this.typewriter?.skip();
+  }
+
   async exit(): Promise<void> {}
 
   dispose(): void {
+    this.qmark?.dispose();
     this.walk?.dispose();
     this.typewriter?.destroy();
     this.title?.destroy();

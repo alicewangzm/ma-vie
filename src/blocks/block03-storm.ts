@@ -15,9 +15,9 @@ import {
   type SideLogHandle,
 } from '../ui/overlay';
 import { stormContent } from '../content/block03';
-import { hillY } from './block01-who-is-alice';
+import { hillY, stageCat } from './block01-who-is-alice';
 
-const WALK_RADIUS = 15;
+const WALK_RADIUS = 22;
 const RAIN_COUNT_HIGH = 1400;
 const RAIN_COUNT_LOW = 500;
 
@@ -58,16 +58,16 @@ class Block03Storm implements StoryBlock {
 
   enter(ctx: WorldContext): void {
     this.ctx = ctx;
+    stageCat(ctx);
     const cat = ctx.cat.object3D;
-    cat.visible = true;
-    cat.position.y = hillY(cat.position.x, cat.position.z) + 0.1;
-    ctx.rig.follow(cat);
     this.walk = new WalkController(
       cat,
       ctx.camera,
       ctx.renderer.domElement,
       new THREE.Vector3(0, cat.position.y, -6),
       WALK_RADIUS,
+      6,
+      ctx.moveInput,
     );
 
     this.title = chapterTitle(ctx.overlay, `${stormContent.title} · ${stormContent.date}`);
@@ -139,12 +139,18 @@ class Block03Storm implements StoryBlock {
     this.lightning(1);
   }
 
+  /**
+   * Light travels faster than sound: the flash lands first, the thunder
+   * arrives 0.6–1.6s later, like a storm a few hundred meters out.
+   * (Design detail — documented in the README.)
+   */
   private lightning(intensity: number): void {
-    this.ctx.audio.thunder(intensity);
     if (this.flashEl && !this.ctx.reducedMotion) {
       this.flashEl.style.opacity = '0.5';
       setTimeout(() => this.flashEl && (this.flashEl.style.opacity = '0'), 120);
     }
+    const delay = this.ctx.reducedMotion ? 0 : 600 + Math.random() * 1000;
+    setTimeout(() => this.ctx.audio.thunder(intensity), delay);
   }
 
   private startClearing(): void {
@@ -215,6 +221,35 @@ class Block03Storm implements StoryBlock {
         this.advanced = true;
         this.onAdvance?.();
       }
+    }
+  }
+
+  /** Skip the current walking objective; the storm still tells its story. */
+  skipInteraction(): void {
+    if (this.beacon) {
+      if (!this.advanced) {
+        this.advanced = true;
+        this.onAdvance?.();
+      }
+      return;
+    }
+    switch (this.phase) {
+      case 'door':
+      case 'pre-storm':
+        this.typewriter?.skip();
+        break;
+      case 'milestones':
+        for (const m of this.milestones) if (!m.reached) this.reach(m);
+        break;
+      case 'storm':
+        if (this.log) {
+          let more = true;
+          while (more) more = this.log.next();
+          this.startClearing();
+        }
+        break;
+      case 'clearing':
+        break;
     }
   }
 

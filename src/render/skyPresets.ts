@@ -37,15 +37,15 @@ export const skyPresets = {
     fogDensity: 0.0022,
     sunIntensity: 1.2,
   },
-  /** The storm. */
+  /** The storm — heavy and dark, the pink fully swallowed. */
   stormGrey: {
-    top: '#5a6272',
-    middle: '#788093',
-    bottom: '#9aa0ad',
-    sunTint: '#b8bcc4',
-    fogColor: '#8f95a3',
-    fogDensity: 0.0038,
-    sunIntensity: 0.5,
+    top: '#3f4654',
+    middle: '#565e70',
+    bottom: '#787f8d',
+    sunTint: '#9599a3',
+    fogColor: '#6e7482',
+    fogDensity: 0.0042,
+    sunIntensity: 0.32,
   },
   /** After the storm: rain easing, light coming back, not sunny yet. */
   afterRain: {

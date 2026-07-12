@@ -1,4 +1,4 @@
-﻿import * as THREE from 'three';
+import * as THREE from 'three';
 import type { StoryBlock } from '../core/StoryBlock';
 import type { WorldContext } from '../core/WorldContext';
 import { WalkController } from '../core/walk';
@@ -10,7 +10,7 @@ import { islandContent } from '../content/block01';
 const HILL_CENTER = new THREE.Vector3(0, 0, -6);
 const HILL_RADIUS_X = 42; // hill sphere r=30 scaled 1.4
 const HILL_RADIUS_Y = 15; // scaled 0.5
-const WALK_RADIUS = 15;
+const WALK_RADIUS = 22; // generous — no invisible walls
 const COLLECT_DIST = 4.2;
 
 /** Height of the hill surface at (x, z) — the cat walks on this. */
@@ -21,10 +21,20 @@ export function hillY(x: number, z: number): number {
   return -14 + HILL_RADIUS_Y * Math.sqrt(Math.max(f, 0));
 }
 
+/** Shared chapter-start staging: cat at the land's center, camera close behind. */
+export function stageCat(ctx: WorldContext): void {
+  const cat = ctx.cat.object3D;
+  cat.position.set(0, hillY(0, -6) + 0.1, -6);
+  cat.visible = true;
+  ctx.rig.frameCat(cat);
+}
+
+type TutorialStep = 'walk' | 'look' | 'chase' | 'done';
+
 /**
- * Block 01 — "Who Is Alice" (intro island). First exploration: the story
- * beats play while Sky-style hints teach look/walk; three glow wisps invite
- * wandering; a gold beacon opens the way onward.
+ * Block 01 — "Who Is Alice", now also the tutorial. The story beats play
+ * while staged prompts teach the two handles; two lights to chase, then
+ * the gold beacon opens the way onward.
  */
 class Block01WhoIsAlice implements StoryBlock {
   readonly id = 'block01-who-is-alice';
@@ -35,7 +45,8 @@ class Block01WhoIsAlice implements StoryBlock {
   private beacon: Wisp | null = null;
   private typewriter: TypewriterHandle | null = null;
   private hintEl: HTMLElement | null = null;
-  private hasMoved = false;
+  private step: TutorialStep = 'walk';
+  private lookStart: THREE.Vector3 | null = null;
   private collectedCount = 0;
   private advanced = false;
   private onAdvance: (() => void) | null = null;
@@ -48,11 +59,8 @@ class Block01WhoIsAlice implements StoryBlock {
 
   enter(ctx: WorldContext): void {
     this.ctx = ctx;
-
+    stageCat(ctx);
     const cat = ctx.cat.object3D;
-    cat.position.set(0, hillY(0, -6) + 0.1, -6);
-    cat.visible = true;
-    ctx.rig.follow(cat);
 
     this.walk = new WalkController(
       cat,
@@ -60,13 +68,14 @@ class Block01WhoIsAlice implements StoryBlock {
       ctx.renderer.domElement,
       new THREE.Vector3(HILL_CENTER.x, cat.position.y, -6),
       WALK_RADIUS,
+      6,
+      ctx.moveInput,
     );
 
-    // three glow wisps around the crest — the "follow the glow" invitations
+    // two lights to chase — the whole exercise
     const spots: [number, number][] = [
-      [-9, -12],
-      [10, -9],
-      [3, 4],
+      [-8, -11],
+      [9, 1],
     ];
     this.wisps = spots.map(([x, z]) => {
       const wisp = createWisp('#fff0b8', 3.4, 0.85);
@@ -76,7 +85,8 @@ class Block01WhoIsAlice implements StoryBlock {
     });
 
     this.typewriter = typewriterLines(ctx.overlay, islandContent.lines, 1700);
-    this.showHint(islandContent.hint);
+    this.lookStart = ctx.camera.position.clone();
+    this.showHint(islandContent.tutorial[0]);
   }
 
   private showHint(text: string): void {
@@ -88,10 +98,25 @@ class Block01WhoIsAlice implements StoryBlock {
     this.hintEl = hint;
   }
 
+  private advanceTutorial(): void {
+    if (this.step === 'walk') {
+      this.step = 'look';
+      this.showHint(islandContent.tutorial[1]);
+    } else if (this.step === 'look') {
+      this.step = 'chase';
+      this.showHint(islandContent.tutorial[2]);
+    } else if (this.step === 'chase') {
+      this.step = 'done';
+      this.hintEl?.remove();
+      this.hintEl = null;
+    }
+  }
+
   private collect(entry: { wisp: Wisp; collected: boolean }): void {
     entry.collected = true;
     entry.wisp.baseScale *= 1.9; // bright flash, then dissolve below
     this.collectedCount += 1;
+    if (this.step === 'chase') this.advanceTutorial();
 
     if (this.collectedCount === this.wisps.length) {
       this.beacon = createWisp('#ffd76a', 5, 1);
@@ -99,6 +124,18 @@ class Block01WhoIsAlice implements StoryBlock {
       this.ctx.scene.add(this.beacon.sprite);
       this.showHint(islandContent.continueHint);
     }
+  }
+
+  /** Corner "skip step": first press completes the chase, second moves on. */
+  skipInteraction(): void {
+    if (this.beacon) {
+      if (!this.advanced) {
+        this.advanced = true;
+        this.onAdvance?.();
+      }
+      return;
+    }
+    for (const entry of this.wisps) if (!entry.collected) this.collect(entry);
   }
 
   update(dt: number, t: number): void {
@@ -110,18 +147,10 @@ class Block01WhoIsAlice implements StoryBlock {
 
     lerpEnvToPreset(this.ctx.env, skyPresets.dawn, 1 - Math.exp(-dt * 0.8));
 
-    // nav hint fades after the first move (script: "appears once, fades")
-    if (!this.hasMoved && this.walk?.moving) {
-      this.hasMoved = true;
-      if (this.hintEl && !this.beacon) {
-        this.hintEl.style.opacity = '0';
-        setTimeout(() => {
-          if (!this.beacon) {
-            this.hintEl?.remove();
-            this.hintEl = null;
-          }
-        }, 1100);
-      }
+    // tutorial gating: walked a step → learn to look → chase the lights
+    if (this.step === 'walk' && this.walk?.moving) this.advanceTutorial();
+    else if (this.step === 'look' && this.lookStart) {
+      if (this.ctx.camera.position.distanceTo(this.lookStart) > 2.5) this.advanceTutorial();
     }
 
     for (const entry of this.wisps) {

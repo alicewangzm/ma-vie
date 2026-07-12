@@ -11,10 +11,12 @@ import {
   type TypewriterHandle,
   type OverlayHandle,
 } from '../ui/overlay';
+import { createQMark, type QMark } from '../ui/qmark';
+import { openCloudModal, type CloudStory } from '../ui/cloudModal';
 import { universityContent, type UniversityCue } from '../content/block02';
-import { hillY } from './block01-who-is-alice';
+import { hillY, stageCat } from './block01-who-is-alice';
 
-const WALK_RADIUS = 15;
+const WALK_RADIUS = 22;
 const MS_PER_BEAT = 2600;
 
 type Panel = ReturnType<typeof makePanel> & { targetY: number };
@@ -33,6 +35,7 @@ class Block02University implements StoryBlock {
   private typewriter: TypewriterHandle | null = null;
   private hintEl: HTMLElement | null = null;
   private panels: Panel[] = [];
+  private qmarks: QMark[] = [];
   private motes: Wisp[] = [];
   private beacon: Wisp | null = null;
   private advanced = false;
@@ -46,16 +49,16 @@ class Block02University implements StoryBlock {
 
   enter(ctx: WorldContext): void {
     this.ctx = ctx;
+    stageCat(ctx);
     const cat = ctx.cat.object3D;
-    cat.visible = true;
-    cat.position.y = hillY(cat.position.x, cat.position.z) + 0.1;
-    ctx.rig.follow(cat);
     this.walk = new WalkController(
       cat,
       ctx.camera,
       ctx.renderer.domElement,
       new THREE.Vector3(0, cat.position.y, -6),
       WALK_RADIUS,
+      6,
+      ctx.moveInput,
     );
 
     this.title = chapterTitle(ctx.overlay, universityContent.title);
@@ -83,7 +86,17 @@ class Block02University implements StoryBlock {
     this.panels.push(panel);
   }
 
+  /** A "look closer" ? that opens the chapter's cloud modal for that spot. */
+  private addQMark(pos: THREE.Vector3, story: CloudStory): void {
+    this.qmarks.push(
+      createQMark(this.ctx.overlay, pos, story.title, () =>
+        openCloudModal(this.ctx.overlay, story),
+      ),
+    );
+  }
+
   private trigger(cue: UniversityCue): void {
+    const modals = universityContent.modals;
     switch (cue) {
       case 'waterloo':
         this.addPanel(
@@ -92,6 +105,7 @@ class Block02University implements StoryBlock {
           new THREE.Vector3(-14, 6, -14),
           '#8a6d3b',
         );
+        this.addQMark(new THREE.Vector3(-14, 3.4, -14), modals.waterloo);
         break;
       case 'laurier':
         this.addPanel(
@@ -100,6 +114,7 @@ class Block02University implements StoryBlock {
           new THREE.Vector3(14, 6.5, -14),
           '#5b3b8a',
         );
+        this.addQMark(new THREE.Vector3(14, 3.9, -14), modals.laurier);
         break;
       case 'projects':
         this.addPanel('Banking APIs', 'Java + Spring Boot', new THREE.Vector3(-17, 3.5, -4));
@@ -109,6 +124,7 @@ class Block02University implements StoryBlock {
           '14,000 SEC files · Python',
           new THREE.Vector3(17, 3.5, -4),
         );
+        this.addQMark(new THREE.Vector3(0, 6.4, -20), modals.projects);
         break;
       case 'coop':
         this.addPanel(
@@ -167,6 +183,8 @@ class Block02University implements StoryBlock {
       m.baseOpacity = Math.max(m.baseOpacity - dt * 0.045, 0);
     }
 
+    for (const q of this.qmarks) q.update(this.ctx.camera);
+
     if (this.beacon) {
       pulseWisp(this.beacon, t, 0.2);
       if (!this.advanced && this.beacon.sprite.position.distanceTo(cat.position) < 4.2) {
@@ -174,6 +192,18 @@ class Block02University implements StoryBlock {
         this.onAdvance?.();
       }
     }
+  }
+
+  /** Skip the walking objective; the beats (and their panels) still land. */
+  skipInteraction(): void {
+    if (this.beacon) {
+      if (!this.advanced) {
+        this.advanced = true;
+        this.onAdvance?.();
+      }
+      return;
+    }
+    this.typewriter?.skip();
   }
 
   async exit(): Promise<void> {}
@@ -188,6 +218,8 @@ class Block02University implements StoryBlock {
       p.dispose();
     }
     this.panels = [];
+    for (const q of this.qmarks) q.dispose();
+    this.qmarks = [];
     for (const m of this.motes) {
       this.ctx.scene.remove(m.sprite);
       m.dispose();

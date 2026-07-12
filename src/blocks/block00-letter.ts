@@ -160,7 +160,34 @@ class Block00Letter implements StoryBlock {
     this.phase = 'accepted';
     this.acceptBtn?.remove();
     this.acceptBtn = null;
-    this.onAdvance?.();
+
+    if (this.ctx.reducedMotion) {
+      this.onAdvance?.();
+      return;
+    }
+
+    // a great gold light gathers and shrinks into the middle of the frame
+    // while the invitation text fades — then the clouds take over
+    const light = document.createElement('div');
+    light.style.cssText =
+      'position:absolute;left:50%;top:50%;width:340vmax;height:340vmax;margin:-170vmax 0 0 -170vmax;' +
+      'border-radius:50%;pointer-events:none;z-index:25;' +
+      'background:radial-gradient(circle, rgba(255,240,190,0.95) 0%, rgba(255,215,106,0.75) 30%, rgba(255,215,106,0) 68%);' +
+      'transform:scale(1);transition:transform 1.5s cubic-bezier(0.5,0,0.8,0.4), opacity 0.5s ease 1.3s;opacity:1;';
+    this.ctx.overlay.appendChild(light);
+    const lines = this.ctx.overlay.querySelector<HTMLElement>('.story-lines');
+    if (lines) {
+      lines.style.transition = 'opacity 1.2s ease';
+      lines.style.opacity = '0';
+    }
+    requestAnimationFrame(() => {
+      light.style.transform = 'scale(0.002)';
+      light.style.opacity = '0';
+    });
+    setTimeout(() => {
+      light.remove();
+      this.onAdvance?.();
+    }, 1550);
   }
 
   update(dt: number, t: number): void {
