@@ -175,19 +175,16 @@ skipBtn.classList.add('visible');
 let blockChangedAt = 0;
 const skipStepBtn = createButton(cornerBar, 'skip step ⏭', 'wl-corner', () => {
   if (director.isBusy || performance.now() - blockChangedAt < 1000) return;
-  const block = director.currentBlock as { skipInteraction?: () => void } | null;
-  block?.skipInteraction?.();
+  const block = director.currentBlock as {
+    skipInteraction?: () => void;
+    skipToEnd?: () => void;
+  } | null;
+  // in the finale the same button resolves the whole story to its end
+  if (director.currentId === 'block08-finale') block?.skipToEnd?.();
+  else block?.skipInteraction?.();
 });
-skipStepBtn.setAttribute('aria-label', 'skip the current walking objective');
+skipStepBtn.setAttribute('aria-label', 'skip the current step');
 skipStepBtn.style.display = 'none';
-
-// jump straight to the finale from anywhere in the story
-const skipEndBtn = createButton(cornerBar, 'skip to end ⏭', 'wl-corner', () => {
-  if (director.isBusy || performance.now() - blockChangedAt < 1000) return;
-  void director.jumpTo(director.chapterIds.length - 1);
-});
-skipEndBtn.setAttribute('aria-label', 'skip to the final chapter');
-skipEndBtn.style.display = 'none';
 
 // mute toggle — always visible
 const muteBtn = createButton(cornerBar, 'sound on', 'wl-corner', () => {
@@ -212,16 +209,10 @@ ctx.progress.subscribe((s) => {
   joysticks.setVisible(WALKABLE.has(s.currentBlock ?? ''));
   // chapters past the letter can fast-forward; the finale runs unhurried
   // (its hobby row has its own "all at once" reveal)
-  const skippable =
-    s.currentBlock !== null &&
-    s.currentBlock !== 'block00-letter' &&
-    s.currentBlock !== 'block08-finale';
+  const skippable = s.currentBlock !== null && s.currentBlock !== 'block00-letter';
   skipStepBtn.style.display = skippable ? '' : 'none';
+  skipStepBtn.textContent = s.currentBlock === 'block08-finale' ? 'skip to end ⏭' : 'skip step ⏭';
   skipStepBtn.classList.add('visible');
-  // "skip to end" rides along everywhere except the finale itself
-  skipEndBtn.style.display =
-    s.currentBlock !== null && s.currentBlock !== 'block08-finale' ? '' : 'none';
-  skipEndBtn.classList.add('visible');
 });
 
 // start audio as early as the browser allows: immediately where autoplay

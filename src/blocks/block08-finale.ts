@@ -524,9 +524,8 @@ class Block08Finale implements StoryBlock {
     return cells;
   }
 
-  private buildPortrait(): void {
-    this.tipEl?.remove();
-    this.tipEl = null;
+  private ensurePortraitCanvas(): HTMLCanvasElement {
+    if (this.portraitCanvas) return this.portraitCanvas;
     const canvas = document.createElement('canvas');
     canvas.width = canvas.height = PORTRAIT_DOTS * 8;
     canvas.style.cssText =
@@ -534,6 +533,13 @@ class Block08Finale implements StoryBlock {
       'background:rgba(255,250,240,0.35);backdrop-filter:blur(2px);pointer-events:none;';
     this.ctx.overlay.appendChild(canvas);
     this.portraitCanvas = canvas;
+    return canvas;
+  }
+
+  private buildPortrait(): void {
+    this.tipEl?.remove();
+    this.tipEl = null;
+    const canvas = this.ensurePortraitCanvas();
 
     const hobbies = finaleContent.hobbies;
     const corner = canvas.getBoundingClientRect();
@@ -768,6 +774,35 @@ class Block08Finale implements StoryBlock {
       }
     });
     this.phaseTime = 100; // clears the reading-time gate → dots fly
+  }
+
+  /**
+   * One press resolves the whole finale: portrait complete, photo on its
+   * way, thanks landed, goodbyes rotating, résumé + hello links up.
+   */
+  skipToEnd(): void {
+    if (this.phase === 'goodbye') {
+      this.typewriter?.skip(); // already at the end — just land the lines
+      return;
+    }
+    // tear down whatever part was mid-flight
+    this.titleCard?.remove();
+    this.titleCard = null;
+    this.tipEl?.remove();
+    this.tipEl = null;
+    this.everythingEl?.remove();
+    this.everythingEl = null;
+    for (const d of this.flyingDots) d.remove();
+    this.flyingDots = [];
+    // the portrait arrives complete
+    this.ensurePortraitCanvas();
+    this.revealQueue = [];
+    for (let k = 0; k < finaleContent.hobbies.length; k++) {
+      this.revealQueue.push(...this.clusterCells(k));
+    }
+    this.clustersQueued = finaleContent.hobbies.length;
+    this.setPhase('goodbye'); // destroys any running typewriter, builds thanks
+    this.typewriter?.skip(); // thanks lands at once → card, signoff, links
   }
 
   /** Fast-forward the current part (kept for the dev hook / future use). */
