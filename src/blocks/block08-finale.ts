@@ -113,10 +113,39 @@ async function loadPortrait(seeds: string[]): Promise<PortraitData | null> {
         if (n > 0) means[k] = [r / n, gr / n, b / n];
       }
     }
-    const clusterCss = means.map(
+    // a cluster whose mean washed out to near-white/grey (the shirt, the sky)
+    // borrows the most colorful real pixel it owns — every word wears an
+    // actual pixel of alice.jpg, never a bleached average
+    const chromaOf = ([r, g2, b]: [number, number, number]): number =>
+      Math.max(r, g2, b) - Math.min(r, g2, b);
+    const vivid = means.map((mean, k) => {
+      if (chromaOf(mean) >= 28) return mean;
+      let best = mean;
+      let bestC = chromaOf(mean);
+      for (let i = 0; i < pixels.length; i++) {
+        if (clusterOf[i] !== k) continue;
+        const c = chromaOf(pixels[i]);
+        if (c > bestC) {
+          bestC = c;
+          best = pixels[i];
+        }
+      }
+      if (bestC < 28) {
+        // an all-white cluster: borrow the most colorful pixel anywhere
+        for (const p of pixels) {
+          const c = chromaOf(p);
+          if (c > bestC) {
+            bestC = c;
+            best = p;
+          }
+        }
+      }
+      return best;
+    });
+    const clusterCss = vivid.map(
       ([r, g2, b]) => `rgb(${Math.round(r)}, ${Math.round(g2)}, ${Math.round(b)})`,
     );
-    const clusterTextCss = means.map(readableCss);
+    const clusterTextCss = vivid.map(readableCss);
     return { pixels, clusterOf, clusterCss, clusterTextCss };
   } catch {
     return null; // no alice.jpg (or decode failed) — fall back to seed colors
@@ -156,6 +185,7 @@ class Block08Finale implements StoryBlock {
   private revealQueue: number[] = []; // grid cells waiting to be painted
   private clustersQueued = 0;
   private clickedCount = 0;
+  private lastModalOpenT = -100; // phaseTime when a hobby cloud was last open
   private tipEl: HTMLElement | null = null;
   private disposables: (THREE.BufferGeometry | THREE.Material | THREE.Texture)[] = [];
 
@@ -713,9 +743,15 @@ class Block08Finale implements StoryBlock {
       this.setPhase('outro');
     }
     if (this.phase === 'everything') {
+      // the dots only fly to a clear sky: every word clicked AND every
+      // cloud closed, plus a breath — so the whole flight is watchable
+      const modalOpen = !!document.querySelector('.wl-modal-backdrop');
+      if (modalOpen) this.lastModalOpenT = this.phaseTime;
+      const quiet = !modalOpen && this.phaseTime - this.lastModalOpenT > 1.2;
       const allClicked = this.clickedCount >= finaleContent.hobbies.length;
-      // give time to open and read the hobby clouds before the words fly
-      if ((allClicked && this.phaseTime > 6) || this.phaseTime > 45) this.setPhase('portrait');
+      if (quiet && ((allClicked && this.phaseTime > 6) || this.phaseTime > 45)) {
+        this.setPhase('portrait');
+      }
     }
     if (this.phase === 'goodbye' && this.titleCard) {
       this.rotateCard(finaleContent.goodbyes, true);

@@ -181,6 +181,14 @@ const skipStepBtn = createButton(cornerBar, 'skip step ⏭', 'wl-corner', () => 
 skipStepBtn.setAttribute('aria-label', 'skip the current walking objective');
 skipStepBtn.style.display = 'none';
 
+// jump straight to the finale from anywhere in the story
+const skipEndBtn = createButton(cornerBar, 'skip to end ⏭', 'wl-corner', () => {
+  if (director.isBusy || performance.now() - blockChangedAt < 1000) return;
+  void director.jumpTo(director.chapterIds.length - 1);
+});
+skipEndBtn.setAttribute('aria-label', 'skip to the final chapter');
+skipEndBtn.style.display = 'none';
+
 // mute toggle — always visible
 const muteBtn = createButton(cornerBar, 'sound on', 'wl-corner', () => {
   audio.start();
@@ -210,6 +218,10 @@ ctx.progress.subscribe((s) => {
     s.currentBlock !== 'block08-finale';
   skipStepBtn.style.display = skippable ? '' : 'none';
   skipStepBtn.classList.add('visible');
+  // "skip to end" rides along everywhere except the finale itself
+  skipEndBtn.style.display =
+    s.currentBlock !== null && s.currentBlock !== 'block08-finale' ? '' : 'none';
+  skipEndBtn.classList.add('visible');
 });
 
 // start audio as early as the browser allows: immediately where autoplay
