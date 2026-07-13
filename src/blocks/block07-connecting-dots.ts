@@ -189,6 +189,18 @@ class Block07ConnectingDots implements StoryBlock {
     }
   }
 
+  /** Fast-forward the beats; a second press reaches the continue button. */
+  skipInteraction(): void {
+    if (this.continueBtn) {
+      if (!this.advanced) {
+        this.advanced = true;
+        this.onAdvance?.();
+      }
+      return;
+    }
+    this.typewriter?.skip();
+  }
+
   async exit(): Promise<void> {
     this.ctx.env.setSunVisible(true); // dawn returns for the finale
   }

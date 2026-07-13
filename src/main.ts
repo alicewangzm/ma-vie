@@ -193,11 +193,23 @@ const WALKABLE = new Set([
 ]);
 ctx.progress.subscribe((s) => {
   if (s.currentBlock !== 'block00-letter') skipBtn.remove();
-  const walkable = WALKABLE.has(s.currentBlock ?? '');
-  joysticks.setVisible(walkable);
-  skipStepBtn.style.display = walkable ? '' : 'none';
+  joysticks.setVisible(WALKABLE.has(s.currentBlock ?? ''));
+  // every chapter past the letter can fast-forward its current step
+  const skippable = s.currentBlock !== null && s.currentBlock !== 'block00-letter';
+  skipStepBtn.style.display = skippable ? '' : 'none';
   skipStepBtn.classList.add('visible');
 });
+
+// start audio as early as the browser allows: immediately where autoplay
+// is granted, otherwise on the very first gesture anywhere on the page
+audio.start();
+const wakeAudio = (): void => {
+  audio.start();
+  window.removeEventListener('pointerdown', wakeAudio);
+  window.removeEventListener('keydown', wakeAudio);
+};
+window.addEventListener('pointerdown', wakeAudio);
+window.addEventListener('keydown', wakeAudio);
 
 // reduced-motion notice (first load, dismissable)
 if (reducedMotion) {

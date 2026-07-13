@@ -30,6 +30,12 @@ export class CatController {
   private stateTime = 0;
   private moving = false;
   private walkTime = 0;
+  private animTime = 0;
+  /** Drives the vertex-shader gait: legs step, tail waves. */
+  private animUniforms = {
+    uTime: { value: 0 },
+    uWalk: { value: 0 },
+  };
   private poseGroup = new THREE.Group();
   private placeholder = new THREE.Group();
   private materials: THREE.Material[] = [];
@@ -88,6 +94,7 @@ export class CatController {
       this.object3D.remove(this.placeholder);
       this.modelRoot = model;
       this.modelLoaded = true;
+      this.injectGait(model);
 
       if (gltf.animations.length > 0) {
         this.mixer = new THREE.AnimationMixer(model);
@@ -104,6 +111,57 @@ export class CatController {
     } catch {
       // no model yet — the capsule placeholder stays; drop cat.glb in public/assets
     }
+  }
+
+  /**
+   * The model has no skeleton, so the gait is faked per-vertex: everything
+   * below the belly line swings in diagonal pairs (a trot) and the rear
+   * upper region — the tail — waves, gently at rest, harder while walking.
+   * Regions are picked in normalized local space, so any cat-shaped mesh
+   * facing +z works.
+   */
+  private injectGait(model: THREE.Object3D): void {
+    const u = this.animUniforms;
+    model.traverse((o) => {
+      const mesh = o as THREE.Mesh;
+      if (!mesh.isMesh) return;
+      mesh.geometry.computeBoundingBox();
+      const bb = mesh.geometry.boundingBox!;
+      const min = bb.min.clone();
+      const size = bb.getSize(new THREE.Vector3());
+      const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+      for (const mat of mats) {
+        mat.onBeforeCompile = (shader) => {
+          shader.uniforms.uTime = u.uTime;
+          shader.uniforms.uWalk = u.uWalk;
+          shader.uniforms.uBoxMin = { value: min };
+          shader.uniforms.uBoxSize = { value: size };
+          shader.vertexShader = shader.vertexShader
+            .replace(
+              '#include <common>',
+              '#include <common>\nuniform float uTime, uWalk;\nuniform vec3 uBoxMin, uBoxSize;',
+            )
+            .replace(
+              '#include <begin_vertex>',
+              /* glsl */ `#include <begin_vertex>
+              {
+                vec3 nrm = (transformed - uBoxMin) / uBoxSize;
+                // trot: legs below the belly, diagonal pairs in anti-phase
+                float leg = smoothstep(0.42, 0.05, nrm.y);
+                float phase = step(0.5, nrm.x) * 3.14159 + step(0.5, nrm.z) * 3.14159;
+                float swing = sin(uTime * 9.5 + phase);
+                transformed.z += swing * leg * uWalk * uBoxSize.y * 0.16;
+                transformed.y += max(swing, 0.0) * leg * uWalk * uBoxSize.y * 0.05;
+                // tail: rear third, upper half — waves at rest, wags walking
+                float tail = smoothstep(0.30, 0.02, nrm.z) * smoothstep(0.45, 0.8, nrm.y);
+                float wag = 0.35 + uWalk * 0.65;
+                transformed.x += sin(uTime * 4.5 + nrm.y * 4.0) * tail * wag * uBoxSize.x * 0.2;
+              }`,
+            );
+        };
+        mat.needsUpdate = true;
+      }
+    });
   }
 
   private findClip(clips: THREE.AnimationClip[], hints: string[]): THREE.AnimationClip | null {
@@ -178,6 +236,11 @@ export class CatController {
    */
   private updateProceduralPose(dt: number): void {
     this.walkTime = this.moving ? this.walkTime + dt : 0;
+    this.animTime += dt;
+    this.animUniforms.uTime.value = this.animTime;
+    const walkTarget = this.moving ? 1 : 0;
+    this.animUniforms.uWalk.value +=
+      (walkTarget - this.animUniforms.uWalk.value) * Math.min(dt * 6, 1);
     const s = this.stateTime;
 
     let y = 0;

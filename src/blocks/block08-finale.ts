@@ -1,4 +1,7 @@
 import * as THREE from 'three';
+import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
+import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
+import helvetiker from 'three/examples/fonts/helvetiker_bold.typeface.json';
 import type { StoryBlock } from '../core/StoryBlock';
 import type { WorldContext } from '../core/WorldContext';
 import { createWisp, pulseWisp, type Wisp } from '../render/wisp';
@@ -140,7 +143,7 @@ class Block08Finale implements StoryBlock {
   private phaseTime = 0;
   private skyline: THREE.Group | null = null;
   private skylineMat: THREE.MeshBasicMaterial | null = null;
-  private lights: Wisp[] = [];
+  private letterMats: THREE.MeshBasicMaterial[] = [];
   private droplet: Wisp | null = null;
   private title: OverlayHandle | null = null;
   private typewriter: TypewriterHandle | null = null;
@@ -181,7 +184,11 @@ class Block08Finale implements StoryBlock {
     void this.typewriter.done.then(() => this.setPhase('reveal'));
   }
 
-  /** Far SF skyline silhouette + Google lights, faded + gently blinking. */
+  /**
+   * The vision on the horizon: a real 3D Google wordmark over a San
+   * Francisco skyline — Transamerica pyramid, Salesforce curve, the flat
+   * downtown blocks. Faded (not yet reality) but steady, no flicker.
+   */
   private buildSkyline(): void {
     const merged = new THREE.Group();
     this.skylineMat = new THREE.MeshBasicMaterial({
@@ -191,26 +198,70 @@ class Block08Finale implements StoryBlock {
       fog: false,
     });
     this.disposables.push(this.skylineMat);
+
     let seed = 7;
     const rand = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-    for (let i = 0; i < 14; i++) {
+    // downtown blocks
+    for (let i = 0; i < 12; i++) {
       const w = 3 + rand() * 4;
-      const h = 5 + rand() * 14 + (i === 7 ? 10 : 0); // one tall spire
+      const h = 4 + rand() * 11;
       const geo = new THREE.BoxGeometry(w, h, 3);
       this.disposables.push(geo);
       const b = new THREE.Mesh(geo, this.skylineMat);
-      b.position.set(-32 + i * 5 + (rand() - 0.5) * 2, 6 + h / 2, -80);
+      b.position.set(-34 + i * 6 + (rand() - 0.5) * 2, 6 + h / 2, -80);
       merged.add(b);
     }
+    // Transamerica pyramid
+    const pyramid = new THREE.ConeGeometry(2.6, 22, 4);
+    this.disposables.push(pyramid);
+    const py = new THREE.Mesh(pyramid, this.skylineMat);
+    py.position.set(-9, 17, -78);
+    py.rotation.y = Math.PI / 4;
+    merged.add(py);
+    // Salesforce tower — tall, rounded, gently tapered
+    const tower = new THREE.CylinderGeometry(1.7, 2.4, 26, 12);
+    this.disposables.push(tower);
+    const tw = new THREE.Mesh(tower, this.skylineMat);
+    tw.position.set(6, 19, -80);
+    merged.add(tw);
+
+    // the 3D GOOGLE wordmark floating above the city
+    const font = new FontLoader().parse(
+      helvetiker as unknown as Parameters<FontLoader['parse']>[0],
+    );
+    let cursor = 0;
+    const letters: { geo: TextGeometry; mat: THREE.MeshBasicMaterial; width: number }[] = [];
+    'Google'.split('').forEach((ch, i) => {
+      const geo = new TextGeometry(ch, {
+        font,
+        size: 4.6,
+        depth: 1.4,
+        curveSegments: 6,
+        bevelEnabled: false,
+      });
+      geo.computeBoundingBox();
+      const width = geo.boundingBox!.max.x - geo.boundingBox!.min.x;
+      const mat = new THREE.MeshBasicMaterial({
+        color: GOOGLE_COLORS[i],
+        transparent: true,
+        opacity: 0,
+        fog: false,
+      });
+      this.disposables.push(geo, mat);
+      letters.push({ geo, mat, width });
+      cursor += width + 0.7;
+    });
+    let x = -cursor / 2;
+    for (const l of letters) {
+      const mesh = new THREE.Mesh(l.geo, l.mat);
+      mesh.position.set(x, 25, -78); // hovering just above the towers, clear of the star tracker
+      merged.add(mesh);
+      this.letterMats.push(l.mat);
+      x += l.width + 0.7;
+    }
+
     this.skyline = merged;
     this.ctx.scene.add(merged);
-
-    GOOGLE_COLORS.forEach((color, i) => {
-      const w = createWisp(color, 3, 0.55);
-      w.sprite.position.set(-15 + i * 6, 30 + Math.sin(i * 2) * 2, -78);
-      this.ctx.scene.add(w.sprite);
-      this.lights.push(w);
-    });
   }
 
   private setPhase(next: Phase): void {
@@ -491,16 +542,13 @@ class Block08Finale implements StoryBlock {
     this.phaseTime += dt;
     lerpEnvToPreset(this.ctx.env, skyPresets.goldenHour, 1 - Math.exp(-dt * 0.5));
 
-    // the vision is faded and blinking — not yet reality
-    const blink = 0.55 + 0.25 * Math.sin(t * 1.3);
+    // the vision is faded — not yet reality — but holds steady on the horizon
     if (this.skylineMat) {
-      const target = 0.5 * blink;
-      this.skylineMat.opacity += (target - this.skylineMat.opacity) * Math.min(dt, 1);
+      this.skylineMat.opacity += (0.5 - this.skylineMat.opacity) * Math.min(dt * 0.5, 1);
     }
-    this.lights.forEach((w, i) => {
-      pulseWisp(w, t + i, 0.25);
-      w.sprite.material.opacity *= blink;
-    });
+    for (const m of this.letterMats) {
+      m.opacity += (0.85 - m.opacity) * Math.min(dt * 0.5, 1);
+    }
     if (this.droplet) {
       pulseWisp(this.droplet, t, 0.15);
       // the droplet drifts down toward the cat like a slow gift
@@ -521,6 +569,29 @@ class Block08Finale implements StoryBlock {
     }
   }
 
+  /**
+   * Fast-forward the current part. In the hobby part this lights every
+   * word at once — for travelers who don't want to open each cloud.
+   */
+  skipInteraction(): void {
+    switch (this.phase) {
+      case 'titles':
+        this.phaseTime = CARD_SECONDS * finaleContent.rotatingTitles.length + 1;
+        break;
+      case 'everything':
+        this.hobbyButtons.forEach((btn) => {
+          if (!btn.dataset.clicked) {
+            btn.dataset.clicked = '1';
+            this.clickedCount += 1;
+          }
+        });
+        this.phaseTime = 100; // clears the reading-time gate → dots fly
+        break;
+      default:
+        this.typewriter?.skip();
+    }
+  }
+
   async exit(): Promise<void> {}
 
   dispose(): void {
@@ -536,11 +607,7 @@ class Block08Finale implements StoryBlock {
     for (const d of this.flyingDots) d.remove();
     this.flyingDots = [];
     if (this.skyline) this.ctx.scene.remove(this.skyline);
-    for (const w of this.lights) {
-      this.ctx.scene.remove(w.sprite);
-      w.dispose();
-    }
-    this.lights = [];
+    this.letterMats = [];
     if (this.droplet) {
       this.ctx.scene.remove(this.droplet.sprite);
       this.droplet.dispose();

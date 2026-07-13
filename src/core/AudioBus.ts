@@ -9,9 +9,17 @@ export class AudioBus {
   private noiseGain: GainNode | null = null;
   muted = false;
 
-  /** Call from a user-gesture handler (click/tap). Safe to call twice. */
+  /** Wake a context the browser parked while waiting for a gesture. */
+  resume(): void {
+    if (this.ctx?.state === 'suspended') void this.ctx.resume();
+  }
+
+  /** Safe to call any time; audio flows as soon as the browser allows. */
   start(): void {
-    if (this.ctx) return;
+    if (this.ctx) {
+      this.resume();
+      return;
+    }
     const Ctor = window.AudioContext;
     if (!Ctor) return;
     this.ctx = new Ctor();

@@ -17,7 +17,10 @@ import { pathsContent } from '../content/block06';
 import { stageCat } from './block01-who-is-alice';
 
 const WALK_CENTER = new THREE.Vector3(0, 1.1, -6);
-const WALK_RADIUS = 16;
+const WALK_RADIUS = 22;
+// the cat faces -z at the node; roads run 15 units out from it
+const ROAD_LEN = 15;
+const TILT = (30 * Math.PI) / 180;
 const GOLD = '#ffd76a';
 const ENVISIONED_BLUE = '#9fc4ef';
 
@@ -98,11 +101,21 @@ class Block06ThreePaths implements StoryBlock {
     );
 
     const c = pathsContent;
+    // straight ahead = gold teaching road; leisure flight tilts 30° left,
+    // PawHearth 30° right (screen left/right for a viewer behind the cat)
+    const node = new THREE.Vector3(0, 2, -6);
+    const ahead = node.clone().add(new THREE.Vector3(0, 0, -ROAD_LEN));
+    const left = node
+      .clone()
+      .add(new THREE.Vector3(-Math.sin(TILT) * ROAD_LEN, 0, -Math.cos(TILT) * ROAD_LEN));
+    const right = node
+      .clone()
+      .add(new THREE.Vector3(Math.sin(TILT) * ROAD_LEN, 0, -Math.cos(TILT) * ROAD_LEN));
     this.paths = [
       {
         key: 'teaching',
         color: GOLD,
-        end: new THREE.Vector3(0, 2, 9),
+        end: ahead,
         lines: c.teaching.lines,
         dream: 0,
         visited: false,
@@ -110,7 +123,7 @@ class Block06ThreePaths implements StoryBlock {
       {
         key: 'pilot',
         color: ENVISIONED_BLUE,
-        end: new THREE.Vector3(-13, 2, -14),
+        end: left,
         lines: c.pilot.lines,
         dream: 0.8,
         visited: false,
@@ -118,7 +131,7 @@ class Block06ThreePaths implements StoryBlock {
       {
         key: 'pawhearth',
         color: ENVISIONED_BLUE,
-        end: new THREE.Vector3(13, 2, -14),
+        end: right,
         lines: c.pawhearth.lines,
         dream: 0.8,
         visited: false,
@@ -151,10 +164,10 @@ class Block06ThreePaths implements StoryBlock {
 
     // ? buttons on the envisioned roads — the visions open in clouds
     this.qmarks.push(
-      createQMark(ctx.overlay, new THREE.Vector3(-13, 4.2, -14), c.modals.pilot.title, () =>
+      createQMark(ctx.overlay, left.clone().setY(4.2), c.modals.pilot.title, () =>
         openCloudModal(ctx.overlay, c.modals.pilot),
       ),
-      createQMark(ctx.overlay, new THREE.Vector3(13, 4.2, -14), c.modals.pawhearth.title, () =>
+      createQMark(ctx.overlay, right.clone().setY(4.2), c.modals.pawhearth.title, () =>
         openCloudModal(ctx.overlay, c.modals.pawhearth),
       ),
     );
@@ -174,7 +187,7 @@ class Block06ThreePaths implements StoryBlock {
       this.disposables.push(tex, mat);
       this.panelMats.push(mat);
       const panel = new THREE.Mesh(panelGeo, mat);
-      panel.position.set(11 + i * 3.4, 4.6 + i * 1.6, -16 - i * 1.5);
+      panel.position.set(9.5 + i * 3.2, 4.8 + i * 1.6, -22 - i * 1.5);
       panel.lookAt(ctx.camera.position);
       this.ctx.scene.add(panel);
       this.panels.push(panel);
@@ -204,7 +217,7 @@ class Block06ThreePaths implements StoryBlock {
 
   private showBeacon(): void {
     this.beacon = createWisp(GOLD, 5, 1);
-    this.beacon.sprite.position.set(0, 3, 11);
+    this.beacon.sprite.position.set(0, 3, -27); // past the gold road's end
     this.ctx.scene.add(this.beacon.sprite);
     const hint = document.createElement('p');
     hint.className = 'wl-hint';

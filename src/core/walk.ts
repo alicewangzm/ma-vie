@@ -1,18 +1,13 @@
 import * as THREE from 'three';
 
 /**
- * Minimal exploration controller: WASD/arrow keys (camera-relative) plus
- * tap/click-to-move via raycast against an invisible ground plane. Motion is
- * clamped to a disc so the cat can't wander off the island. Blocks own one
- * per exploration scene and dispose it on exit.
+ * Exploration controller: WASD/arrow keys or the left joystick, both
+ * camera-relative. Screen taps deliberately do NOT move the cat — the two
+ * handles (and the letter/? click targets) own the pointer. Motion is
+ * clamped to a disc so the cat can't wander off the island.
  */
 export class WalkController {
-  /** World point the cat is heading to (tap-to-move), or null. */
-  private goal: THREE.Vector3 | null = null;
   private keys = new Set<string>();
-  private raycaster = new THREE.Raycaster();
-  private pointer = new THREE.Vector2();
-  private plane: THREE.Plane;
   private moveDir = new THREE.Vector3();
   private camFwd = new THREE.Vector3();
   private camRight = new THREE.Vector3();
@@ -23,36 +18,19 @@ export class WalkController {
     if (!e.repeat) this.keys.add(e.code);
   };
   private onKeyUp = (e: KeyboardEvent) => this.keys.delete(e.code);
-  private onPointerDown = (e: PointerEvent) => this.handleTap(e);
 
   constructor(
     private target: THREE.Object3D,
     private camera: THREE.Camera,
-    private dom: HTMLElement,
+    _dom: HTMLElement, // kept for call-site stability; taps no longer steer
     private center: THREE.Vector3,
     private radius: number,
     private speed = 6,
     /** Analog input from the left joystick (y = forward, x = strafe). */
     private stick: { x: number; y: number } | null = null,
   ) {
-    this.plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -center.y);
     window.addEventListener('keydown', this.onKeyDown);
     window.addEventListener('keyup', this.onKeyUp);
-    dom.addEventListener('pointerdown', this.onPointerDown);
-  }
-
-  private handleTap(e: PointerEvent): void {
-    const rect = this.dom.getBoundingClientRect();
-    this.pointer.set(
-      ((e.clientX - rect.left) / rect.width) * 2 - 1,
-      -((e.clientY - rect.top) / rect.height) * 2 + 1,
-    );
-    this.raycaster.setFromCamera(this.pointer, this.camera);
-    const hit = new THREE.Vector3();
-    if (this.raycaster.ray.intersectPlane(this.plane, hit)) {
-      this.clampToIsland(hit);
-      this.goal = hit;
-    }
   }
 
   private clampToIsland(p: THREE.Vector3): void {
@@ -85,14 +63,6 @@ export class WalkController {
       this.camFwd.normalize();
       this.camRight.crossVectors(this.camFwd, new THREE.Vector3(0, 1, 0)).negate();
       this.moveDir.addScaledVector(this.camFwd, fwd).addScaledVector(this.camRight, -side);
-      this.goal = null; // keys override tap goal
-    } else if (this.goal) {
-      this.moveDir.subVectors(this.goal, this.target.position);
-      this.moveDir.y = 0;
-      if (this.moveDir.length() < 0.3) {
-        this.goal = null;
-        this.moveDir.set(0, 0, 0);
-      }
     }
 
     this.moving = this.moveDir.lengthSq() > 0;
@@ -112,6 +82,5 @@ export class WalkController {
   dispose(): void {
     window.removeEventListener('keydown', this.onKeyDown);
     window.removeEventListener('keyup', this.onKeyUp);
-    this.dom.removeEventListener('pointerdown', this.onPointerDown);
   }
 }
