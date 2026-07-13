@@ -128,12 +128,20 @@ export const finaleContent = {
       },
     },
     {
-      word: 'incurable optimist',
+      word: 'storyteller',
       color: '#9b6bb3',
       modal: {
-        title: 'incurable optimist',
-        body: ['[placeholder] Exhibit A: this entire website.'],
-        images: [{ src: 'assets/hobby-optimist.jpg', alt: 'proof of optimism' }],
+        title: 'storyteller',
+        body: [
+          '[placeholder] Behind and in front of the camera — directing, acting, cutting the reel.',
+        ],
+        images: [
+          {
+            src: 'assets/hobby-amateurDirectorActor.mp4',
+            alt: 'Alice directing and acting',
+            caption: 'amateur director · actor',
+          },
+        ],
       },
     },
   ],
