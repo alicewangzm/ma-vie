@@ -166,8 +166,13 @@ const skipBtn = createButton(cornerBar, 'Skip →', 'wl-corner', () => {
 });
 skipBtn.classList.add('visible');
 
-// skip the walking objective of the current chapter (text still plays)
+// skip the walking objective of the current chapter (text still plays).
+// Ignore presses mid-wipe or right after a chapter change — currentBlock
+// swaps to the incoming chapter before the clouds open, so a stray second
+// click used to fast-forward a chapter the traveler never saw.
+let blockChangedAt = 0;
 const skipStepBtn = createButton(cornerBar, 'skip step ⏭', 'wl-corner', () => {
+  if (director.isBusy || performance.now() - blockChangedAt < 1000) return;
   const block = director.currentBlock as { skipInteraction?: () => void } | null;
   block?.skipInteraction?.();
 });
@@ -192,10 +197,15 @@ const WALKABLE = new Set([
   'block06-three-paths',
 ]);
 ctx.progress.subscribe((s) => {
+  blockChangedAt = performance.now();
   if (s.currentBlock !== 'block00-letter') skipBtn.remove();
   joysticks.setVisible(WALKABLE.has(s.currentBlock ?? ''));
-  // every chapter past the letter can fast-forward its current step
-  const skippable = s.currentBlock !== null && s.currentBlock !== 'block00-letter';
+  // chapters past the letter can fast-forward; the finale runs unhurried
+  // (its hobby row has its own "all at once" reveal)
+  const skippable =
+    s.currentBlock !== null &&
+    s.currentBlock !== 'block00-letter' &&
+    s.currentBlock !== 'block08-finale';
   skipStepBtn.style.display = skippable ? '' : 'none';
   skipStepBtn.classList.add('visible');
 });

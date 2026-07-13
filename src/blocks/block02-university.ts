@@ -118,19 +118,20 @@ class Block02University implements StoryBlock {
         break;
       case 'projects':
         this.addPanel('Banking APIs', 'Java + Spring Boot', new THREE.Vector3(-17, 3.5, -4));
-        this.addPanel('Supplier Upload', 'React + Google Maps', new THREE.Vector3(0, 9, -20));
+        // the CS work clusters on the Waterloo (left) side of the road
+        this.addPanel('Supplier Upload', 'React + Google Maps', new THREE.Vector3(-7, 8.5, -18));
         this.addPanel(
           'Finance Research',
           '14,000 SEC files · Python',
           new THREE.Vector3(17, 3.5, -4),
         );
-        this.addQMark(new THREE.Vector3(0, 6.4, -20), modals.projects);
+        this.addQMark(new THREE.Vector3(-9, 6.4, -19), modals.projects);
         break;
       case 'coop':
         this.addPanel(
           'Replicant',
           'co-op · San Francisco',
-          new THREE.Vector3(0, 12.5, -26),
+          new THREE.Vector3(-17, 12.5, -25),
           '#b3552d',
         );
         break;
@@ -183,7 +184,7 @@ class Block02University implements StoryBlock {
       m.baseOpacity = Math.max(m.baseOpacity - dt * 0.045, 0);
     }
 
-    for (const q of this.qmarks) q.update(this.ctx.camera);
+    for (const q of this.qmarks) q.update(this.ctx.camera, cat.position);
 
     if (this.beacon) {
       pulseWisp(this.beacon, t, 0.2);

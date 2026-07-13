@@ -20,7 +20,7 @@ const WALK_CENTER = new THREE.Vector3(0, 1.1, -6);
 const WALK_RADIUS = 22;
 // the cat faces -z at the node; roads run 15 units out from it
 const ROAD_LEN = 15;
-const TILT = (30 * Math.PI) / 180;
+const TILT = (45 * Math.PI) / 180; // envisioned roads swing well clear of the gold one
 const GOLD = '#ffd76a';
 const ENVISIONED_BLUE = '#9fc4ef';
 
@@ -101,8 +101,8 @@ class Block06ThreePaths implements StoryBlock {
     );
 
     const c = pathsContent;
-    // straight ahead = gold teaching road; leisure flight tilts 30° left,
-    // PawHearth 30° right (screen left/right for a viewer behind the cat)
+    // straight ahead = gold teaching road; leisure flight tilts 45° left,
+    // PawHearth 45° right (screen left/right for a viewer behind the cat)
     const node = new THREE.Vector3(0, 2, -6);
     const ahead = node.clone().add(new THREE.Vector3(0, 0, -ROAD_LEN));
     const left = node
@@ -172,6 +172,21 @@ class Block06ThreePaths implements StoryBlock {
       ),
     );
 
+    // dream-clouds gather around the two envisioned road ends — soft white
+    // puffs, so the futures sit half-hidden in mist while the gold road is clear
+    for (const end of [left, right]) {
+      for (let i = 0; i < 6; i++) {
+        const puff = createWisp('#ffffff', 4.5 + Math.random() * 3, 0.28);
+        puff.sprite.position.set(
+          end.x + (Math.random() - 0.5) * 9,
+          2.2 + Math.random() * 3.5,
+          end.z + (Math.random() - 0.5) * 7 - 2,
+        );
+        this.ctx.scene.add(puff.sprite);
+        this.trails.push(puff); // shares the trail pulse + teardown
+      }
+    }
+
     // PawHearth: floating "screenshot" panels near its vision end
     const panelGeo = new THREE.PlaneGeometry(4.4, 2.75);
     this.disposables.push(panelGeo);
@@ -187,7 +202,7 @@ class Block06ThreePaths implements StoryBlock {
       this.disposables.push(tex, mat);
       this.panelMats.push(mat);
       const panel = new THREE.Mesh(panelGeo, mat);
-      panel.position.set(9.5 + i * 3.2, 4.8 + i * 1.6, -22 - i * 1.5);
+      panel.position.set(right.x + 1.5 + i * 3.2, 4.8 + i * 1.6, right.z - 4 - i * 1.5);
       panel.lookAt(ctx.camera.position);
       this.ctx.scene.add(panel);
       this.panels.push(panel);
@@ -248,7 +263,7 @@ class Block06ThreePaths implements StoryBlock {
     d.value += (targetDream - d.value) * Math.min(dt * 1.5, 1);
 
     for (const w of this.trails) pulseWisp(w, t);
-    for (const q of this.qmarks) q.update(this.ctx.camera);
+    for (const q of this.qmarks) q.update(this.ctx.camera, cat.position);
 
     // envisioned panels bob and gently blink (faded futures)
     this.panels.forEach((panel, i) => {

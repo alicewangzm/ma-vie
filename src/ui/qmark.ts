@@ -45,13 +45,18 @@ function ensureStyles(): void {
 }
 
 export interface QMark {
-  /** Re-project to screen space; call once per frame. */
-  update(camera: THREE.Camera): void;
+  /**
+   * Re-project to screen space; call once per frame. Pass the cat's
+   * position to make the ? a discovery: it only fades in once the cat
+   * wanders close (within `nearRadius`).
+   */
+  update(camera: THREE.Camera, catPos?: THREE.Vector3, nearRadius?: number): void;
   setVisible(v: boolean): void;
   dispose(): void;
 }
 
 const _v = new THREE.Vector3();
+export const QMARK_NEAR_RADIUS = 8;
 
 export function createQMark(
   parent: HTMLElement,
@@ -70,9 +75,10 @@ export function createQMark(
   let visible = true;
 
   return {
-    update(camera: THREE.Camera) {
+    update(camera: THREE.Camera, catPos?: THREE.Vector3, nearRadius = QMARK_NEAR_RADIUS) {
+      const far = catPos ? worldPos.distanceTo(catPos) > nearRadius : false;
       _v.copy(worldPos).project(camera);
-      const off = !visible || _v.z > 1 || Math.abs(_v.x) > 1.05 || Math.abs(_v.y) > 1.05;
+      const off = !visible || far || _v.z > 1 || Math.abs(_v.x) > 1.05 || Math.abs(_v.y) > 1.05;
       btn.dataset.offscreen = off ? '1' : '0';
       if (!off) {
         btn.style.left = `${((_v.x + 1) / 2) * 100}%`;

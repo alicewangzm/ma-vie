@@ -80,8 +80,9 @@ export function ensureOverlayStyles(): void {
       opacity: 1;
     }
     .wl-button:hover {
+      /* no transform here — it would clobber translateX(-50%) centering
+         and shove centered buttons (accept) sideways on hover/click */
       background: rgba(255, 244, 214, 0.95);
-      transform: translateY(-1px);
     }
     .wl-accept {
       position: absolute;
@@ -127,7 +128,8 @@ export function ensureOverlayStyles(): void {
       left: 50%;
       top: calc(max(12px, env(safe-area-inset-top, 0px)) + 46px);
       transform: translateX(-50%);
-      width: min(38rem, 90vw);
+      /* wide enough that a title + date slot stays on one line on desktop */
+      width: min(50rem, 94vw);
       text-align: center;
       color: #4a3f5c;
       text-shadow: 0 1px 8px rgba(255, 255, 255, 0.7);
@@ -203,9 +205,10 @@ export function ensureOverlayStyles(): void {
       transition: opacity 0.6s ease;
     }
     .wl-links {
+      /* low enough to clear the signoff lines above */
       position: absolute;
       left: 50%;
-      bottom: 8%;
+      bottom: 2.5%;
       transform: translateX(-50%);
       display: flex;
       gap: 1.2rem;
@@ -225,10 +228,20 @@ export function ensureOverlayStyles(): void {
       transition: background 0.3s ease, transform 0.3s ease;
     }
     .wl-links a:hover { background: rgba(255, 244, 214, 0.95); transform: translateY(-1px); }
+    .wl-emoji {
+      display: inline-block;
+      margin-left: 0.35em;
+      animation: wl-emoji-bob 1.7s ease-in-out infinite;
+    }
+    @keyframes wl-emoji-bob {
+      0%, 100% { transform: translateY(0) rotate(-6deg); }
+      50% { transform: translateY(-4px) rotate(8deg); }
+    }
     @media (prefers-reduced-motion: reduce) {
       .story-line, .wl-button, .wl-chapter-title, .wl-sidelog p, .wl-title-card {
         transition-duration: 0.01s;
       }
+      .wl-emoji { animation: none; }
     }
   `;
   document.head.appendChild(style);

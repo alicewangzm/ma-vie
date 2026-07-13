@@ -3,11 +3,15 @@ export const stormContent = {
   title: 'Chapter Two — The Storm Before Sunrise',
   date: 'Spring 2024',
   intro: ['After graduation, a door appeared with a familiar name.', 'She reached for it.'],
-  /** One glowing milestone each — reached by walking to them, in order. */
+  /**
+   * One glowing milestone each. The cat starts at the first (the written
+   * test) and follows the road to the rest.
+   */
   milestones: [
     'The written test — passed.',
     'Interview one — passed.',
-    'Interview two — passed. Interview three — passed.',
+    'Interview two — passed.',
+    'Interview three — passed.',
   ],
   preStorm: [
     'The sun was almost up.',

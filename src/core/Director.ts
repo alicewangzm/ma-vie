@@ -56,6 +56,11 @@ export class Director {
     return this.current;
   }
 
+  /** True while a transition is in flight (block swaps mid-wipe). */
+  get isBusy(): boolean {
+    return this.busy;
+  }
+
   /** Enter a block directly (no wipe on the way in — we boot behind clouds). */
   async start(atIndex = 0): Promise<void> {
     if (this.index !== -1 || this.registrations.length === 0) return;

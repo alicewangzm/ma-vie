@@ -3,6 +3,7 @@ import type { StoryBlock } from '../core/StoryBlock';
 import type { WorldContext } from '../core/WorldContext';
 import { WalkController } from '../core/walk';
 import { createWisp, pulseWisp, type Wisp } from '../render/wisp';
+import { makePanel } from '../render/panels';
 import { skyPresets, lerpEnvToPreset } from '../render/skyPresets';
 import {
   typewriterLines,
@@ -33,6 +34,7 @@ class Block05Teaching implements StoryBlock {
   private typewriter: TypewriterHandle | null = null;
   private hintEl: HTMLElement | null = null;
   private lanterns: Wisp[] = [];
+  private board: ReturnType<typeof makePanel> | null = null;
   private qmark: QMark | null = null;
   private beacon: Wisp | null = null;
   private warm = false;
@@ -69,6 +71,12 @@ class Block05Teaching implements StoryBlock {
   /** Full color returns; small warm lights kindle in a ring. */
   private kindle(): void {
     this.warm = true;
+    // the classroom board — placeholder until Stage 3 art
+    this.board = makePanel('Math · Science · Technology', 'Teacher', '#3b6d8a');
+    this.board.mesh.position.set(4.5, 2, -12); // rises into place
+    this.board.mesh.scale.setScalar(1.6);
+    this.board.mesh.lookAt(this.ctx.camera.position);
+    this.ctx.scene.add(this.board.mesh);
     // "look closer": what she actually teaches, in a cloud
     this.qmark = createQMark(
       this.ctx.overlay,
@@ -114,7 +122,12 @@ class Block05Teaching implements StoryBlock {
       w.baseOpacity = Math.min(w.baseOpacity + dt * 0.25, 0.85);
       pulseWisp(w, t);
     }
-    this.qmark?.update(this.ctx.camera);
+    if (this.board) {
+      this.board.material.opacity = Math.min(this.board.material.opacity + dt * 0.6, 0.92);
+      const target = 6;
+      this.board.mesh.position.y += (target - this.board.mesh.position.y) * Math.min(dt * 1.4, 1);
+    }
+    this.qmark?.update(this.ctx.camera, cat.position);
 
     if (this.beacon) {
       pulseWisp(this.beacon, t, 0.2);
@@ -145,6 +158,10 @@ class Block05Teaching implements StoryBlock {
     this.typewriter?.destroy();
     this.title?.destroy();
     this.hintEl?.remove();
+    if (this.board) {
+      this.ctx.scene.remove(this.board.mesh);
+      this.board.dispose();
+    }
     for (const w of this.lanterns) {
       this.ctx.scene.remove(w.sprite);
       w.dispose();

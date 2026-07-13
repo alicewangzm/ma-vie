@@ -6,12 +6,7 @@ import type { StoryBlock } from '../core/StoryBlock';
 import type { WorldContext } from '../core/WorldContext';
 import { createWisp, pulseWisp, type Wisp } from '../render/wisp';
 import { skyPresets, lerpEnvToPreset } from '../render/skyPresets';
-import {
-  typewriterLines,
-  chapterTitle,
-  type TypewriterHandle,
-  type OverlayHandle,
-} from '../ui/overlay';
+import { typewriterLines, type TypewriterHandle } from '../ui/overlay';
 import { openCloudModal } from '../ui/cloudModal';
 import { finaleContent } from '../content/block08';
 
@@ -143,9 +138,9 @@ class Block08Finale implements StoryBlock {
   private phaseTime = 0;
   private skyline: THREE.Group | null = null;
   private skylineMat: THREE.MeshBasicMaterial | null = null;
+  private bridgeMat: THREE.MeshBasicMaterial | null = null;
   private letterMats: THREE.MeshBasicMaterial[] = [];
   private droplet: Wisp | null = null;
-  private title: OverlayHandle | null = null;
   private typewriter: TypewriterHandle | null = null;
   private titleCard: HTMLElement | null = null;
   private titleIndex = -1;
@@ -178,8 +173,8 @@ class Block08Finale implements StoryBlock {
     ctx.rig.follow(null);
     ctx.rig.lookAt(new THREE.Vector3(0, 14, -60));
 
+    // no chapter title here — the finale speaks for itself
     this.buildSkyline();
-    this.title = chapterTitle(ctx.overlay, finaleContent.title);
     this.typewriter = typewriterLines(ctx.overlay, finaleContent.partA, 2400, 3);
     void this.typewriter.done.then(() => this.setPhase('reveal'));
   }
@@ -201,29 +196,110 @@ class Block08Finale implements StoryBlock {
 
     let seed = 7;
     const rand = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-    // downtown blocks
+    // downtown sits left of frame, across the bay (reference: SF postcard view)
     for (let i = 0; i < 12; i++) {
       const w = 3 + rand() * 4;
       const h = 4 + rand() * 11;
       const geo = new THREE.BoxGeometry(w, h, 3);
       this.disposables.push(geo);
       const b = new THREE.Mesh(geo, this.skylineMat);
-      b.position.set(-34 + i * 6 + (rand() - 0.5) * 2, 6 + h / 2, -80);
+      b.position.set(-48 + i * 6 + (rand() - 0.5) * 2, 6 + h / 2, -80);
       merged.add(b);
     }
     // Transamerica pyramid
     const pyramid = new THREE.ConeGeometry(2.6, 22, 4);
     this.disposables.push(pyramid);
     const py = new THREE.Mesh(pyramid, this.skylineMat);
-    py.position.set(-9, 17, -78);
+    py.position.set(-23, 17, -78);
     py.rotation.y = Math.PI / 4;
     merged.add(py);
     // Salesforce tower — tall, rounded, gently tapered
     const tower = new THREE.CylinderGeometry(1.7, 2.4, 26, 12);
     this.disposables.push(tower);
     const tw = new THREE.Mesh(tower, this.skylineMat);
-    tw.position.set(6, 19, -80);
+    tw.position.set(-8, 19, -80);
     merged.add(tw);
+
+    // the Golden Gate Bridge crosses the right foreground: two ladder
+    // towers, a drooping main cable with suspenders, deck running off-frame
+    this.bridgeMat = new THREE.MeshBasicMaterial({
+      color: 0xbb6248, // international orange, weathered by the haze
+      transparent: true,
+      opacity: 0,
+      fog: false,
+    });
+    this.disposables.push(this.bridgeMat);
+    const bridge = new THREE.Group();
+    const DECK_Y = 9;
+    const TOP_Y = 27;
+    const towerXs = [12, 34];
+
+    const deckGeo = new THREE.BoxGeometry(56, 0.8, 2.4);
+    this.disposables.push(deckGeo);
+    const deck = new THREE.Mesh(deckGeo, this.bridgeMat);
+    deck.position.set(23, DECK_Y, 0);
+    bridge.add(deck);
+
+    const legGeo = new THREE.BoxGeometry(1.1, TOP_Y - 3, 1.3);
+    const barGeo = new THREE.BoxGeometry(4.7, 1.1, 1.5);
+    this.disposables.push(legGeo, barGeo);
+    for (const tx of towerXs) {
+      for (const s of [-1.8, 1.8]) {
+        const leg = new THREE.Mesh(legGeo, this.bridgeMat);
+        leg.position.set(tx + s, 3 + (TOP_Y - 3) / 2, 0);
+        bridge.add(leg);
+      }
+      for (const by of [14, 20, 25.5]) {
+        const bar = new THREE.Mesh(barGeo, this.bridgeMat);
+        bar.position.set(tx, by, 0);
+        bridge.add(bar);
+      }
+    }
+
+    // cables: center span droops between the towers; side spans run to the deck
+    const spans: [THREE.Vector3, THREE.Vector3, THREE.Vector3][] = [
+      [
+        new THREE.Vector3(towerXs[0], TOP_Y, 0),
+        new THREE.Vector3(23, DECK_Y + 1.5, 0),
+        new THREE.Vector3(towerXs[1], TOP_Y, 0),
+      ],
+      [
+        new THREE.Vector3(-5, DECK_Y + 0.5, 0),
+        new THREE.Vector3(4, 13, 0),
+        new THREE.Vector3(towerXs[0], TOP_Y, 0),
+      ],
+      [
+        new THREE.Vector3(towerXs[1], TOP_Y, 0),
+        new THREE.Vector3(42, 13, 0),
+        new THREE.Vector3(51, DECK_Y + 0.5, 0),
+      ],
+    ];
+    let mainSpan: THREE.QuadraticBezierCurve3 | null = null;
+    for (const [a, ctrl, b] of spans) {
+      const curve = new THREE.QuadraticBezierCurve3(a, ctrl, b);
+      if (!mainSpan) mainSpan = curve;
+      for (const z of [-1.1, 1.1]) {
+        const tube = new THREE.TubeGeometry(curve, 20, 0.14, 5);
+        this.disposables.push(tube);
+        const cable = new THREE.Mesh(tube, this.bridgeMat);
+        cable.position.z = z;
+        bridge.add(cable);
+      }
+    }
+    // suspenders hang from the main span down to the deck
+    for (let i = 1; i < 8; i++) {
+      const p = mainSpan!.getPoint(i / 8);
+      const len = p.y - DECK_Y;
+      const geo = new THREE.BoxGeometry(0.1, len, 0.1);
+      this.disposables.push(geo);
+      const rod = new THREE.Mesh(geo, this.bridgeMat);
+      rod.position.set(p.x, DECK_Y + len / 2, 1.1);
+      bridge.add(rod);
+    }
+
+    bridge.position.set(6, 0, -56);
+    bridge.rotation.y = -0.18; // recedes gently, like the postcard shot
+    merged.add(bridge);
 
     // the 3D GOOGLE wordmark floating above the city
     const font = new FontLoader().parse(
@@ -242,7 +318,8 @@ class Block08Finale implements StoryBlock {
       geo.computeBoundingBox();
       const width = geo.boundingBox!.max.x - geo.boundingBox!.min.x;
       const mat = new THREE.MeshBasicMaterial({
-        color: GOOGLE_COLORS[i],
+        // brand colors washed toward the warm sky — a vision, not a sign
+        color: new THREE.Color(GOOGLE_COLORS[i]).lerp(new THREE.Color('#f5efe6'), 0.45),
         transparent: true,
         opacity: 0,
         fog: false,
@@ -251,7 +328,7 @@ class Block08Finale implements StoryBlock {
       letters.push({ geo, mat, width });
       cursor += width + 0.7;
     });
-    let x = -cursor / 2;
+    let x = -cursor / 2 - 14; // centered over the city, which sits left of frame
     for (const l of letters) {
       const mesh = new THREE.Mesh(l.geo, l.mat);
       mesh.position.set(x, 25, -78); // hovering just above the towers, clear of the star tracker
@@ -330,6 +407,16 @@ class Block08Finale implements StoryBlock {
       this.hobbyButtons.push(btn);
     });
     root.appendChild(row);
+
+    // for travelers in a hurry: light every word with one click
+    const allBtn = document.createElement('button');
+    allBtn.className = 'wl-hobby';
+    allBtn.textContent = '✨ all of it at once';
+    allBtn.style.cssText = 'color:rgba(74,63,92,0.6);font-style:italic;font-weight:500;';
+    allBtn.addEventListener('click', () => this.revealAll());
+    const allRow = document.createElement('p');
+    allRow.appendChild(allBtn);
+    root.appendChild(allRow);
     this.ctx.overlay.appendChild(root);
     this.everythingEl = root;
 
@@ -473,6 +560,15 @@ class Block08Finale implements StoryBlock {
     this.droplet.sprite.position.set(0, 34, -30);
     this.ctx.scene.add(this.droplet.sprite);
     this.typewriter = typewriterLines(this.ctx.overlay, finaleContent.reward, 2400, 3);
+    // a little red book bobs beside "the secret" — readers will know it
+    this.ctx.overlay.querySelectorAll<HTMLElement>('.story-line').forEach((el) => {
+      if (!/the secret/i.test(el.textContent ?? '')) return;
+      const emoji = document.createElement('span');
+      emoji.className = 'wl-emoji';
+      emoji.textContent = '📕';
+      emoji.setAttribute('aria-hidden', 'true');
+      el.appendChild(emoji);
+    });
     void this.typewriter.done.then(() => this.setPhase('goodbye'));
   }
 
@@ -546,13 +642,19 @@ class Block08Finale implements StoryBlock {
     if (this.skylineMat) {
       this.skylineMat.opacity += (0.5 - this.skylineMat.opacity) * Math.min(dt * 0.5, 1);
     }
+    if (this.bridgeMat) {
+      this.bridgeMat.opacity += (0.55 - this.bridgeMat.opacity) * Math.min(dt * 0.5, 1);
+    }
     for (const m of this.letterMats) {
-      m.opacity += (0.85 - m.opacity) * Math.min(dt * 0.5, 1);
+      m.opacity += (0.6 - m.opacity) * Math.min(dt * 0.5, 1);
     }
     if (this.droplet) {
-      pulseWisp(this.droplet, t, 0.15);
-      // the droplet drifts down toward the cat like a slow gift
-      this.droplet.sprite.position.y = Math.max(this.droplet.sprite.position.y - dt * 1.6, 6);
+      // the droplet is alive: it breathes, sways like a leaf on the way
+      // down, and settles into a gentle hover above the cat
+      pulseWisp(this.droplet, t, 0.35);
+      const s = this.droplet.sprite.position;
+      s.y = Math.max(s.y - dt * 1.6, 6 + Math.sin(t * 1.8) * 0.5);
+      s.x = Math.sin(t * 1.1) * 1.4;
     }
     this.drawPortrait(dt);
 
@@ -569,23 +671,26 @@ class Block08Finale implements StoryBlock {
     }
   }
 
-  /**
-   * Fast-forward the current part. In the hobby part this lights every
-   * word at once — for travelers who don't want to open each cloud.
-   */
+  /** Light every hobby word at once; the dots fly right after. */
+  private revealAll(): void {
+    this.hobbyButtons.forEach((btn) => {
+      if (!btn.dataset.clicked) {
+        btn.dataset.clicked = '1';
+        btn.style.textShadow = `0 0 14px ${btn.style.color}`;
+        this.clickedCount += 1;
+      }
+    });
+    this.phaseTime = 100; // clears the reading-time gate → dots fly
+  }
+
+  /** Fast-forward the current part (kept for the dev hook / future use). */
   skipInteraction(): void {
     switch (this.phase) {
       case 'titles':
         this.phaseTime = CARD_SECONDS * finaleContent.rotatingTitles.length + 1;
         break;
       case 'everything':
-        this.hobbyButtons.forEach((btn) => {
-          if (!btn.dataset.clicked) {
-            btn.dataset.clicked = '1';
-            this.clickedCount += 1;
-          }
-        });
-        this.phaseTime = 100; // clears the reading-time gate → dots fly
+        this.revealAll();
         break;
       default:
         this.typewriter?.skip();
@@ -596,7 +701,6 @@ class Block08Finale implements StoryBlock {
 
   dispose(): void {
     this.typewriter?.destroy();
-    this.title?.destroy();
     this.titleCard?.remove();
     this.tipEl?.remove();
     this.everythingEl?.remove();

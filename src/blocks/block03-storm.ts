@@ -5,6 +5,7 @@ import { WalkController } from '../core/walk';
 import { createWisp, pulseWisp, type Wisp } from '../render/wisp';
 import { makePanel } from '../render/panels';
 import { makeRain, type Rain } from '../render/rain';
+import { createStonePath, type StonePath } from '../render/stones';
 import { skyPresets, lerpEnvToPreset } from '../render/skyPresets';
 import {
   typewriterLines,
@@ -36,6 +37,7 @@ class Block03Storm implements StoryBlock {
   private walk: WalkController | null = null;
   private phase: Phase = 'door';
   private door: ReturnType<typeof makePanel> | null = null;
+  private roads: StonePath[] = [];
   private milestones: { wisp: Wisp; reached: boolean; label: string }[] = [];
   private reachedCount = 0;
   private rain: Rain | null = null;
@@ -93,11 +95,13 @@ class Block03Storm implements StoryBlock {
   private startMilestones(): void {
     if (this.phase !== 'door') return;
     this.phase = 'milestones';
-    // three milestones marching toward the (almost rising) sun
+    // the written test is where the cat already stands; interviews one to
+    // three light the road winding toward the door on the horizon
     const spots: [number, number][] = [
-      [-8, 0],
-      [0, -8],
-      [9, -13],
+      [0, -6], // written test — the starting point
+      [-7, -11],
+      [-1, -17],
+      [6, -21],
     ];
     this.milestones = spots.map(([x, z], i) => {
       const wisp = createWisp('#ffcf7d', 3.6, 0.95);
@@ -105,6 +109,18 @@ class Block03Storm implements StoryBlock {
       this.ctx.scene.add(wisp.sprite);
       return { wisp, reached: false, label: stormContent.milestones[i] };
     });
+    // stone road connecting the milestones, so the way forward reads
+    for (let i = 0; i < spots.length - 1; i++) {
+      const [ax, az] = spots[i];
+      const [bx, bz] = spots[i + 1];
+      const road = createStonePath(new THREE.Vector3(ax, 0, az), new THREE.Vector3(bx, 0, bz), {
+        color: 0xb0a8bd,
+      });
+      this.ctx.scene.add(road.mesh);
+      this.roads.push(road);
+    }
+    // the first light greets the cat immediately — no walk needed
+    this.reach(this.milestones[0]);
   }
 
   private reach(m: (typeof this.milestones)[number]): void {
@@ -275,6 +291,11 @@ class Block03Storm implements StoryBlock {
       wisp.dispose();
     }
     this.milestones = [];
+    for (const r of this.roads) {
+      this.ctx.scene.remove(r.mesh);
+      r.dispose();
+    }
+    this.roads = [];
     if (this.rain) {
       this.ctx.scene.remove(this.rain.points);
       this.rain.dispose();

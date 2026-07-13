@@ -47,7 +47,8 @@ describe('content data', () => {
   it('storm chapter carries its date slot and full milestone/self-talk copy', async () => {
     const { stormContent } = await import('../src/content/block03');
     expect(stormContent.date.length).toBeGreaterThan(0);
-    expect(stormContent.milestones).toHaveLength(3);
+    // written test (the starting point) + interviews one to three
+    expect(stormContent.milestones).toHaveLength(4);
     expect(stormContent.sideLog.length).toBeGreaterThanOrEqual(4);
   });
 
