@@ -134,8 +134,8 @@ with full feature parity. Same edge delivery, same per-push previews.
   hover / press-and-hold (still `.jpg` + motion `.mp4` with the same basename,
   a ◉ badge in the corner, no library needed). Export both halves of each Live
   Photo into `public/assets` and pair them by name.
-- **PawHearth live demo** — embed `assets/pawHearthHome.html` (the liquid-glass
-  home-screen prototype) in the PawHearth cloud via a scaled same-origin iframe.
+- ~~**PawHearth live demo**~~ — shipped: the liquid-glass home-screen prototype
+  runs fully interactive in the PawHearth cloud (scaled same-origin iframe).
 
 ## Credits & inspiration
 
