@@ -127,6 +127,16 @@ Concretely this ships as a **static-assets-only Worker** (`wrangler.jsonc` with 
 Pages into Workers, and as of 2026 Workers static assets is the recommended target
 with full feature parity. Same edge delivery, same per-push previews.
 
+## Further enhancements
+
+- **Live Photos** — the memory clouds already play videos; the next step is
+  Apple-style live tiles: a still photo that plays its paired 3-second clip on
+  hover / press-and-hold (still `.jpg` + motion `.mp4` with the same basename,
+  a ◉ badge in the corner, no library needed). Export both halves of each Live
+  Photo into `public/assets` and pair them by name.
+- **PawHearth live demo** — embed `assets/pawHearthHome.html` (the liquid-glass
+  home-screen prototype) in the PawHearth cloud via a scaled same-origin iframe.
+
 ## Credits & inspiration
 
 - _Sky: Children of the Light_ (thatgamecompany) — tonal inspiration only; zero copied

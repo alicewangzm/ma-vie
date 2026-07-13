@@ -1,0 +1,1480 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pawhearth — Home (Liquid Glass)</title>
+
+  <!-- Shared design tokens (source of truth: ../tokens.json) — reused for
+       type, spacing, radius, ink colors and easing so this concept still
+       feels like Pawhearth. The five pastel + glass values below are LOCAL
+       to this concept, same pattern as the scene-pack colors in home.html:
+       they are not system tokens, they belong to this exploration. -->
+  <link rel="stylesheet" href="./tokens.css" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;800&display=swap" rel="stylesheet" />
+
+  <style>
+    /* =========================================================
+       CONCEPT PALETTE — pastel + liquid glass
+       These 5 pastels (and the 18px glass blur) are now the LOCKED
+       design and have ALSO been promoted into the canonical
+       design/mockups/tokens.css (color.pastel.* / effect.glassBlur):
+       future screens should reference those canonical tokens rather
+       than re-declaring local copies. home.html keeps its own local
+       --pg-* vars below unchanged, for stability of this proven screen.
+       ========================================================= */
+    :root {
+      --pg-blush:  #F0DDD6;
+      --pg-butter: #FDFFB6;
+      --pg-mint:   #E4F1EE;
+      --pg-sky:    #D9EDF8;
+      --pg-lilac:  #DEDAF4;
+
+      --pg-glass-blur: 18px;
+
+      /* cat art palette — separate namespace from scene colors,
+         same convention as the --cat-* vars in home.html */
+      --cat-body:  #FBEFE6;
+      --cat-shade: #EBD9CC;
+      --cat-inner: #F3C2D6;
+      --cat-face:  #5A4B3E;
+      --cat-blush: #F3AFAF;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+    body {
+      font-family: var(--type-family-base);
+      color: var(--color-ink-primary);
+      background: var(--color-bg-surfaceAlt);
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      gap: var(--space-lg);
+      padding: var(--space-xxl);
+    }
+
+    .concept-tag {
+      max-inline-size: 390px;
+      text-align: center;
+      font-size: var(--type-size-sm);
+      color: var(--color-ink-secondary);
+      line-height: var(--type-lineHeight-body);
+    }
+    .concept-tag strong { color: var(--color-ink-primary); }
+
+    /* =========================================================
+       PHONE FRAME  (390 × 844) — same shell as home.html
+       ========================================================= */
+    .phone {
+      position: relative;
+      inline-size: 390px;
+      block-size: 844px;
+      border-radius: 48px;
+      background: #0e0d0c;
+      padding: 6px;
+      box-shadow: var(--elevation-e2);
+    }
+    .screen {
+      position: relative;
+      inline-size: 100%;
+      block-size: 100%;
+      border-radius: 42px;
+      overflow: hidden;
+      background: var(--pg-blush);
+    }
+    .safe-top {
+      position: absolute; inset-block-start: 0; inset-inline: 0;
+      block-size: 54px; z-index: 40; pointer-events: none;
+    }
+    .safe-bottom {
+      position: absolute; inset-block-end: 0; inset-inline: 0;
+      block-size: 34px; z-index: 40; pointer-events: none;
+    }
+    .island {
+      position: absolute; inset-block-start: 12px; inset-inline-start: 50%;
+      transform: translateX(-50%);
+      inline-size: 112px; block-size: 30px;
+      border-radius: var(--radius-pill); background: #14110f;
+    }
+    .home-indicator {
+      position: absolute; inset-block-end: 9px; inset-inline-start: 50%;
+      transform: translateX(-50%);
+      inline-size: 134px; block-size: 5px;
+      border-radius: var(--radius-pill); background: rgb(from var(--color-ink-primary) r g b / 0.35);
+    }
+
+    /* =========================================================
+       SCENE STACK — two pastel backdrops, crossfaded smoothly.
+       Only the 5 concept colors are used in either scene.
+       ========================================================= */
+    .scene-stack { position: absolute; inset: 0; z-index: 0; }
+    .scene-stack.is-switching { animation: scene-blur-pulse 600ms ease; }
+    .scene { position: absolute; inset: 0; transition: opacity var(--motion-duration-slow) var(--motion-easing-standard); }
+    .scene-home { opacity: 1; }
+    .scene-outdoor { opacity: 0; }
+    .scene-stack.show-outdoor .scene-home { opacity: 0; }
+    .scene-stack.show-outdoor .scene-outdoor { opacity: 1; }
+    @keyframes scene-blur-pulse {
+      0%   { filter: blur(0); }
+      45%  { filter: blur(5px); }
+      100% { filter: blur(0); }
+    }
+
+    /* ---- home scene ---- */
+    .wall { position: absolute; inset: 0; background: linear-gradient(160deg, var(--pg-blush) 0%, var(--pg-lilac) 100%); }
+    .window {
+      position: absolute; inset-block-start: 88px; inset-inline-start: 40px;
+      inline-size: 150px; block-size: 168px;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      background: linear-gradient(180deg, var(--pg-sky), var(--pg-butter));
+      box-shadow: 0 0 0 8px var(--pg-blush), 0 0 0 12px rgb(from var(--color-ink-primary) r g b / 0.06);
+    }
+    .window .sun {
+      position: absolute; inset-block-end: 20px; inset-inline-start: 50%;
+      transform: translateX(-50%);
+      inline-size: 64px; block-size: 64px; border-radius: 50%;
+      background: var(--pg-butter);
+      box-shadow: 0 0 26px 12px rgba(253, 255, 182, 0.65);
+    }
+    .cloud { position: absolute; background: var(--color-glass-surfaceStrong); border-radius: var(--radius-pill); }
+    .window .cloud-1 { inset-block-start: 24px; inset-inline-start: 18px; inline-size: 40px; block-size: 14px; }
+    .window .cloud-2 { inset-block-start: 44px; inset-inline-start: 64px; inline-size: 26px; block-size: 10px; }
+    .floor { position: absolute; inset-inline: 0; inset-block-end: 0; block-size: 30%; background: var(--pg-mint); }
+    .rug {
+      position: absolute; inset-block-end: 40px; inset-inline-start: 50%;
+      transform: translateX(-50%);
+      inline-size: 232px; block-size: 64px;
+      border-radius: var(--radius-pill);
+      background: var(--pg-lilac);
+      opacity: 0.85;
+      box-shadow: 0 6px 14px rgba(90, 70, 50, 0.08);
+    }
+
+    /* ---- outdoor scene ---- */
+    .sky-outdoor { position: absolute; inset: 0; background: linear-gradient(180deg, var(--pg-sky) 0%, var(--pg-butter) 100%); }
+    .sun-outdoor {
+      position: absolute; inset-block-start: 64px; inset-inline-end: 74px;
+      inline-size: 76px; block-size: 76px; border-radius: 50%;
+      background: var(--pg-butter);
+      box-shadow: 0 0 34px 16px rgba(253, 255, 182, 0.55);
+    }
+    .scene-outdoor .cloud-1 { inset-block-start: 70px; inset-inline-start: 34px; inline-size: 52px; block-size: 16px; }
+    .scene-outdoor .cloud-2 { inset-block-start: 96px; inset-inline-start: 76px; inline-size: 30px; block-size: 11px; }
+    .hill-far {
+      position: absolute; inset-block-end: 22%; inset-inline: -10%;
+      block-size: 120px; border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+      background: var(--pg-lilac); opacity: 0.75;
+    }
+    .grass { position: absolute; inset-inline: 0; inset-block-end: 0; block-size: 32%; background: var(--pg-mint); }
+    .flower { position: absolute; inline-size: 10px; block-size: 10px; border-radius: 50%; }
+    .flower-1 { inset-block-end: 26%; inset-inline-start: 16%; background: var(--pg-blush); }
+    .flower-2 { inset-block-end: 22%; inset-inline-start: 26%; background: var(--pg-butter); inline-size: 8px; block-size: 8px; }
+    .flower-3 { inset-block-end: 27%; inset-inline-end: 20%; background: var(--pg-butter); }
+    .flower-4 { inset-block-end: 21%; inset-inline-end: 30%; background: var(--pg-blush); inline-size: 8px; block-size: 8px; }
+
+    /* =========================================================
+       LIQUID GLASS — the reusable button system
+       Every interactive control on this screen uses this class.
+       Layers: frosted base + soft blurred color glow behind
+       (::before) + a specular top sheen (::after).
+       ========================================================= */
+    .glass-btn {
+      position: relative;
+      inline-size: 44px; block-size: 44px;
+      flex: none;
+      border: 1px solid rgba(255, 255, 255, 0.7);
+      border-radius: var(--radius-pill);
+      background:
+        linear-gradient(155deg, rgba(255,255,255,0.78), rgba(255,255,255,0.30) 55%, rgba(255,255,255,0.5)),
+        var(--tint, var(--pg-blush));
+      box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.9) inset,
+        0 -6px 10px rgba(255, 255, 255, 0.35) inset,
+        0 10px 22px rgba(90, 70, 50, 0.16);
+      backdrop-filter: blur(var(--pg-glass-blur)) saturate(165%);
+      -webkit-backdrop-filter: blur(var(--pg-glass-blur)) saturate(165%);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--color-ink-primary);
+      cursor: pointer;
+      transition: transform 420ms var(--motion-easing-gentleSpring), box-shadow 260ms ease;
+    }
+    .glass-btn::before {
+      content: "";
+      position: absolute; inset: -16px;
+      border-radius: inherit;
+      background: radial-gradient(circle, var(--tint, var(--pg-blush)) 0%, transparent 70%);
+      filter: blur(14px);
+      opacity: 0.55;
+      z-index: -1;
+    }
+    .glass-btn::after {
+      content: "";
+      position: absolute; inset: 2px 2px auto 2px;
+      block-size: 45%;
+      border-radius: 999px 999px 60% 60% / 100% 100% 30% 30%;
+      background: linear-gradient(180deg, rgba(255,255,255,0.85), rgba(255,255,255,0));
+      opacity: 0.8;
+      pointer-events: none;
+    }
+    .glass-btn:hover { transform: translateY(-1px); }
+    .glass-btn:active { transform: scale(0.92); }
+    .glass-btn:focus-visible { outline: 3px solid var(--color-focusRing); outline-offset: 2px; }
+    .glass-btn svg { position: relative; z-index: 1; inline-size: 20px; block-size: 20px; }
+
+    .tint-blush  { --tint: var(--pg-blush); }
+    .tint-butter { --tint: var(--pg-butter); }
+    .tint-mint   { --tint: var(--pg-mint); }
+    .tint-sky    { --tint: var(--pg-sky); }
+    .tint-lilac  { --tint: var(--pg-lilac); }
+
+    /* a non-button glass surface (chip) — same frosted material,
+       no glow/sheen, for the greeting text and the scene switch */
+    .glass-chip {
+      background: linear-gradient(155deg, rgba(255,255,255,0.68), rgba(255,255,255,0.26));
+      border: 1px solid rgba(255, 255, 255, 0.65);
+      backdrop-filter: blur(var(--pg-glass-blur)) saturate(150%);
+      -webkit-backdrop-filter: blur(var(--pg-glass-blur)) saturate(150%);
+      box-shadow: 0 1px 0 rgba(255,255,255,0.8) inset, 0 8px 20px var(--color-shadow);
+      border-radius: var(--radius-lg);
+    }
+
+    /* =========================================================
+       CHROME — greeting + icon button
+       ========================================================= */
+    .chrome-top {
+      position: absolute;
+      inset-block-start: calc(54px + 14px);
+      inset-inline: 20px;
+      z-index: 30;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+    .greeting-chip { padding-block: 10px; padding-inline: var(--space-lg); }
+    .greeting-eyebrow { margin: 0; font-size: var(--type-size-xs); font-weight: var(--type-weight-semibold); color: var(--color-ink-secondary); }
+    .greeting-title { margin: 2px 0 0; font-size: var(--type-size-xl); font-weight: var(--type-weight-bold); color: var(--color-ink-primary); }
+
+    /* =========================================================
+       SCENE SWITCH — the one setting: home vs outdoor.
+       A liquid-glass segmented pill with a sliding tinted thumb;
+       the thumb glide + the scene crossfade are what make it feel
+       "smooth" rather than a hard cut.
+       ========================================================= */
+    .scene-switch {
+      position: absolute;
+      z-index: 30;
+      inset-block-start: 132px;
+      inset-inline-start: 20px;
+      position: absolute;
+      display: flex;
+      inline-size: 96px; block-size: 40px;
+      padding: 3px;
+      border-radius: var(--radius-pill);
+    }
+    .scene-thumb {
+      position: absolute;
+      inset-block: 3px;
+      inset-inline-start: 3px;
+      inline-size: 45px;
+      border-radius: var(--radius-pill);
+      background: var(--pg-sky);
+      box-shadow: 0 1px 0 rgba(255,255,255,0.8) inset, 0 4px 10px rgba(90,70,50,0.14);
+      transition: transform 460ms var(--motion-easing-gentleSpring), background 460ms ease;
+    }
+    .scene-switch.show-outdoor .scene-thumb {
+      transform: translateX(45px);
+      background: var(--pg-mint);
+    }
+    .scene-opt {
+      position: relative; z-index: 1;
+      inline-size: 45px; block-size: 100%;
+      border: none; background: transparent;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--color-ink-secondary);
+      cursor: pointer;
+    }
+    .scene-switch.show-outdoor .scene-opt[data-scene="home"],
+    .scene-switch:not(.show-outdoor) .scene-opt[data-scene="outdoor"] { color: var(--color-ink-secondary); }
+    .scene-switch:not(.show-outdoor) .scene-opt[data-scene="home"],
+    .scene-switch.show-outdoor .scene-opt[data-scene="outdoor"] { color: var(--color-ink-primary); }
+    .scene-opt svg { inline-size: 18px; block-size: 18px; }
+    .scene-opt:focus-visible { outline: 3px solid var(--color-focusRing); outline-offset: 2px; border-radius: var(--radius-pill); }
+
+    /* =========================================================
+       CAT STAGE — the cat walks the full width of the floor
+       .cat-walk-track spans the room; .cat-rig carries the
+       horizontal walk offset (--cat-x, set by JS). The shadow and
+       the tracker ring both live on the rig so they travel with
+       the cat but do NOT pick up the cat's own vertical bob/groom
+       transforms.
+       ========================================================= */
+    .cat-walk-track {
+      position: absolute;
+      inset-inline: 0;
+      inset-block-end: 150px;   /* stand on the rug/grass */
+      block-size: 0;
+      z-index: 15;
+    }
+    .cat-rig {
+      position: absolute;
+      inset-inline-start: 18px;
+      inset-block-end: 0;
+      transform: translateX(var(--cat-x, 0px));
+      transition: transform 900ms cubic-bezier(0.45, 0, 0.2, 1);
+    }
+    .cat-shadow {
+      position: absolute;
+      inset-block-end: -6px;
+      inset-inline-start: 50%;
+      transform: translateX(-50%);
+      inline-size: 92px; block-size: 16px;
+      background: radial-gradient(ellipse at center, rgba(90,70,50,0.18), transparent 72%);
+      border-radius: 50%;
+    }
+
+    /* ---- the cat itself — soft "liquid blob" construction ---- */
+    .liquid-cat {
+      position: relative;
+      inset-block-end: 0;
+      inline-size: 130px; block-size: 112px;
+      border: none; background: transparent; padding: 0;
+      cursor: pointer;
+    }
+    .liquid-cat.facing-left { transform: scaleX(-1); }
+    .liquid-cat.is-walking { animation: lc-walk-bob 460ms ease-in-out infinite; }
+    .liquid-cat:focus-visible { outline: none; }
+    .liquid-cat:focus-visible .lc-body { box-shadow: 0 0 0 4px var(--color-focusRing); }
+
+    .lc-tail {
+      position: absolute; inset-inline-end: -22px; inset-block-end: 6px;
+      inline-size: 46px; block-size: 46px;
+      border-block-start: 13px solid var(--cat-body);
+      border-inline-end: 13px solid var(--cat-body);
+      border-start-end-radius: 36px;
+      transform-origin: 0% 100%;
+      animation: lc-tail-sway 2400ms ease-in-out infinite alternate;
+      z-index: 1;
+    }
+    .lc-body {
+      position: absolute; inset-inline-start: 50%; inset-block-end: 0;
+      inline-size: 100px; block-size: 74px;
+      background: var(--cat-body);
+      border-radius: 50% 50% 50% 50% / 90% 90% 30% 30%;
+      z-index: 2;
+      animation: lc-jelly 3400ms ease-in-out infinite alternate;
+    }
+    .lc-head {
+      position: absolute; inset-inline-start: 50%; inset-block-start: -6px;
+      inline-size: 92px; block-size: 78px;
+      background: var(--cat-body);
+      border-radius: 50% 50% 46% 46% / 58% 58% 42% 42%;
+      transform: translateX(-50%);
+      z-index: 3;
+      transition: transform 260ms ease;
+    }
+
+    /* pointed, soft-triangle ears — set close together and upright,
+       the key "this is a cat, not a bunny" signal */
+    .lc-ear {
+      position: absolute; inset-block-start: -18px;
+      inline-size: 32px; block-size: 36px;
+      background: var(--cat-body);
+      clip-path: polygon(50% 0%, 82% 30%, 88% 82%, 68% 100%, 32% 100%, 12% 82%, 18% 30%);
+    }
+    .lc-ear-l { inset-inline-start: 6px; transform: rotate(-10deg); }
+    .lc-ear-r { inset-inline-end: 6px; transform: rotate(10deg); }
+    .lc-ear-inner {
+      position: absolute; inset: 10px 9px 7px 9px;
+      background: var(--cat-inner);
+      clip-path: polygon(50% 0%, 82% 30%, 88% 82%, 68% 100%, 32% 100%, 12% 82%, 18% 30%);
+      opacity: 0.85;
+    }
+
+    .lc-eye {
+      position: absolute; inset-block-start: 32px;
+      inline-size: 15px; block-size: 15px;
+      background: var(--cat-face);
+      border-radius: 50%;
+      transform-origin: center;
+      animation: lc-blink 5200ms ease-in-out infinite;
+    }
+    .lc-eye::after {
+      content: ""; position: absolute; inset-block-start: 3px; inset-inline-start: 3px;
+      inline-size: 5px; block-size: 5px; background: #fff; border-radius: 50%; opacity: 0.95;
+    }
+    .lc-eye-l { inset-inline-start: 21px; }
+    .lc-eye-r { inset-inline-end: 21px; }
+    .lc-nose {
+      position: absolute; inset-block-start: 47px; inset-inline-start: 50%;
+      transform: translateX(-50%);
+      inline-size: 8px; block-size: 6px;
+      background: var(--cat-inner);
+      border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+    }
+    .lc-mouth {
+      position: absolute; inset-block-start: 53px; inset-inline-start: 50%;
+      transform: translateX(-50%);
+      inline-size: 14px; block-size: 7px;
+      border-block-end: 2px solid var(--cat-shade);
+      border-radius: 0 0 50% 50% / 0 0 100% 100%;
+      opacity: 0.7;
+    }
+    .lc-whisker {
+      position: absolute; inset-block-start: 49px;
+      inline-size: 20px; block-size: 1.5px;
+      background: var(--cat-shade);
+      opacity: 0.75;
+    }
+    .lc-whisker-l { inset-inline-start: -10px; transform: rotate(5deg); }
+    .lc-whisker-r { inset-inline-end: -10px; transform: rotate(-5deg); }
+    .lc-blush { position: absolute; inset-block-start: 45px; inline-size: 11px; block-size: 6px; border-radius: 50%; background: var(--cat-blush); opacity: 0.45; transition: opacity 220ms ease; }
+    .lc-blush-l { inset-inline-start: 8px; }
+    .lc-blush-r { inset-inline-end: 8px; }
+
+    .lc-foot { position: absolute; inset-block-end: -4px; inline-size: 26px; block-size: 16px; background: var(--cat-body); border-radius: 50%; z-index: 1; }
+    .lc-foot-l { inset-inline-start: 12px; }
+    .lc-foot-r { inset-inline-end: 12px; }
+    .is-walking .lc-foot-l { animation: lc-step-l 460ms ease-in-out infinite; }
+    .is-walking .lc-foot-r { animation: lc-step-r 460ms ease-in-out infinite; }
+
+    /* ---- grooming: plays while the tracker ring opens ---- */
+    .is-grooming .lc-head { animation: lc-groom-tilt 1560ms ease-in-out 1; }
+    .is-grooming .lc-foot-r { animation: lc-groom-paw 520ms ease-in-out 3; transform-origin: 50% 100%; }
+    .is-grooming .lc-eye { animation: none; inline-size: 15px; block-size: 5px; inset-block-start: 38px; border-radius: 0 0 15px 15px; }
+    .is-grooming .lc-eye::after { opacity: 0; }
+    .is-grooming .lc-blush { opacity: 0.85; }
+    .is-grooming .lc-tail { animation: none; transform: rotate(28deg); transition: transform 400ms var(--motion-easing-standard); }
+
+    @keyframes lc-walk-bob {
+      0%, 100% { transform: translateY(0) rotate(0deg); }
+      50%      { transform: translateY(-4px) rotate(-2deg); }
+    }
+    @keyframes lc-jelly {
+      0%   { transform: translateX(-50%) scaleY(1);    border-radius: 48% 48% 46% 46% / 60% 60% 40% 40%; }
+      100% { transform: translateX(-50%) scaleY(1.03); border-radius: 46% 46% 48% 48% / 58% 58% 42% 42%; }
+    }
+    @keyframes lc-tail-sway {
+      from { transform: rotate(-8deg); }
+      to   { transform: rotate(14deg); }
+    }
+    @keyframes lc-step-l {
+      0%, 100% { transform: translateY(0) scaleY(1); }
+      50%      { transform: translateY(-6px) scaleY(0.85); }
+    }
+    @keyframes lc-step-r {
+      0%, 100% { transform: translateY(-6px) scaleY(0.85); }
+      50%      { transform: translateY(0) scaleY(1); }
+    }
+    @keyframes lc-blink {
+      0%, 92%, 100% { transform: scaleY(1); }
+      96%           { transform: scaleY(0.12); }
+    }
+    @keyframes lc-groom-paw {
+      0%, 100% { transform: translate(0, 0) rotate(0deg); }
+      30%      { transform: translate(-4px, -50px) rotate(-38deg); }
+      55%      { transform: translate(-2px, -44px) rotate(-26deg); }
+    }
+    @keyframes lc-groom-tilt {
+      0%, 100% { transform: translateX(-50%) rotate(0deg); }
+      50%      { transform: translateX(-50%) rotate(-6deg); }
+    }
+
+    /* =========================================================
+       TRACKER RING — appears FROM THE CAT on click (no separate
+       dock). Lives inside .cat-rig so it travels with the cat;
+       the cat is walked back to center first so the ring always
+       fits inside the frame, same anchor math as home.html.
+       ========================================================= */
+    .tracker-fan {
+      position: absolute;
+      inset-block-end: 70px;
+      inset-inline-start: 50%;
+      inline-size: 0; block-size: 0;
+      z-index: 20;
+    }
+    .tracker-fan .glass-btn {
+      position: absolute;
+      inset-block-end: 0; inset-inline-start: 0;
+      margin-inline-start: -22px;
+      margin-block-end: -22px;
+      transform: translate(var(--x), var(--y)) scale(0.5);
+      opacity: 0;
+      pointer-events: none;
+      transition: transform 340ms var(--motion-easing-gentleSpring), opacity 260ms var(--motion-easing-standard);
+    }
+    .tracker-fan.is-open .glass-btn {
+      opacity: 1;
+      transform: translate(var(--x), var(--y)) scale(1);
+      pointer-events: auto;
+    }
+    .tracker-fan.is-open .glass-btn:nth-child(1) { transition-delay: 0ms; }
+    .tracker-fan.is-open .glass-btn:nth-child(2) { transition-delay: 60ms; }
+    .tracker-fan.is-open .glass-btn:nth-child(3) { transition-delay: 120ms; }
+    .tracker-fan.is-open .glass-btn:nth-child(4) { transition-delay: 180ms; }
+    .tracker-fan.is-open .glass-btn:nth-child(5) { transition-delay: 240ms; }
+    .tracker-fan:not(.is-open) .glass-btn { transition-duration: 200ms; transition-delay: 0ms; }
+
+    /* =========================================================
+       TRACKER POPUPS — light glass overlays for the four quick
+       trackers (exercise · sleep · eat · accomplishments). The
+       scene AND the cat stay visible behind: the backdrop is only
+       a soft translucent tint (no opaque scrim), and the card is
+       the same frosted liquid-glass material used everywhere else.
+       Only the Diary earns a full screen, so it navigates away
+       instead of opening a popup.
+       ========================================================= */
+    .popup {
+      position: absolute; inset: 0;
+      z-index: 60;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 260ms var(--motion-easing-standard), visibility 260ms;
+    }
+    .popup.is-open { opacity: 1; visibility: visible; }
+
+    /* soft translucent tint only — the cat + scene read through it */
+    .popup-backdrop {
+      position: absolute; inset: 0;
+      background: rgb(from var(--color-ink-primary) r g b / 0.10);
+      backdrop-filter: blur(2px);
+      -webkit-backdrop-filter: blur(2px);
+      cursor: pointer;
+    }
+
+    .popup-card {
+      position: relative;
+      z-index: 1;
+      inline-size: 100%;
+      max-inline-size: 328px;
+      padding: var(--space-xl);
+      transform: translateY(12px) scale(0.96);
+      transition: transform 360ms var(--motion-easing-gentleSpring);
+    }
+    .popup.is-open .popup-card { transform: translateY(0) scale(1); }
+    /* accent glow keyed to the card's own tint (matches its ring button) */
+    .popup-card::before {
+      content: "";
+      position: absolute;
+      inset-block-start: -34px; inset-inline: 4px;
+      block-size: 130px;
+      border-radius: inherit;
+      background: radial-gradient(120% 80% at 50% 0%, var(--tint, var(--pg-blush)) 0%, transparent 70%);
+      filter: blur(26px);
+      opacity: 0.55;
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    .popup-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: var(--space-md);
+      margin-block-end: var(--space-lg);
+    }
+    .popup-eyebrow {
+      margin: 0;
+      font-size: var(--type-size-xs);
+      font-weight: var(--type-weight-semibold);
+      color: var(--color-ink-secondary);
+      letter-spacing: 0.02em;
+    }
+    .popup-title {
+      margin: 2px 0 0;
+      font-size: var(--type-size-lg);
+      font-weight: var(--type-weight-bold);
+      color: var(--color-ink-primary);
+      line-height: var(--type-lineHeight-heading);
+    }
+    .popup-close { inline-size: 40px; block-size: 40px; flex: none; }
+    .popup-note {
+      margin: var(--space-md) 0 0;
+      font-size: var(--type-size-sm);
+      color: var(--color-ink-secondary);
+      text-align: center;
+      line-height: var(--type-lineHeight-body);
+    }
+    /* generic scroll region so a taller popup (eat) stays inside the frame */
+    .popup-body {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-lg);
+      max-block-size: 560px;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      scrollbar-width: none;
+    }
+    .popup-body::-webkit-scrollbar { width: 0; height: 0; }
+
+    /* ---- selectable option chips (exercise) ---- */
+    .chip-row { display: flex; flex-wrap: wrap; gap: var(--space-sm); }
+    .opt-chip {
+      border: 1px solid rgba(255, 255, 255, 0.65);
+      border-radius: var(--radius-pill);
+      padding-block: 10px; padding-inline: var(--space-lg);
+      background: linear-gradient(155deg, var(--color-glass-border), rgba(255,255,255,0.22));
+      backdrop-filter: blur(var(--pg-glass-blur)) saturate(150%);
+      -webkit-backdrop-filter: blur(var(--pg-glass-blur)) saturate(150%);
+      color: var(--color-ink-primary);
+      font: inherit; font-size: var(--type-size-sm); font-weight: var(--type-weight-semibold);
+      cursor: pointer;
+      display: inline-flex; align-items: center; gap: var(--space-xs);
+      transition: transform 200ms var(--motion-easing-gentleSpring), box-shadow 200ms ease;
+    }
+    .opt-chip[aria-pressed="true"] {
+      background:
+        linear-gradient(155deg, rgba(255,255,255,0.85), rgba(255,255,255,0.4)),
+        var(--tint, var(--pg-blush));
+      box-shadow: 0 1px 0 rgba(255,255,255,0.9) inset, 0 8px 16px rgba(90,70,50,0.14);
+    }
+    .opt-chip:active { transform: scale(0.94); }
+    .opt-chip:focus-visible { outline: 3px solid var(--color-focusRing); outline-offset: 2px; }
+
+    /* ---- sleep stepper ---- */
+    .stepper { display: flex; align-items: center; justify-content: center; gap: var(--space-lg); }
+    .stepper-value { min-inline-size: 96px; text-align: center; display: flex; flex-direction: column; }
+    .stepper-hours { font-size: var(--type-size-xxl); font-weight: var(--type-weight-bold); color: var(--color-ink-primary); line-height: 1; }
+    .stepper-unit { font-size: var(--type-size-sm); font-weight: var(--type-weight-semibold); color: var(--color-ink-secondary); margin-block-start: 4px; }
+
+    /* ---- eat: three light meal sections; NO numbers, ever (Principle 4) ---- */
+    .meal {
+      display: flex; flex-direction: column; gap: var(--space-sm);
+      padding-block: var(--space-sm) var(--space-md);
+      border-block-end: 1px solid rgba(133, 117, 102, 0.14);
+    }
+    .meal:last-child { border-block-end: none; padding-block-end: 0; }
+    .meal-head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-sm); }
+    .meal-name { font-size: var(--type-size-base); font-weight: var(--type-weight-bold); color: var(--color-ink-primary); }
+    .meal-body { display: flex; align-items: center; gap: var(--space-md); }
+    .photo-tile {
+      inline-size: 60px; block-size: 60px; flex: none;
+      border: 1.5px dashed rgba(133, 117, 102, 0.5);
+      border-radius: var(--radius-md);
+      background: linear-gradient(155deg, rgba(255,255,255,0.5), rgba(255,255,255,0.18));
+      backdrop-filter: blur(var(--pg-glass-blur)) saturate(140%);
+      -webkit-backdrop-filter: blur(var(--pg-glass-blur)) saturate(140%);
+      color: var(--color-ink-secondary);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      transition: transform 200ms var(--motion-easing-gentleSpring), border-color 200ms ease;
+    }
+    .photo-tile:hover { border-color: rgba(133, 117, 102, 0.8); }
+    .photo-tile:active { transform: scale(0.94); }
+    .photo-tile svg { inline-size: 22px; block-size: 22px; }
+    .photo-tile:focus-visible { outline: 3px solid var(--color-focusRing); outline-offset: 2px; }
+
+    /* soft pill — meal time affordance + nourish check */
+    .soft-pill {
+      border: 1px solid var(--color-glass-border);
+      border-radius: var(--radius-pill);
+      padding-block: 8px; padding-inline: var(--space-md);
+      background: linear-gradient(155deg, rgba(255,255,255,0.58), rgba(255,255,255,0.2));
+      backdrop-filter: blur(var(--pg-glass-blur)) saturate(150%);
+      -webkit-backdrop-filter: blur(var(--pg-glass-blur)) saturate(150%);
+      color: var(--color-ink-secondary);
+      font: inherit; font-size: var(--type-size-sm); font-weight: var(--type-weight-semibold);
+      display: inline-flex; align-items: center; gap: var(--space-xs);
+      cursor: pointer;
+      transition: transform 200ms var(--motion-easing-gentleSpring), box-shadow 200ms ease, color 200ms ease;
+    }
+    .soft-pill svg { inline-size: 16px; block-size: 16px; }
+    .soft-pill:active { transform: scale(0.95); }
+    .soft-pill:focus-visible { outline: 3px solid var(--color-focusRing); outline-offset: 2px; }
+    .nourish-toggle { flex: 1; justify-content: center; }
+    .nourish-toggle[aria-pressed="true"] {
+      color: var(--color-ink-primary);
+      background:
+        linear-gradient(155deg, rgba(255,255,255,0.85), rgba(255,255,255,0.4)),
+        var(--tint, var(--pg-butter));
+      box-shadow: 0 1px 0 rgba(255,255,255,0.9) inset, 0 6px 14px var(--color-shadow);
+    }
+
+    /* ---- accomplishments: add field + list ---- */
+    .accw-add { display: flex; gap: var(--space-sm); margin-block-end: var(--space-lg); }
+    .accw-input {
+      flex: 1; min-inline-size: 0;
+      border: 1px solid var(--color-glass-border);
+      border-radius: var(--radius-pill);
+      padding-block: 10px; padding-inline: var(--space-lg);
+      background: linear-gradient(155deg, var(--color-glass-border), rgba(255,255,255,0.24));
+      backdrop-filter: blur(var(--pg-glass-blur)) saturate(150%);
+      -webkit-backdrop-filter: blur(var(--pg-glass-blur)) saturate(150%);
+      font: inherit; font-size: var(--type-size-sm); color: var(--color-ink-primary);
+    }
+    .accw-input::placeholder { color: var(--color-ink-muted); }
+    .accw-input:focus-visible { outline: 3px solid var(--color-focusRing); outline-offset: 2px; }
+    .accw-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-sm); }
+    .accw-item {
+      display: flex; align-items: center; gap: var(--space-sm);
+      padding-block: 10px; padding-inline: var(--space-md);
+      border-radius: var(--radius-md);
+      background: linear-gradient(155deg, rgba(255,255,255,0.5), rgba(255,255,255,0.18));
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      font-size: var(--type-size-sm); font-weight: var(--type-weight-semibold); color: var(--color-ink-primary);
+    }
+    .accw-dot { inline-size: 8px; block-size: 8px; border-radius: 50%; background: var(--tint, var(--pg-lilac)); flex: none; box-shadow: 0 0 0 3px rgba(255,255,255,0.5); }
+
+    /* ---- to-dos: add field + checkable list. Mirrors the accomplishments
+       add/list treatment, but a distinct feature (own .todo-* classes) with
+       real checkboxes. Check-off is deliberately quiet — a fade to a muted
+       strikethrough, nothing celebratory (Accomplishments owns that moment). */
+    .todo-add { display: flex; gap: var(--space-sm); margin-block-end: var(--space-lg); }
+    .todo-input {
+      flex: 1; min-inline-size: 0;
+      border: 1px solid var(--color-glass-border);
+      border-radius: var(--radius-pill);
+      padding-block: 10px; padding-inline: var(--space-lg);
+      background: linear-gradient(155deg, var(--color-glass-border), rgba(255,255,255,0.24));
+      backdrop-filter: blur(var(--pg-glass-blur)) saturate(150%);
+      -webkit-backdrop-filter: blur(var(--pg-glass-blur)) saturate(150%);
+      font: inherit; font-size: var(--type-size-sm); color: var(--color-ink-primary);
+    }
+    .todo-input::placeholder { color: var(--color-ink-muted); }
+    .todo-input:focus-visible { outline: 3px solid var(--color-focusRing); outline-offset: 2px; }
+    .todo-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-sm); }
+    .todo-item {
+      display: flex; align-items: center; gap: var(--space-sm);
+      padding-block: 10px; padding-inline: var(--space-md);
+      border-radius: var(--radius-md);
+      background: linear-gradient(155deg, rgba(255,255,255,0.5), rgba(255,255,255,0.18));
+      border: 1px solid rgba(255, 255, 255, 0.5);
+    }
+    .todo-label { display: flex; align-items: center; gap: var(--space-sm); cursor: pointer; flex: 1; min-inline-size: 0; }
+    /* real <input type="checkbox"> kept for a11y, visually hidden; the styled
+       .todo-box is its custom face and reflects :checked via the sibling combinator */
+    .todo-check {
+      position: absolute;
+      inline-size: 1px; block-size: 1px;
+      margin: 0; padding: 0;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .todo-box {
+      inline-size: 22px; block-size: 22px; flex: none;
+      border: 1px solid var(--color-glass-border);
+      border-radius: var(--radius-sm);
+      background: linear-gradient(155deg, rgba(255,255,255,0.5), rgba(255,255,255,0.18));
+      backdrop-filter: blur(var(--pg-glass-blur)) saturate(150%);
+      -webkit-backdrop-filter: blur(var(--pg-glass-blur)) saturate(150%);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--color-ink-primary);
+      transition: background var(--motion-duration-fast) var(--motion-easing-standard);
+    }
+    .todo-tick {
+      inline-size: 14px; block-size: 14px;
+      opacity: 0;
+      transition: opacity var(--motion-duration-fast) var(--motion-easing-standard);
+    }
+    .todo-check:checked + .todo-box {
+      background:
+        linear-gradient(155deg, rgba(255,255,255,0.85), rgba(255,255,255,0.4)),
+        var(--tint, var(--pg-lilac));
+    }
+    .todo-check:checked + .todo-box .todo-tick { opacity: 1; }
+    .todo-check:focus-visible + .todo-box { outline: 3px solid var(--color-focusRing); outline-offset: 2px; }
+    .todo-text {
+      font-size: var(--type-size-sm); font-weight: var(--type-weight-semibold);
+      color: var(--color-ink-primary);
+      text-decoration: line-through;
+      text-decoration-color: transparent;
+      transition:
+        text-decoration-color var(--motion-duration-fast) var(--motion-easing-standard),
+        color var(--motion-duration-fast) var(--motion-easing-standard);
+    }
+    .todo-item.is-done .todo-text {
+      color: var(--color-ink-muted);
+      text-decoration-color: var(--color-ink-muted);
+    }
+
+    /* =========================================================
+       REDUCED MOTION
+       ========================================================= */
+    @media (prefers-reduced-motion: reduce) {
+      .lc-body, .lc-tail, .lc-eye, .liquid-cat.is-walking,
+      .is-walking .lc-foot-l, .is-walking .lc-foot-r,
+      .is-grooming .lc-head, .is-grooming .lc-foot-r,
+      .scene-stack.is-switching { animation: none; }
+      .cat-rig, .glass-btn, .scene, .scene-thumb, .tracker-fan .glass-btn,
+      .popup, .popup-card { transition-duration: 1ms; }
+    }
+  </style>
+</head>
+
+<body>
+  <p class="concept-tag">
+    <strong>Home — Liquid Glass · Walking Cat.</strong>
+    The locked, canonical Home screen; the earlier draft is kept for reference at <code>home-v0.html</code>.
+  </p>
+
+  <div class="phone">
+    <div class="screen">
+
+      <div class="app">
+        <!-- ---------- SCENE ---------- -->
+        <div class="scene-stack" id="sceneStack">
+          <div class="scene scene-home" aria-hidden="true">
+            <div class="wall"></div>
+            <div class="window">
+              <span class="cloud cloud-1"></span>
+              <span class="cloud cloud-2"></span>
+              <span class="sun"></span>
+            </div>
+            <div class="floor"></div>
+            <div class="rug"></div>
+          </div>
+          <div class="scene scene-outdoor" aria-hidden="true">
+            <div class="sky-outdoor"></div>
+            <span class="cloud cloud-1"></span>
+            <span class="cloud cloud-2"></span>
+            <span class="sun-outdoor"></span>
+            <div class="hill-far"></div>
+            <div class="grass"></div>
+            <span class="flower flower-1"></span>
+            <span class="flower flower-2"></span>
+            <span class="flower flower-3"></span>
+            <span class="flower flower-4"></span>
+          </div>
+        </div>
+
+        <!-- ---------- CHROME ---------- -->
+        <div class="chrome-top">
+          <div class="greeting-chip glass-chip">
+            <p class="greeting-eyebrow" id="eyebrow">good afternoon</p>
+            <h1 class="greeting-title">Alice's home</h1>
+          </div>
+          <button class="glass-btn tint-lilac" id="todoBtn" type="button" aria-label="open your to-dos">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M9 6h11" /><path d="M9 12h11" /><path d="M9 18h11" />
+              <path d="M4 6l1 1 2-2" /><path d="M4 12l1 1 2-2" /><path d="M4 18l1 1 2-2" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- ---------- SCENE SWITCH — the one setting ---------- -->
+        <div class="scene-switch glass-chip" id="sceneSwitch" role="group" aria-label="choose your background">
+          <span class="scene-thumb" aria-hidden="true"></span>
+          <button class="scene-opt" type="button" data-scene="home" aria-pressed="true" aria-label="home">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M4 11.5 12 4l8 7.5" /><path d="M6 10v9h12v-9" /><path d="M10 19v-5h4v5" />
+            </svg>
+          </button>
+          <button class="scene-opt" type="button" data-scene="outdoor" aria-pressed="false" aria-label="outdoor">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 3 7 12h3l-4 6h12l-4-6h3Z" /><path d="M12 21v-4" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- ---------- CAT — walks the full floor; tap to reveal her ring ---------- -->
+        <div class="cat-walk-track">
+          <div class="cat-rig" id="catRig">
+            <span class="cat-shadow"></span>
+
+            <button class="liquid-cat" id="cat" type="button" aria-pressed="false"
+                    aria-label="check in with Alice the cat">
+              <span class="lc-tail"></span>
+              <span class="lc-body"></span>
+              <span class="lc-head">
+                <span class="lc-ear lc-ear-l"><span class="lc-ear-inner"></span></span>
+                <span class="lc-ear lc-ear-r"><span class="lc-ear-inner"></span></span>
+                <span class="lc-whisker lc-whisker-l"></span>
+                <span class="lc-whisker lc-whisker-r"></span>
+                <span class="lc-eye lc-eye-l"></span>
+                <span class="lc-eye lc-eye-r"></span>
+                <span class="lc-nose"></span>
+                <span class="lc-mouth"></span>
+                <span class="lc-blush lc-blush-l"></span>
+                <span class="lc-blush lc-blush-r"></span>
+              </span>
+              <span class="lc-foot lc-foot-l"></span>
+              <span class="lc-foot lc-foot-r"></span>
+            </button>
+
+            <!-- tracker ring — hidden until the cat is tapped -->
+            <div class="tracker-fan" id="fan">
+              <button class="glass-btn tint-blush" data-tracker="exercise" style="--x: 0px; --y: -150px;" type="button" aria-label="log exercise">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M3 12h3M18 12h3M7 12h10" /><path d="M6 8v8M18 8v8" />
+                </svg>
+              </button>
+              <button class="glass-btn tint-sky" data-tracker="sleep" style="--x: 142.7px; --y: -46.4px;" type="button" aria-label="log sleep">
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M20 14.5A8 8 0 1 1 10.5 4 6.5 6.5 0 0 0 20 14.5Z" />
+                </svg>
+              </button>
+              <button class="glass-btn tint-butter" data-tracker="eat" style="--x: 88.2px; --y: 121.4px;" type="button" aria-label="log a meal">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M4 11a8 8 0 0 0 16 0Z" /><path d="M3 11h18" /><path d="M9 6c0 1-1 1-1 2M13 5c0 1-1 1-1 2" />
+                </svg>
+              </button>
+              <button class="glass-btn tint-lilac" data-tracker="accomplishments" style="--x: -88.2px; --y: 121.4px;" type="button" aria-label="log an accomplishment">
+                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M12 2l2.6 6.6 7 .5-5.4 4.6 1.8 6.9L12 16.9 6 20.6l1.8-6.9L2.4 9.1l7-.5Z" />
+                </svg>
+              </button>
+              <button class="glass-btn tint-mint" data-tracker="diary" style="--x: -142.7px; --y: -46.4px;" type="button" aria-label="write in your diary">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M12 6c-2-1.5-5-1.5-7 0v12c2-1.5 5-1.5 7 0 2-1.5 5-1.5 7 0V6c-2-1.5-5-1.5-7 0Z" /><path d="M12 6v12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ---------- TRACKER POPUPS — light glass overlays; cat stays visible ---------- -->
+      <!-- Exercise (3.1): a few low-friction option chips, not a form -->
+      <div class="popup" id="popup-exercise" role="dialog" aria-modal="false" aria-labelledby="exercise-title">
+        <div class="popup-backdrop" data-close="true" aria-hidden="true"></div>
+        <div class="popup-card glass-chip tint-blush">
+          <div class="popup-head">
+            <div>
+              <p class="popup-eyebrow">exercise</p>
+              <h2 class="popup-title" id="exercise-title">how did you move today?</h2>
+            </div>
+            <button class="glass-btn tint-blush popup-close" type="button" data-close="true" aria-label="close">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M6 6l12 12M18 6L6 18" />
+              </svg>
+            </button>
+          </div>
+          <div class="chip-row">
+            <button class="opt-chip" type="button" aria-pressed="false">walk</button>
+            <button class="opt-chip" type="button" aria-pressed="false">stretch</button>
+            <button class="opt-chip" type="button" aria-pressed="false">dance</button>
+            <button class="opt-chip" type="button" aria-pressed="false">rest</button>
+          </div>
+          <p class="popup-note">any bit of movement counts — even resting is caring for yourself.</p>
+        </div>
+      </div>
+
+      <!-- Sleep (3.2): a simple hours-slept quick-picker -->
+      <div class="popup" id="popup-sleep" role="dialog" aria-modal="false" aria-labelledby="sleep-title">
+        <div class="popup-backdrop" data-close="true" aria-hidden="true"></div>
+        <div class="popup-card glass-chip tint-sky">
+          <div class="popup-head">
+            <div>
+              <p class="popup-eyebrow">sleep</p>
+              <h2 class="popup-title" id="sleep-title">how long did you rest?</h2>
+            </div>
+            <button class="glass-btn tint-sky popup-close" type="button" data-close="true" aria-label="close">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M6 6l12 12M18 6L6 18" />
+              </svg>
+            </button>
+          </div>
+          <div class="stepper">
+            <button class="glass-btn tint-sky" id="sleepMinus" type="button" aria-label="less sleep">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M5 12h14" />
+              </svg>
+            </button>
+            <div class="stepper-value">
+              <span class="stepper-hours" id="sleepHours">7.5</span>
+              <span class="stepper-unit">hours</span>
+            </div>
+            <button class="glass-btn tint-sky" id="sleepPlus" type="button" aria-label="more sleep">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M12 5v14M5 12h14" />
+              </svg>
+            </button>
+          </div>
+          <p class="popup-note">however much you got is okay.</p>
+        </div>
+      </div>
+
+      <!-- Eat (3.3): breakfast / lunch / dinner. Nourishment, never numbers (Principle 4). -->
+      <div class="popup" id="popup-eat" role="dialog" aria-modal="false" aria-labelledby="eat-title">
+        <div class="popup-backdrop" data-close="true" aria-hidden="true"></div>
+        <div class="popup-card glass-chip tint-butter">
+          <div class="popup-head">
+            <div>
+              <p class="popup-eyebrow">eat</p>
+              <h2 class="popup-title" id="eat-title">did you nourish yourself?</h2>
+            </div>
+            <button class="glass-btn tint-butter popup-close" type="button" data-close="true" aria-label="close">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M6 6l12 12M18 6L6 18" />
+              </svg>
+            </button>
+          </div>
+          <div class="popup-body">
+            <div class="meal">
+              <div class="meal-head">
+                <span class="meal-name">breakfast</span>
+                <button class="soft-pill" type="button" aria-label="add a time for breakfast">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                       stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" />
+                  </svg>
+                  add a time
+                </button>
+              </div>
+              <div class="meal-body">
+                <button class="photo-tile" type="button" aria-label="add a photo of breakfast">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                       stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M4 8h3l1.5-2h7L17 8h3v11H4Z" /><circle cx="12" cy="13" r="3.5" />
+                  </svg>
+                </button>
+                <button class="soft-pill nourish-toggle" type="button" aria-pressed="false">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                       stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M12 20s-7-4.5-7-9.5A3.8 3.8 0 0 1 12 7a3.8 3.8 0 0 1 7 3.5c0 5-7 9.5-7 9.5Z" />
+                  </svg>
+                  this nourished me
+                </button>
+              </div>
+            </div>
+            <div class="meal">
+              <div class="meal-head">
+                <span class="meal-name">lunch</span>
+                <button class="soft-pill" type="button" aria-label="add a time for lunch">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                       stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" />
+                  </svg>
+                  add a time
+                </button>
+              </div>
+              <div class="meal-body">
+                <button class="photo-tile" type="button" aria-label="add a photo of lunch">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                       stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M4 8h3l1.5-2h7L17 8h3v11H4Z" /><circle cx="12" cy="13" r="3.5" />
+                  </svg>
+                </button>
+                <button class="soft-pill nourish-toggle" type="button" aria-pressed="false">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                       stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M12 20s-7-4.5-7-9.5A3.8 3.8 0 0 1 12 7a3.8 3.8 0 0 1 7 3.5c0 5-7 9.5-7 9.5Z" />
+                  </svg>
+                  this nourished me
+                </button>
+              </div>
+            </div>
+            <div class="meal">
+              <div class="meal-head">
+                <span class="meal-name">dinner</span>
+                <button class="soft-pill" type="button" aria-label="add a time for dinner">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                       stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" />
+                  </svg>
+                  add a time
+                </button>
+              </div>
+              <div class="meal-body">
+                <button class="photo-tile" type="button" aria-label="add a photo of dinner">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                       stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M4 8h3l1.5-2h7L17 8h3v11H4Z" /><circle cx="12" cy="13" r="3.5" />
+                  </svg>
+                </button>
+                <button class="soft-pill nourish-toggle" type="button" aria-pressed="false">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                       stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M12 20s-7-4.5-7-9.5A3.8 3.8 0 0 1 12 7a3.8 3.8 0 0 1 7 3.5c0 5-7 9.5-7 9.5Z" />
+                  </svg>
+                  this nourished me
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Accomplishments (3.4): add-item field + list, pre-seeded with kind examples -->
+      <div class="popup" id="popup-accomplishments" role="dialog" aria-modal="false" aria-labelledby="accw-title">
+        <div class="popup-backdrop" data-close="true" aria-hidden="true"></div>
+        <div class="popup-card glass-chip tint-lilac">
+          <div class="popup-head">
+            <div>
+              <p class="popup-eyebrow">accomplishments</p>
+              <h2 class="popup-title" id="accw-title">what did you do today?</h2>
+            </div>
+            <button class="glass-btn tint-lilac popup-close" type="button" data-close="true" aria-label="close">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M6 6l12 12M18 6L6 18" />
+              </svg>
+            </button>
+          </div>
+          <form class="accw-add" id="accForm">
+            <input class="accw-input" id="accInput" type="text" placeholder="however small it was…" aria-label="add an accomplishment" />
+            <button class="glass-btn tint-lilac" type="submit" aria-label="add accomplishment">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M12 5v14M5 12h14" />
+              </svg>
+            </button>
+          </form>
+          <ul class="accw-list" id="accList">
+            <li class="accw-item"><span class="accw-dot"></span>studied 1 minute</li>
+            <li class="accw-item"><span class="accw-dot"></span>got out of bed</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- To-dos (screen 2, optional top-right popup): a gentle invitation, not a task list.
+           Resets-daily framing is copy-only ("today's little things"); no dates/persistence. -->
+      <div class="popup" id="popup-todos" role="dialog" aria-modal="false" aria-labelledby="todos-title">
+        <div class="popup-backdrop" data-close="true" aria-hidden="true"></div>
+        <div class="popup-card glass-chip tint-lilac">
+          <div class="popup-head">
+            <div>
+              <p class="popup-eyebrow">today's little things</p>
+              <h2 class="popup-title" id="todos-title">anything you'd like to do today?</h2>
+            </div>
+            <button class="glass-btn tint-lilac popup-close" type="button" data-close="true" aria-label="close">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M6 6l12 12M18 6L6 18" />
+              </svg>
+            </button>
+          </div>
+          <form class="todo-add" id="todoForm">
+            <input class="todo-input" id="todoInput" type="text" placeholder="something small…" aria-label="add a little thing" />
+            <button class="glass-btn tint-lilac" type="submit" aria-label="add to your list">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M12 5v14M5 12h14" />
+              </svg>
+            </button>
+          </form>
+          <ul class="todo-list" id="todoList">
+            <li class="todo-item">
+              <label class="todo-label">
+                <input class="todo-check" type="checkbox" />
+                <span class="todo-box" aria-hidden="true">
+                  <svg class="todo-tick" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+                       stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M5 12l5 5L19 7" />
+                  </svg>
+                </span>
+                <span class="todo-text">stretch for a minute</span>
+              </label>
+            </li>
+            <li class="todo-item">
+              <label class="todo-label">
+                <input class="todo-check" type="checkbox" />
+                <span class="todo-box" aria-hidden="true">
+                  <svg class="todo-tick" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+                       stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M5 12l5 5L19 7" />
+                  </svg>
+                </span>
+                <span class="todo-text">text someone back</span>
+              </label>
+            </li>
+          </ul>
+          <p class="popup-note">it's okay if some of these carry over, or if none of them happen today.</p>
+        </div>
+      </div>
+
+      <div class="safe-top"><span class="island"></span></div>
+      <div class="safe-bottom"><span class="home-indicator"></span></div>
+
+    </div><!-- /.screen -->
+  </div><!-- /.phone -->
+
+  <script>
+    var cat = document.getElementById('cat');
+    var rig = document.getElementById('catRig');
+    var track = rig.parentElement;
+    var fan = document.getElementById('fan');
+    var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+    // ---------- cat: walk the full width of the room ----------
+    var MARGIN = 18;
+    var CAT_WIDTH = 130;
+    var SPEED = 55; // px/sec — constant walking speed regardless of distance
+    var catX = 0;
+    var maxX = 0;
+    var ringOpen = false;
+    var homing = false;
+    var walkTimer = null;
+
+    function computeBounds() {
+      var trackWidth = track.clientWidth;
+      maxX = Math.max(0, trackWidth - MARGIN * 2 - CAT_WIDTH);
+    }
+
+    function setPosition(x, durationMs) {
+      rig.style.transitionDuration = (durationMs || 1) + 'ms';
+      rig.style.setProperty('--cat-x', x + 'px');
+    }
+
+    function walkTo(targetX, durationMs) {
+      cat.classList.toggle('facing-left', targetX < catX - 1);
+      catX = targetX;
+      cat.classList.add('is-walking');
+      setPosition(catX, reduceMotion.matches ? 1 : durationMs);
+    }
+
+    function scheduleWalk() {
+      if (reduceMotion.matches || ringOpen || homing) return;
+      clearTimeout(walkTimer);
+      walkTimer = setTimeout(function () {
+        if (ringOpen || homing) return;
+        computeBounds();
+        var next = Math.round(Math.random() * maxX);
+        if (Math.abs(next - catX) < 40) next = maxX - next;
+        next = Math.max(0, Math.min(maxX, next));
+        var duration = Math.max(500, (Math.abs(next - catX) / SPEED) * 1000);
+        walkTo(next, duration);
+        clearTimeout(walkTimer);
+        walkTimer = setTimeout(function () {
+          cat.classList.remove('is-walking');
+          scheduleWalk();
+        }, reduceMotion.matches ? 1 : duration);
+      }, 1400 + Math.random() * 2200);
+    }
+
+    // ---------- tap the cat: home to center, then reveal her ring ----------
+    function setFan(open) {
+      ringOpen = open;
+      fan.classList.toggle('is-open', open);
+      cat.setAttribute('aria-pressed', open ? 'true' : 'false');
+    }
+
+    function openSequence() {
+      clearTimeout(walkTimer);
+      computeBounds();
+      var target = Math.round(maxX / 2);
+      var alreadyHome = Math.abs(catX - target) < 2 || reduceMotion.matches;
+
+      function reveal() {
+        homing = false;
+        setFan(true);
+        cat.classList.add('is-grooming');
+        setTimeout(function () { cat.classList.remove('is-grooming'); }, reduceMotion.matches ? 1 : 1600);
+      }
+
+      if (alreadyHome) {
+        if (target !== catX) walkTo(target, 1);
+        reveal();
+      } else {
+        homing = true;
+        walkTo(target, 700);
+        setTimeout(function () {
+          cat.classList.remove('is-walking');
+          reveal();
+        }, 700);
+      }
+    }
+
+    cat.addEventListener('click', function () {
+      if (homing) return;
+      if (ringOpen) {
+        setFan(false);
+        scheduleWalk();
+        return;
+      }
+      openSequence();
+    });
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key !== 'Escape') return;
+      // a popup takes priority: close it first, leaving the ring as it was
+      if (openPopup) { closePopup(); return; }
+      if (ringOpen) {
+        setFan(false);
+        scheduleWalk();
+      }
+    });
+
+    // ---------- tracker popups: light glass overlays, cat stays visible ----------
+    // The four quick trackers open a popup over the scene; only the Diary
+    // (per spec) navigates to its own full screen instead.
+    var popups = {
+      exercise: document.getElementById('popup-exercise'),
+      sleep: document.getElementById('popup-sleep'),
+      eat: document.getElementById('popup-eat'),
+      accomplishments: document.getElementById('popup-accomplishments'),
+      todos: document.getElementById('popup-todos')
+    };
+    var openPopup = null;
+
+    function closePopup() {
+      if (!openPopup) return;
+      openPopup.classList.remove('is-open');
+      openPopup = null;
+    }
+
+    function showPopup(name) {
+      var next = popups[name];
+      if (!next) return;
+      if (openPopup && openPopup !== next) openPopup.classList.remove('is-open'); // one at a time
+      next.classList.add('is-open');
+      openPopup = next;
+      var closeBtn = next.querySelector('.popup-close');
+      if (closeBtn) closeBtn.focus();
+    }
+
+    // wire the ring buttons: stopPropagation so the cat/ring state is untouched
+    fan.querySelectorAll('[data-tracker]').forEach(function (btn) {
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var tracker = btn.dataset.tracker;
+        if (tracker === 'diary') { window.location.href = './diary.html'; return; }
+        showPopup(tracker);
+      });
+    });
+
+    // the top-right to-do button lives in .chrome-top (outside the cat hit
+    // area), so a plain click handler is enough — no stopPropagation needed.
+    document.getElementById('todoBtn').addEventListener('click', function () {
+      showPopup('todos');
+    });
+
+    // close affordances: the × button and the translucent backdrop
+    Object.keys(popups).forEach(function (name) {
+      popups[name].querySelectorAll('[data-close]').forEach(function (el) {
+        el.addEventListener('click', function (e) {
+          e.stopPropagation();
+          closePopup();
+        });
+      });
+    });
+
+    // ---------- popup interactions (mockup-only; no persistence) ----------
+    // selectable chips + nourish checks toggle their pressed state
+    document.querySelectorAll('.opt-chip, .nourish-toggle').forEach(function (el) {
+      el.addEventListener('click', function () {
+        el.setAttribute('aria-pressed', el.getAttribute('aria-pressed') === 'true' ? 'false' : 'true');
+      });
+    });
+
+    // sleep hours quick-picker (0–14h, half-hour steps)
+    var sleepHoursEl = document.getElementById('sleepHours');
+    var sleepHours = 7.5;
+    function renderSleep() {
+      sleepHoursEl.textContent = Number.isInteger(sleepHours) ? String(sleepHours) : sleepHours.toFixed(1);
+    }
+    document.getElementById('sleepMinus').addEventListener('click', function () {
+      sleepHours = Math.max(0, sleepHours - 0.5); renderSleep();
+    });
+    document.getElementById('sleepPlus').addEventListener('click', function () {
+      sleepHours = Math.min(14, sleepHours + 0.5); renderSleep();
+    });
+
+    // accomplishments: add an item to the list
+    var accForm = document.getElementById('accForm');
+    var accInput = document.getElementById('accInput');
+    var accList = document.getElementById('accList');
+    accForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var text = accInput.value.trim();
+      if (!text) return;
+      var li = document.createElement('li');
+      li.className = 'accw-item';
+      var dot = document.createElement('span');
+      dot.className = 'accw-dot';
+      li.appendChild(dot);
+      li.appendChild(document.createTextNode(text));
+      accList.appendChild(li);
+      accInput.value = '';
+      accInput.focus();
+    });
+
+    // to-dos: add a little thing to the list, and quietly check items off.
+    // Mirrors the accomplishments add flow; check-off just toggles .is-done
+    // (a CSS fade to muted strikethrough) — no celebration here.
+    var todoForm = document.getElementById('todoForm');
+    var todoInput = document.getElementById('todoInput');
+    var todoList = document.getElementById('todoList');
+
+    function buildTodoItem(text) {
+      var li = document.createElement('li');
+      li.className = 'todo-item';
+      var label = document.createElement('label');
+      label.className = 'todo-label';
+      var check = document.createElement('input');
+      check.className = 'todo-check';
+      check.type = 'checkbox';
+      var box = document.createElement('span');
+      box.className = 'todo-box';
+      box.setAttribute('aria-hidden', 'true');
+      box.innerHTML = '<svg class="todo-tick" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5L19 7" /></svg>';
+      var textEl = document.createElement('span');
+      textEl.className = 'todo-text';
+      textEl.appendChild(document.createTextNode(text));
+      label.appendChild(check);
+      label.appendChild(box);
+      label.appendChild(textEl);
+      li.appendChild(label);
+      return li;
+    }
+
+    todoForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var text = todoInput.value.trim();
+      if (!text) return;
+      todoList.appendChild(buildTodoItem(text));
+      todoInput.value = '';
+      todoInput.focus();
+    });
+
+    // delegated toggle: covers the pre-seeded items AND anything added later
+    todoList.addEventListener('change', function (e) {
+      var box = e.target;
+      if (!box.classList || !box.classList.contains('todo-check')) return;
+      var li = box.closest('.todo-item');
+      if (li) li.classList.toggle('is-done', box.checked);
+    });
+
+    computeBounds();
+    catX = Math.round(maxX / 2);
+    setPosition(catX, 1);
+    window.addEventListener('resize', computeBounds);
+    scheduleWalk();
+
+    // ---------- scene switch: home vs outdoor ----------
+    var sceneStack = document.getElementById('sceneStack');
+    var sceneSwitch = document.getElementById('sceneSwitch');
+    var sceneOpts = sceneSwitch.querySelectorAll('.scene-opt');
+    var eyebrow = document.getElementById('eyebrow');
+
+    function setScene(outdoor) {
+      sceneStack.classList.toggle('show-outdoor', outdoor);
+      sceneSwitch.classList.toggle('show-outdoor', outdoor);
+      sceneOpts.forEach(function (btn) {
+        btn.setAttribute('aria-pressed', (btn.dataset.scene === 'outdoor') === outdoor ? 'true' : 'false');
+      });
+      eyebrow.textContent = outdoor ? 'good afternoon outside' : 'good afternoon';
+      if (!reduceMotion.matches) {
+        sceneStack.classList.remove('is-switching');
+        void sceneStack.offsetWidth; // restart the blur pulse
+        sceneStack.classList.add('is-switching');
+      }
+    }
+
+    sceneOpts.forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        setScene(btn.dataset.scene === 'outdoor');
+      });
+    });
+  </script>
+</body>
+</html>

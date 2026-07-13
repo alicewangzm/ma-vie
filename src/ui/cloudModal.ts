@@ -35,8 +35,9 @@ function ensureStyles(): void {
       position: absolute;
       left: 50%;
       top: 50%;
-      width: min(80vw, 46rem);
-      max-height: 80vh;
+      /* one square window into the memory — media scrolls sideways inside */
+      width: min(84vw, 78vh, 44rem);
+      aspect-ratio: 1;
       transform: translate(-50%, -50%) scale(0.86);
       background: rgba(255, 252, 246, 0.94);
       border-radius: 4rem;
@@ -58,8 +59,10 @@ function ensureStyles(): void {
       transform: translate(-50%, -50%) scale(1);
     }
     .wl-cloud-scroll {
+      flex: 1;
+      min-height: 0;
       overflow-y: auto;
-      padding: 2.6rem 2.8rem 3.4rem;
+      padding: 2.4rem 2.6rem 3rem;
       color: #4a3f5c;
     }
     .wl-cloud h3 {
@@ -69,23 +72,35 @@ function ensureStyles(): void {
       letter-spacing: 0.05em;
     }
     .wl-cloud p { margin: 0 0 0.7em; line-height: 1.7; }
-    .wl-cloud-images {
+    .wl-cloud-media { position: relative; margin: 1rem 0; }
+    .wl-cloud-strip {
+      /* the photo reel: one row, swipe or arrow left/right */
       display: flex;
-      flex-wrap: wrap;
-      gap: 0.8rem;
-      justify-content: center;
-      margin: 1rem 0;
+      gap: 0.7rem;
+      overflow-x: auto;
+      scroll-snap-type: x mandatory;
+      padding: 0.2rem 0 0.5rem;
+      scrollbar-width: thin;
+      -webkit-overflow-scrolling: touch;
     }
-    .wl-cloud-images figure { margin: 0; text-align: center; max-width: 46%; }
-    .wl-cloud-images img,
+    .wl-cloud-strip figure {
+      flex: 0 0 auto;
+      margin: 0;
+      text-align: center;
+      scroll-snap-align: center;
+    }
+    .wl-cloud-strip img,
+    .wl-cloud-strip video,
     .wl-cloud-img-slot {
-      width: 100%;
-      min-width: 9rem;
+      height: min(15rem, 34vh);
+      width: auto;
+      max-width: min(22rem, 62vw);
       border-radius: 1rem;
       display: block;
+      object-fit: cover;
     }
     .wl-cloud-img-slot {
-      aspect-ratio: 4 / 3;
+      width: 13rem;
       background: repeating-linear-gradient(45deg, #eee6f0, #eee6f0 10px, #f6eff6 10px, #f6eff6 20px);
       display: flex;
       align-items: center;
@@ -96,7 +111,26 @@ function ensureStyles(): void {
       padding: 0 1rem;
       text-align: center;
     }
-    .wl-cloud-images figcaption { font-size: 0.8rem; opacity: 0.75; margin-top: 0.3em; }
+    .wl-cloud-strip figcaption { font-size: 0.8rem; opacity: 0.75; margin-top: 0.3em; }
+    .wl-strip-arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 2.4rem;
+      height: 2.4rem;
+      border-radius: 50%;
+      border: 1px solid rgba(74, 63, 92, 0.3);
+      background: rgba(255, 250, 240, 0.94);
+      color: #4a3f5c;
+      font-size: 1.05rem;
+      cursor: pointer;
+      z-index: 2;
+      box-shadow: 0 2px 8px rgba(74, 63, 92, 0.2);
+    }
+    .wl-strip-arrow:hover { background: rgba(255, 244, 214, 1); }
+    .wl-strip-arrow:disabled { opacity: 0.25; cursor: default; }
+    .wl-strip-arrow[data-dir='prev'] { left: -0.7rem; }
+    .wl-strip-arrow[data-dir='next'] { right: -0.7rem; }
     .wl-cloud-links { display: flex; gap: 0.8rem; justify-content: center; flex-wrap: wrap; margin-top: 0.6rem; }
     .wl-cloud-links a {
       color: #4a3f5c;
@@ -160,31 +194,76 @@ export function openCloudModal(parent: HTMLElement, story: CloudStory): CloudMod
     scroll.appendChild(p);
   }
 
+  const isVideo = (src: string): boolean => /\.(mp4|webm|mov)$/i.test(src);
   if (story.images?.length) {
-    const grid = document.createElement('div');
-    grid.className = 'wl-cloud-images';
+    const media = document.createElement('div');
+    media.className = 'wl-cloud-media';
+    const strip = document.createElement('div');
+    strip.className = 'wl-cloud-strip';
     for (const img of story.images) {
       const fig = document.createElement('figure');
-      const el = document.createElement('img');
-      el.src = img.src;
-      el.alt = img.alt;
-      el.loading = 'lazy';
-      el.addEventListener('error', () => {
-        // image not dropped in /assets yet — show a soft slot instead
-        const slot = document.createElement('div');
-        slot.className = 'wl-cloud-img-slot';
-        slot.textContent = `${img.alt} — drop ${img.src.replace('assets/', '')} into public/assets`;
-        el.replaceWith(slot);
-      });
-      fig.appendChild(el);
+      if (isVideo(img.src)) {
+        const v = document.createElement('video');
+        v.src = img.src;
+        v.controls = true;
+        v.playsInline = true;
+        v.preload = 'metadata';
+        v.setAttribute('aria-label', img.alt);
+        fig.appendChild(v);
+      } else {
+        const el = document.createElement('img');
+        el.src = img.src;
+        el.alt = img.alt;
+        el.loading = 'lazy';
+        el.addEventListener('error', () => {
+          // image not dropped in /assets yet — show a soft slot instead
+          const slot = document.createElement('div');
+          slot.className = 'wl-cloud-img-slot';
+          slot.textContent = `${img.alt} — drop ${img.src.replace('assets/', '')} into public/assets`;
+          el.replaceWith(slot);
+        });
+        fig.appendChild(el);
+      }
       if (img.caption) {
         const cap = document.createElement('figcaption');
         cap.textContent = img.caption;
         fig.appendChild(cap);
       }
-      grid.appendChild(fig);
+      strip.appendChild(fig);
     }
-    scroll.appendChild(grid);
+    media.appendChild(strip);
+
+    // arrows appear only when the reel actually overflows
+    const makeArrow = (dir: 'prev' | 'next'): HTMLButtonElement => {
+      const btn = document.createElement('button');
+      btn.className = 'wl-strip-arrow';
+      btn.dataset.dir = dir;
+      btn.textContent = dir === 'prev' ? '‹' : '›';
+      btn.setAttribute('aria-label', dir === 'prev' ? 'previous photos' : 'more photos');
+      btn.addEventListener('click', () =>
+        strip.scrollBy({
+          left: (dir === 'next' ? 1 : -1) * strip.clientWidth * 0.8,
+          behavior: 'smooth',
+        }),
+      );
+      return btn;
+    };
+    const prev = makeArrow('prev');
+    const next = makeArrow('next');
+    media.append(prev, next);
+    const updateArrows = (): void => {
+      const scrollable = strip.scrollWidth > strip.clientWidth + 4;
+      prev.style.display = next.style.display = scrollable ? '' : 'none';
+      prev.disabled = strip.scrollLeft < 8;
+      next.disabled = strip.scrollLeft > strip.scrollWidth - strip.clientWidth - 8;
+    };
+    strip.addEventListener('scroll', updateArrows, { passive: true });
+    // media sizes settle as files load; capture-phase catches both kinds
+    strip.addEventListener('load', updateArrows, true);
+    strip.addEventListener('loadedmetadata', updateArrows, true);
+    requestAnimationFrame(updateArrows);
+
+    scroll.appendChild(media);
   }
 
   if (story.links?.length) {
@@ -215,6 +294,7 @@ export function openCloudModal(parent: HTMLElement, story: CloudStory): CloudMod
   const closed = new Promise<void>((res) => (resolveClosed = res));
 
   const close = (): void => {
+    backdrop.querySelectorAll('video').forEach((v) => v.pause());
     backdrop.classList.remove('visible');
     window.removeEventListener('keydown', onKey);
     setTimeout(() => {

@@ -1,0 +1,98 @@
+/* Generated from ../tokens.json — tokens.json is the source of truth; keep in sync by hand for now. */
+/* Note: brand.* and feedback.* tokens are currently unreferenced by the locked pastel design — kept for later use, not deleted. */
+
+:root {
+  /* ---- color · theme: light ---- */
+  /* bg */
+  --color-bg-base: #FAF6F0;
+  --color-bg-surface: #FFFDF9;
+  --color-bg-surfaceAlt: #F3ECE2;
+
+  /* ink */
+  --color-ink-primary: #4A3F35;
+  --color-ink-secondary: #857566;
+  --color-ink-muted: #B3A493;
+  --color-ink-onPrimary: #FFFDF9;
+
+  /* brand */
+  --color-brand-primary: #DE8268;
+  --color-brand-primaryPressed: #C96F55;
+  --color-brand-secondary: #9DB89A;
+  --color-brand-secondaryStrong: #7FA07C;
+
+  /* pastel */
+  --color-pastel-blush: #F0DDD6;
+  --color-pastel-butter: #FDFFB6;
+  --color-pastel-mint: #E4F1EE;
+  --color-pastel-sky: #D9EDF8;
+  --color-pastel-lilac: #DEDAF4;
+
+  /* tracker */
+  --color-tracker-exercise-fill: #F0DDD6;
+  --color-tracker-sleep-fill: #D9EDF8;
+  --color-tracker-eat-fill: #FDFFB6;
+  --color-tracker-accomplishments-fill: #DEDAF4;
+  --color-tracker-diary-fill: #E4F1EE;
+
+  /* feedback */
+  --color-feedback-celebration: #86B98A;
+  --color-feedback-calmSupport: #A7C4E2;
+
+  /* effects */
+  --color-shadow: rgba(90, 70, 50, 0.12);
+  --color-focusRing: rgba(222, 130, 104, 0.4);
+
+  /* glass */
+  --color-glass-surface: rgba(255, 255, 255, 0.55);
+  --color-glass-surfaceStrong: rgba(255, 255, 255, 0.75);
+  --color-glass-border: rgba(255, 255, 255, 0.6);
+
+  /* ---- type ---- */
+  --type-family-base: 'Nunito', ui-rounded, -apple-system, 'Segoe UI', sans-serif;
+
+  --type-size-xs: 12px;
+  --type-size-sm: 14px;
+  --type-size-base: 16px;
+  --type-size-lg: 20px;
+  --type-size-xl: 24px;
+  --type-size-xxl: 32px;
+
+  --type-weight-regular: 400;
+  --type-weight-semibold: 600;
+  --type-weight-bold: 800;
+
+  --type-lineHeight-body: 1.5;
+  --type-lineHeight-heading: 1.25;
+
+  /* ---- space ---- */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-touch: 14px; /* shared padding rhythm for tappable fields/buttons/CTAs, between --space-md and --space-lg */
+  --space-lg: 16px;
+  --space-xl: 24px;
+  --space-xxl: 32px;
+  --space-xxxl: 48px;
+
+  /* ---- radius ---- */
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-pill: 999px;
+
+  /* ---- elevation ---- */
+  --elevation-e1: 0 2px 8px rgba(90, 70, 50, 0.12);
+  --elevation-e2: 0 6px 20px rgba(90, 70, 50, 0.16);
+
+  /* ---- effect ---- */
+  --effect-glassBlur: 18px;
+
+  /* ---- motion ---- */
+  --motion-easing-standard: cubic-bezier(0.33, 0, 0.2, 1);
+  --motion-easing-gentleSpring: cubic-bezier(0.34, 1.3, 0.5, 1);
+
+  --motion-duration-fast: 200ms;
+  --motion-duration-base: 300ms;
+  --motion-duration-slow: 450ms;
+  --motion-duration-ambient: 3200ms;
+}

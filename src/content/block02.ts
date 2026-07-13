@@ -34,8 +34,18 @@ export const universityContent = {
         '[placeholder] What those five years actually looked like.',
       ],
       images: [
-        { src: 'assets/uw-1.jpg', alt: 'Waterloo photo 1' },
-        { src: 'assets/uw-2.jpg', alt: 'Waterloo photo 2' },
+        { src: 'assets/uw-0.jpg', alt: 'Waterloo campus', caption: 'Waterloo [placeholder]' },
+        { src: 'assets/uw-oasis-0.png', alt: 'Oasis project', caption: 'Oasis [placeholder]' },
+        { src: 'assets/uw-oasis-1.png', alt: 'Oasis project', caption: 'Oasis [placeholder]' },
+        {
+          src: 'assets/uw-simpleFavour-0.png',
+          alt: 'A Little Favour app',
+          caption: 'A Little Favour — Capstone bronze',
+        },
+        { src: 'assets/uw-simpleFavour-1.png', alt: 'A Little Favour app' },
+        { src: 'assets/uw-simpleFavour-2.png', alt: 'A Little Favour app' },
+        { src: 'assets/uw-mHeart-0.jpg', alt: 'mHeart project', caption: 'mHeart [placeholder]' },
+        { src: 'assets/uw-mHeart-1.jpg', alt: 'mHeart project' },
       ],
     },
     laurier: {
@@ -44,7 +54,7 @@ export const universityContent = {
         '[placeholder] BBA — Finance, minor in Economics.',
         '[placeholder] The other side of the same road.',
       ],
-      images: [{ src: 'assets/wlu-1.jpg', alt: 'Laurier photo' }],
+      images: [{ src: 'assets/wlu-0.jpg', alt: 'Laurier campus' }],
     },
     banking: {
       title: 'Banking APIs',

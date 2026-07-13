@@ -22,8 +22,11 @@ export const teachingContent = {
       '[placeholder] Why handing people tools feels like magic.',
     ],
     images: [
-      { src: 'assets/teaching-1.jpg', alt: 'teaching photo 1' },
-      { src: 'assets/teaching-2.jpg', alt: 'science project photo' },
+      { src: 'assets/teacher-science-0.jpg', alt: 'science class' },
+      { src: 'assets/teacher-science-1.mp4', alt: 'science class clip' },
+      { src: 'assets/teacher-science-2.jpg', alt: 'science class' },
+      { src: 'assets/teacher-science-3.jpg', alt: 'student project' },
+      { src: 'assets/teacher-science-4.jpg', alt: 'student project' },
     ],
   },
 } as const;

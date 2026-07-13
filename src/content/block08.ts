@@ -44,7 +44,10 @@ export const finaleContent = {
       modal: {
         title: 'musician',
         body: ['[placeholder] What Alice plays, since when, and for whom.'],
-        images: [{ src: 'assets/hobby-musician.jpg', alt: 'Alice and music' }],
+        images: [
+          { src: 'assets/hobby-musician-piano.mp4', alt: 'Alice at the piano', caption: 'piano' },
+          { src: 'assets/hobby-musician-ukulele.mp4', alt: 'Alice on ukulele', caption: 'ukulele' },
+        ],
       },
     },
     {
@@ -53,7 +56,18 @@ export const finaleContent = {
       modal: {
         title: 'baker',
         body: ['[placeholder] The kitchen story — what she bakes on rainy days.'],
-        images: [{ src: 'assets/hobby-baker.jpg', alt: 'something fresh from the oven' }],
+        images: [
+          { src: 'assets/hobby-baker-0.jpg', alt: 'fresh from the oven' },
+          { src: 'assets/hobby-baker-1.jpg', alt: 'fresh from the oven' },
+          { src: 'assets/hobby-baker-2.jpg', alt: 'fresh from the oven' },
+          { src: 'assets/hobby-baker-3.jpg', alt: 'fresh from the oven' },
+          { src: 'assets/hobby-baker-4.jpg', alt: 'fresh from the oven' },
+          { src: 'assets/hobby-baker-5.jpg', alt: 'fresh from the oven' },
+          { src: 'assets/hobby-baker-6.jpg', alt: 'fresh from the oven' },
+          { src: 'assets/hobby-baker-7.jpg', alt: 'fresh from the oven' },
+          { src: 'assets/hobby-baker-8.jpg', alt: 'fresh from the oven' },
+          { src: 'assets/hobby-baker-9.jpg', alt: 'fresh from the oven' },
+        ],
       },
     },
     {
@@ -62,7 +76,33 @@ export const finaleContent = {
       modal: {
         title: 'artist',
         body: ['[placeholder] Small watercolors, big feelings.'],
-        images: [{ src: 'assets/hobby-artist.jpg', alt: 'a piece Alice made' }],
+        images: [
+          {
+            src: 'assets/hobby-artist-painter.jpg',
+            alt: 'a painting by Alice',
+            caption: 'painter',
+          },
+          {
+            src: 'assets/hobby-artist-videoEditor-0.mp4',
+            alt: 'a video Alice edited',
+            caption: 'video editor',
+          },
+          { src: 'assets/hobby-artist-videoEditor-1.mp4', alt: 'a video Alice edited' },
+          {
+            src: 'assets/hobby-artist-photographer-0.jpg',
+            alt: 'photo by Alice',
+            caption: 'photographer',
+          },
+          { src: 'assets/hobby-artist-photographer-1.jpg', alt: 'photo by Alice' },
+          { src: 'assets/hobby-artist-photographer-2.jpg', alt: 'photo by Alice' },
+          { src: 'assets/hobby-artist-photographer-3.jpg', alt: 'photo by Alice' },
+          { src: 'assets/hobby-artist-photographer-4.jpg', alt: 'photo by Alice' },
+          { src: 'assets/hobby-artist-photographer-5.jpg', alt: 'photo by Alice' },
+          { src: 'assets/hobby-artist-photographer-6.jpg', alt: 'photo by Alice' },
+          { src: 'assets/hobby-artist-photographer-7.jpg', alt: 'photo by Alice' },
+          { src: 'assets/hobby-artist-photographer-8.jpg', alt: 'photo by Alice' },
+          { src: 'assets/hobby-artist-photographer-9.jpg', alt: 'photo by Alice' },
+        ],
       },
     },
     {
@@ -71,7 +111,20 @@ export const finaleContent = {
       modal: {
         title: 'athlete',
         body: ['[placeholder] The sport that clears her head.'],
-        images: [{ src: 'assets/hobby-athlete.jpg', alt: 'Alice in motion' }],
+        images: [
+          {
+            src: 'assets/hobby-athlete-bungeeJumping.mp4',
+            alt: 'Alice bungee jumping',
+            caption: 'bungee jumping',
+          },
+          { src: 'assets/hobby-athlete-hiking.jpg', alt: 'Alice hiking', caption: 'hiking' },
+          {
+            src: 'assets/hobby-athlete-tabletennis-0.jpg',
+            alt: 'table tennis',
+            caption: 'table tennis',
+          },
+          { src: 'assets/hobby-athlete-tabletennis-1.jpg', alt: 'table tennis' },
+        ],
       },
     },
     {

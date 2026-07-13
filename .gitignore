@@ -4,3 +4,5 @@ dist
 .DS_Store
 MASTER_PROMPT.md
 STORY-SCRIPT.md
+# full-size camera originals; the site ships the compressed copies in public/assets
+assets-originals/
