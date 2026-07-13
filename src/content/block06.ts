@@ -47,11 +47,15 @@ export const pathsContent = {
       body: [
         '[placeholder] What PawHearth is, in one warm sentence.',
         '[placeholder] Where it stands today, and what comes next.',
+        'Try the home-screen prototype — tap the cat:',
       ],
-      images: [
-        { src: 'assets/pawhearth-1.jpg', alt: 'PawHearth design screenshot 1' },
-        { src: 'assets/pawhearth-2.jpg', alt: 'PawHearth design screenshot 2' },
-      ],
+      /** The real liquid-glass prototype, live in the cloud. */
+      embed: {
+        src: 'assets/pawHearthHome.html',
+        width: 500,
+        height: 1020,
+        label: 'PawHearth home-screen prototype (interactive)',
+      },
     },
   },
 } as const;

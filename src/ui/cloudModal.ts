@@ -11,6 +11,8 @@ export interface CloudStory {
   body: readonly string[];
   images?: readonly { src: string; alt: string; caption?: string }[];
   links?: readonly { label: string; href: string }[];
+  /** A live same-origin page (e.g. a design prototype), scaled to fit. */
+  embed?: { src: string; width: number; height: number; label: string };
 }
 
 let styled = false;
@@ -131,6 +133,18 @@ function ensureStyles(): void {
     .wl-strip-arrow:disabled { opacity: 0.25; cursor: default; }
     .wl-strip-arrow[data-dir='prev'] { left: -0.7rem; }
     .wl-strip-arrow[data-dir='next'] { right: -0.7rem; }
+    .wl-cloud-embed {
+      /* fixed-size window a live prototype is scaled into */
+      margin: 1rem auto 0.5rem;
+      overflow: hidden;
+      border-radius: 1.4rem;
+    }
+    .wl-cloud-embed iframe {
+      border: 0;
+      transform-origin: top left;
+      display: block;
+      background: transparent;
+    }
     .wl-cloud-links { display: flex; gap: 0.8rem; justify-content: center; flex-wrap: wrap; margin-top: 0.6rem; }
     .wl-cloud-links a {
       color: #4a3f5c;
@@ -264,6 +278,29 @@ export function openCloudModal(parent: HTMLElement, story: CloudStory): CloudMod
     requestAnimationFrame(updateArrows);
 
     scroll.appendChild(media);
+  }
+
+  if (story.embed) {
+    const { src, width, height, label } = story.embed;
+    const wrap = document.createElement('div');
+    wrap.className = 'wl-cloud-embed';
+    const frame = document.createElement('iframe');
+    frame.src = src;
+    frame.title = label;
+    frame.loading = 'lazy';
+    frame.style.width = `${width}px`;
+    frame.style.height = `${height}px`;
+    wrap.appendChild(frame);
+    scroll.appendChild(wrap);
+    // scale the prototype to the room the cloud actually has
+    requestAnimationFrame(() => {
+      const maxW = scroll.clientWidth * 0.96;
+      const maxH = Math.max(cloud.clientHeight * 0.66, 260);
+      const s = Math.min(maxW / width, maxH / height, 1);
+      frame.style.transform = `scale(${s})`;
+      wrap.style.width = `${Math.round(width * s)}px`;
+      wrap.style.height = `${Math.round(height * s)}px`;
+    });
   }
 
   if (story.links?.length) {
