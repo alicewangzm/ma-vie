@@ -42,6 +42,7 @@ export function makePanel(
     opacity: 0,
     side: THREE.DoubleSide,
     fog: false,
+    depthWrite: false, // transparent cards must not fight each other in the depth buffer
   });
   const mesh = new THREE.Mesh(geo, material);
   return {

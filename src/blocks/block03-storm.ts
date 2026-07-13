@@ -3,7 +3,6 @@ import type { StoryBlock } from '../core/StoryBlock';
 import type { WorldContext } from '../core/WorldContext';
 import { WalkController } from '../core/walk';
 import { createWisp, pulseWisp, type Wisp } from '../render/wisp';
-import { makePanel } from '../render/panels';
 import { makeRain, type Rain } from '../render/rain';
 import { createStonePath, type StonePath } from '../render/stones';
 import { skyPresets, lerpEnvToPreset } from '../render/skyPresets';
@@ -22,6 +21,45 @@ const WALK_RADIUS = 22;
 const RAIN_COUNT_HIGH = 1400;
 const RAIN_COUNT_LOW = 500;
 
+/**
+ * The door card with the Google wordmark — full brand color while hope
+ * holds, a grey twin that takes over once the storm rolls in.
+ */
+function googleDoorTexture(saturated: boolean): THREE.CanvasTexture {
+  const c = document.createElement('canvas');
+  c.width = 512;
+  c.height = 320;
+  const g = c.getContext('2d')!;
+  g.fillStyle = '#fff3dd'; // warm cream — survives the sun glare better than white
+  g.beginPath();
+  g.roundRect(8, 8, 496, 304, 28);
+  g.fill();
+  g.strokeStyle = 'rgba(74, 63, 92, 0.25)';
+  g.lineWidth = 5;
+  g.stroke();
+  const colors = saturated
+    ? ['#4285f4', '#ea4335', '#fbbc05', '#4285f4', '#34a853', '#ea4335']
+    : ['#9aa0a6', '#9aa0a6', '#b7babf', '#9aa0a6', '#a6aaaf', '#9aa0a6'];
+  g.font = '700 92px ui-sans-serif, system-ui, sans-serif';
+  g.textBaseline = 'middle';
+  const word = 'Google';
+  let width = 0;
+  for (const ch of word) width += g.measureText(ch).width;
+  let x = (c.width - width) / 2;
+  word.split('').forEach((ch, i) => {
+    g.fillStyle = colors[i];
+    g.fillText(ch, x, 148);
+    x += g.measureText(ch).width;
+  });
+  g.textAlign = 'center';
+  g.fillStyle = 'rgba(74, 63, 92, 0.6)';
+  g.font = 'italic 26px ui-sans-serif, system-ui, sans-serif';
+  g.fillText('a door appeared', c.width / 2, 248);
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
 type Phase = 'door' | 'milestones' | 'pre-storm' | 'storm' | 'clearing';
 
 /**
@@ -36,7 +74,10 @@ class Block03Storm implements StoryBlock {
   private ctx!: WorldContext;
   private walk: WalkController | null = null;
   private phase: Phase = 'door';
-  private door: ReturnType<typeof makePanel> | null = null;
+  private door: THREE.Group | null = null;
+  private doorColorMat: THREE.MeshBasicMaterial | null = null;
+  private doorGrayMat: THREE.MeshBasicMaterial | null = null;
+  private doorDisposables: (THREE.BufferGeometry | THREE.Material | THREE.Texture)[] = [];
   private roads: StonePath[] = [];
   private milestones: { wisp: Wisp; reached: boolean; label: string }[] = [];
   private reachedCount = 0;
@@ -74,12 +115,32 @@ class Block03Storm implements StoryBlock {
 
     this.title = chapterTitle(ctx.overlay, `${stormContent.title} · ${stormContent.date}`);
 
-    // the door with a familiar name (logo placeholder until Stage 3 art)
-    this.door = makePanel('Google', 'a door appeared', '#4285f4');
-    this.door.mesh.position.set(0, 8, -24);
-    this.door.mesh.scale.setScalar(1.6);
-    this.door.mesh.lookAt(ctx.camera.position);
-    ctx.scene.add(this.door.mesh);
+    // the door with a familiar name — full-color wordmark for now; its grey
+    // twin fades in when the storm takes the sky
+    const doorGeo = new THREE.PlaneGeometry(4.4, 2.75);
+    const colorTex = googleDoorTexture(true);
+    const grayTex = googleDoorTexture(false);
+    this.doorColorMat = new THREE.MeshBasicMaterial({
+      map: colorTex,
+      transparent: true,
+      opacity: 0,
+      side: THREE.DoubleSide,
+      fog: false,
+      depthWrite: false,
+    });
+    this.doorGrayMat = this.doorColorMat.clone();
+    this.doorGrayMat.map = grayTex;
+    this.doorDisposables.push(doorGeo, colorTex, grayTex, this.doorColorMat, this.doorGrayMat);
+    this.door = new THREE.Group();
+    const colorMesh = new THREE.Mesh(doorGeo, this.doorColorMat);
+    const grayMesh = new THREE.Mesh(doorGeo, this.doorGrayMat);
+    grayMesh.position.z = 0.02; // in front, so the grey version wins as it fades in
+    this.door.add(colorMesh, grayMesh);
+    // left of center, out of the sun halo's additive glare
+    this.door.position.set(-8.5, 7.5, -26);
+    this.door.scale.setScalar(2.0); // reads from the start of the road
+    this.door.lookAt(ctx.camera.position);
+    ctx.scene.add(this.door);
 
     this.typewriter = typewriterLines(ctx.overlay, stormContent.intro, 2200);
     void this.typewriter.done.then(() => this.startMilestones());
@@ -172,7 +233,8 @@ class Block03Storm implements StoryBlock {
   private startClearing(): void {
     this.phase = 'clearing';
     this.beacon = createWisp('#ffd76a', 5, 1);
-    this.beacon.sprite.position.set(0, hillY(0, 8) + 2, 8);
+    // always forward: the way on lies past the door, not behind the cat
+    this.beacon.sprite.position.set(0, hillY(0, -27) + 2, -27);
     this.ctx.scene.add(this.beacon.sprite);
     const hint = document.createElement('p');
     hint.className = 'wl-hint';
@@ -192,11 +254,13 @@ class Block03Storm implements StoryBlock {
     const stormy = this.phase === 'storm' || this.phase === 'clearing';
     lerpEnvToPreset(this.ctx.env, stormy ? skyPresets.stormGrey : skyPresets.preDawnPink, k);
 
-    if (this.door) {
-      this.door.material.opacity = Math.min(
-        this.door.material.opacity + dt * 0.5,
-        stormy ? 0.25 : 0.85, // the door dims once the storm takes the sky
-      );
+    if (this.doorColorMat && this.doorGrayMat) {
+      // storm: the brand colors drain away and a dim grey door remains
+      const colorTarget = stormy ? 0 : 0.9;
+      const grayTarget = stormy ? 0.35 : 0;
+      this.doorColorMat.opacity +=
+        (colorTarget - this.doorColorMat.opacity) * Math.min(dt * 0.7, 1);
+      this.doorGrayMat.opacity += (grayTarget - this.doorGrayMat.opacity) * Math.min(dt * 0.7, 1);
     }
 
     for (const m of this.milestones) {
@@ -282,10 +346,9 @@ class Block03Storm implements StoryBlock {
     this.log?.destroy();
     this.hintEl?.remove();
     this.flashEl?.remove();
-    if (this.door) {
-      this.ctx.scene.remove(this.door.mesh);
-      this.door.dispose();
-    }
+    if (this.door) this.ctx.scene.remove(this.door);
+    this.doorDisposables.forEach((d) => d.dispose());
+    this.doorDisposables.length = 0;
     for (const { wisp } of this.milestones) {
       this.ctx.scene.remove(wisp.sprite);
       wisp.dispose();

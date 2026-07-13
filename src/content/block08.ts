@@ -36,7 +36,7 @@ export const finaleContent = {
    * where it was sampled from.
    */
   everythingLead: 'a little bit of a…',
-  everythingTip: 'click each colored word',
+  everythingTip: 'tap a word',
   hobbies: [
     {
       word: 'musician',

@@ -99,13 +99,15 @@ class Block02University implements StoryBlock {
     const modals = universityContent.modals;
     switch (cue) {
       case 'waterloo':
+        // the CS story lines the left road — Waterloo, Replicant, Banking
+        // APIs, Supplier Upload — zigzagging high/low so no card hides another
         this.addPanel(
           'University of Waterloo',
           'Computer Science — with Distinction',
-          new THREE.Vector3(-14, 6, -14),
+          new THREE.Vector3(-4.5, 4.6, -14),
           '#8a6d3b',
         );
-        this.addQMark(new THREE.Vector3(-14, 3.4, -14), modals.waterloo);
+        this.addQMark(new THREE.Vector3(-4.5, 2.3, -14), modals.waterloo);
         break;
       case 'laurier':
         this.addPanel(
@@ -117,23 +119,25 @@ class Block02University implements StoryBlock {
         this.addQMark(new THREE.Vector3(14, 3.9, -14), modals.laurier);
         break;
       case 'projects':
-        this.addPanel('Banking APIs', 'Java + Spring Boot', new THREE.Vector3(-17, 3.5, -4));
-        // the CS work clusters on the Waterloo (left) side of the road
-        this.addPanel('Supplier Upload', 'React + Google Maps', new THREE.Vector3(-7, 8.5, -18));
+        this.addPanel('Banking APIs', 'Java + Spring Boot', new THREE.Vector3(-13, 4.8, -20));
+        this.addQMark(new THREE.Vector3(-13, 2.4, -20), modals.banking);
+        this.addPanel('Supplier Upload', 'React + Google Maps', new THREE.Vector3(-17, 7.6, -24));
+        this.addQMark(new THREE.Vector3(-17, 3.6, -24), modals.supplier);
         this.addPanel(
           'Finance Research',
           '14,000 SEC files · Python',
           new THREE.Vector3(17, 3.5, -4),
         );
-        this.addQMark(new THREE.Vector3(-9, 6.4, -19), modals.projects);
+        this.addQMark(new THREE.Vector3(17, 1.8, -4), modals.finance);
         break;
       case 'coop':
         this.addPanel(
           'Replicant',
           'co-op · San Francisco',
-          new THREE.Vector3(-17, 12.5, -25),
+          new THREE.Vector3(-9, 7.8, -17),
           '#b3552d',
         );
+        this.addQMark(new THREE.Vector3(-9, 3.6, -17), modals.replicant);
         break;
       case 'awards':
         // gold award motes drifting up around the crest
@@ -153,7 +157,8 @@ class Block02University implements StoryBlock {
 
   private showBeacon(): void {
     this.beacon = createWisp('#ffd76a', 5, 1);
-    this.beacon.sprite.position.set(0, hillY(0, 6) + 2, 8);
+    // always forward — at the end of the view the cat faces
+    this.beacon.sprite.position.set(0, hillY(0, -25) + 2, -25);
     this.ctx.scene.add(this.beacon.sprite);
     const hint = document.createElement('p');
     hint.className = 'wl-hint';

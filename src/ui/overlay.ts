@@ -279,6 +279,7 @@ export function typewriterLines(
   parent.appendChild(root);
 
   let timer: ReturnType<typeof setInterval> | null = null;
+  let dwellTimer: ReturnType<typeof setTimeout> | null = null;
   let resolveDone!: () => void;
   const done = new Promise<void>((res) => (resolveDone = res));
 
@@ -297,7 +298,9 @@ export function typewriterLines(
     if (i >= els.length) {
       if (timer) clearInterval(timer);
       timer = null;
-      resolveDone();
+      // dwell: the last line gets read time before whatever `done` triggers
+      // (phase switches used to tear it down the instant it faded in)
+      dwellTimer = setTimeout(resolveDone, msPerLine * 1.5);
     }
   };
   revealNext();
@@ -314,10 +317,14 @@ export function typewriterLines(
       i = els.length;
       if (timer) clearInterval(timer);
       timer = null;
+      if (dwellTimer) clearTimeout(dwellTimer);
       resolveDone();
     },
     destroy() {
       if (timer) clearInterval(timer);
+      // a destroyed typewriter must never resolve later and re-trigger
+      // its owner (the dwell timeout would outlive a disposed block)
+      if (dwellTimer) clearTimeout(dwellTimer);
       root.remove();
     },
   };

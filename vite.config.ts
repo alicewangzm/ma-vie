@@ -11,5 +11,7 @@ export default defineConfig({
   test: {
     environment: 'node',
     include: ['tests/**/*.test.ts'],
+    // importing every chapter (incl. the bundled 3D font) can top 5s cold
+    testTimeout: 15000,
   },
 });

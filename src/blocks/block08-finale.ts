@@ -138,6 +138,7 @@ class Block08Finale implements StoryBlock {
   private phaseTime = 0;
   private skyline: THREE.Group | null = null;
   private skylineMat: THREE.MeshBasicMaterial | null = null;
+  private buildingMat: THREE.MeshBasicMaterial | null = null;
   private bridgeMat: THREE.MeshBasicMaterial | null = null;
   private letterMats: THREE.MeshBasicMaterial[] = [];
   private droplet: Wisp | null = null;
@@ -196,15 +197,58 @@ class Block08Finale implements StoryBlock {
 
     let seed = 7;
     const rand = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+
+    // a shared window grid makes the blocks read as buildings, not boxes
+    const winCanvas = document.createElement('canvas');
+    winCanvas.width = 64;
+    winCanvas.height = 128;
+    const wg = winCanvas.getContext('2d')!;
+    wg.fillStyle = '#5a6a8c';
+    wg.fillRect(0, 0, winCanvas.width, winCanvas.height);
+    for (let y = 6; y < 120; y += 9) {
+      for (let x = 6; x < 58; x += 10) {
+        if (rand() < 0.6) {
+          wg.fillStyle = rand() < 0.25 ? '#ffe3b0' : '#c8d4ea'; // a few lit warm
+          wg.fillRect(x, y, 5, 4);
+        }
+      }
+    }
+    const winTex = new THREE.CanvasTexture(winCanvas);
+    winTex.colorSpace = THREE.SRGBColorSpace;
+    this.buildingMat = new THREE.MeshBasicMaterial({
+      map: winTex,
+      transparent: true,
+      opacity: 0,
+      fog: false,
+    });
+    this.disposables.push(winTex, this.buildingMat);
+
     // downtown sits left of frame, across the bay (reference: SF postcard view)
     for (let i = 0; i < 12; i++) {
       const w = 3 + rand() * 4;
       const h = 4 + rand() * 11;
       const geo = new THREE.BoxGeometry(w, h, 3);
       this.disposables.push(geo);
-      const b = new THREE.Mesh(geo, this.skylineMat);
-      b.position.set(-48 + i * 6 + (rand() - 0.5) * 2, 6 + h / 2, -80);
+      const b = new THREE.Mesh(geo, this.buildingMat);
+      const bx = -48 + i * 6 + (rand() - 0.5) * 2;
+      b.position.set(bx, 6 + h / 2, -80);
       merged.add(b);
+      if (i % 4 === 1) {
+        // a stepped-back upper tier, like the older downtown towers
+        const tierGeo = new THREE.BoxGeometry(w * 0.55, 2.6, 2.2);
+        this.disposables.push(tierGeo);
+        const tier = new THREE.Mesh(tierGeo, this.buildingMat);
+        tier.position.set(bx, 6 + h + 1.3, -80);
+        merged.add(tier);
+      }
+      if (i % 5 === 2) {
+        // rooftop antenna
+        const antGeo = new THREE.CylinderGeometry(0.07, 0.07, 4, 5);
+        this.disposables.push(antGeo);
+        const ant = new THREE.Mesh(antGeo, this.skylineMat);
+        ant.position.set(bx + w * 0.2, 6 + h + 2, -80);
+        merged.add(ant);
+      }
     }
     // Transamerica pyramid
     const pyramid = new THREE.ConeGeometry(2.6, 22, 4);
@@ -297,7 +341,9 @@ class Block08Finale implements StoryBlock {
       bridge.add(rod);
     }
 
-    bridge.position.set(6, 0, -56);
+    // the bridge stands far behind the city, a haze-softened landmark
+    bridge.position.set(10, 2, -112);
+    bridge.scale.setScalar(1.4);
     bridge.rotation.y = -0.18; // recedes gently, like the postcard shot
     merged.add(bridge);
 
@@ -411,7 +457,7 @@ class Block08Finale implements StoryBlock {
     // for travelers in a hurry: light every word with one click
     const allBtn = document.createElement('button');
     allBtn.className = 'wl-hobby';
-    allBtn.textContent = '✨ all of it at once';
+    allBtn.textContent = '✨ all at once';
     allBtn.style.cssText = 'color:rgba(74,63,92,0.6);font-style:italic;font-weight:500;';
     allBtn.addEventListener('click', () => this.revealAll());
     const allRow = document.createElement('p');
@@ -423,6 +469,7 @@ class Block08Finale implements StoryBlock {
     const tip = document.createElement('p');
     tip.className = 'wl-hint';
     tip.textContent = c.everythingTip;
+    tip.style.bottom = '7%'; // clear of the "all at once" row above it
     this.ctx.overlay.appendChild(tip);
     this.tipEl = tip;
   }
@@ -642,8 +689,12 @@ class Block08Finale implements StoryBlock {
     if (this.skylineMat) {
       this.skylineMat.opacity += (0.5 - this.skylineMat.opacity) * Math.min(dt * 0.5, 1);
     }
+    if (this.buildingMat) {
+      this.buildingMat.opacity += (0.55 - this.buildingMat.opacity) * Math.min(dt * 0.5, 1);
+    }
     if (this.bridgeMat) {
-      this.bridgeMat.opacity += (0.55 - this.bridgeMat.opacity) * Math.min(dt * 0.5, 1);
+      // farther away now — softer through the haze
+      this.bridgeMat.opacity += (0.42 - this.bridgeMat.opacity) * Math.min(dt * 0.5, 1);
     }
     for (const m of this.letterMats) {
       m.opacity += (0.6 - m.opacity) * Math.min(dt * 0.5, 1);

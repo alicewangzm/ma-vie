@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { theme } from '../theme';
 import type { Transition } from '../core/Director';
 
-const DURATION = 1.2; // seconds each way
+const DURATION = 1.9; // seconds each way — fast enough to cut, slow enough to read as clouds
 
 /**
  * Fullscreen cloud-wipe between story blocks: procedural fbm clouds roll in
@@ -103,7 +103,9 @@ export class CloudWipe implements Transition {
     const dir = Math.sign(this.target - this.progress);
     if (dir !== 0) {
       this.progress = THREE.MathUtils.clamp(this.progress + (dt / DURATION) * dir, 0, 1);
-      this.material.uniforms.uProgress.value = this.progress;
+      // ease the tween so the reveal breathes instead of flashing past
+      const p = this.progress;
+      this.material.uniforms.uProgress.value = p * p * (3 - 2 * p);
       if (this.progress === this.target && this.resolve) {
         const res = this.resolve;
         this.resolve = null;

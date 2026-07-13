@@ -98,7 +98,8 @@ class Block05Teaching implements StoryBlock {
 
   private showBeacon(): void {
     this.beacon = createWisp('#ffd76a', 5, 1);
-    this.beacon.sprite.position.set(0, hillY(0, 6) + 2, 8);
+    // always forward — at the end of the view the cat faces
+    this.beacon.sprite.position.set(0, hillY(0, -25) + 2, -25);
     this.ctx.scene.add(this.beacon.sprite);
     const hint = document.createElement('p');
     hint.className = 'wl-hint';

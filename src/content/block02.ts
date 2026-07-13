@@ -46,16 +46,25 @@ export const universityContent = {
       ],
       images: [{ src: 'assets/wlu-1.jpg', alt: 'Laurier photo' }],
     },
-    projects: {
-      title: 'Projects along the way',
+    banking: {
+      title: 'Banking APIs',
+      body: ['Java + Spring Boot. [placeholder] What it does, why it mattered.'],
+      links: [{ label: 'Banking APIs ↗', href: '#' }], // [placeholder link]
+    },
+    supplier: {
+      title: 'Supplier Upload',
+      body: ['React + Google Maps. [placeholder] Type an address, watch it finish itself.'],
+      links: [{ label: 'Supplier Upload ↗', href: '#' }], // [placeholder link]
+    },
+    finance: {
+      title: 'Finance Research',
+      body: ['[placeholder] 14,000 SEC files, wrangled by Python while she slept.'],
+    },
+    replicant: {
+      title: 'Replicant — co-op, San Francisco',
       body: [
-        'Banking APIs — Java + Spring Boot. [placeholder] What it does, why it mattered.',
-        'Supplier Upload — React + Google Maps. [placeholder] Type an address, watch it finish itself.',
-        'Finance Research — 14,000 SEC files, wrangled by Python overnight. [placeholder]',
-      ],
-      links: [
-        { label: 'Banking APIs ↗', href: '#' }, // [placeholder link]
-        { label: 'Supplier Upload ↗', href: '#' }, // [placeholder link]
+        '[placeholder] What Alice built there.',
+        '[placeholder] First taste of the city that keeps turning up in her dreams.',
       ],
     },
   },

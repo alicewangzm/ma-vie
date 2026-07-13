@@ -172,21 +172,6 @@ class Block06ThreePaths implements StoryBlock {
       ),
     );
 
-    // dream-clouds gather around the two envisioned road ends — soft white
-    // puffs, so the futures sit half-hidden in mist while the gold road is clear
-    for (const end of [left, right]) {
-      for (let i = 0; i < 6; i++) {
-        const puff = createWisp('#ffffff', 4.5 + Math.random() * 3, 0.28);
-        puff.sprite.position.set(
-          end.x + (Math.random() - 0.5) * 9,
-          2.2 + Math.random() * 3.5,
-          end.z + (Math.random() - 0.5) * 7 - 2,
-        );
-        this.ctx.scene.add(puff.sprite);
-        this.trails.push(puff); // shares the trail pulse + teardown
-      }
-    }
-
     // PawHearth: floating "screenshot" panels near its vision end
     const panelGeo = new THREE.PlaneGeometry(4.4, 2.75);
     this.disposables.push(panelGeo);
@@ -198,6 +183,7 @@ class Block06ThreePaths implements StoryBlock {
         opacity: 0.55,
         side: THREE.DoubleSide,
         fog: false,
+        depthWrite: false,
       });
       this.disposables.push(tex, mat);
       this.panelMats.push(mat);
@@ -206,6 +192,20 @@ class Block06ThreePaths implements StoryBlock {
       panel.lookAt(ctx.camera.position);
       this.ctx.scene.add(panel);
       this.panels.push(panel);
+    }
+    // a ring of soft dream-clouds around the PawHearth boards only —
+    // enough mist to say "vision", not enough to hide anything
+    const puffCenter = new THREE.Vector3(right.x + 3, 5.5, right.z - 5);
+    for (let i = 0; i < 5; i++) {
+      const a = (i / 5) * Math.PI * 2;
+      const puff = createWisp('#ffffff', 4 + Math.random() * 2, 0.22);
+      puff.sprite.position.set(
+        puffCenter.x + Math.cos(a) * 5.5,
+        puffCenter.y + Math.sin(a * 2) * 2,
+        puffCenter.z + Math.sin(a) * 3,
+      );
+      this.ctx.scene.add(puff.sprite);
+      this.trails.push(puff); // shares the trail pulse + teardown
     }
 
     this.title = chapterTitle(ctx.overlay, c.title);

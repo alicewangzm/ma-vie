@@ -27,6 +27,8 @@ const quality: 'low' | 'high' =
 const MAX_DPR = quality === 'low' ? 1.5 : 2;
 
 const renderer = new THREE.WebGLRenderer({ antialias: true });
+// first clear matches the page background + wipe tint — no color pop at boot
+renderer.setClearColor('#f4e9ef', 1);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, MAX_DPR));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
