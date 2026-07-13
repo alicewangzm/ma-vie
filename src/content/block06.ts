@@ -43,10 +43,13 @@ export const pathsContent = {
       images: [{ src: 'assets/pilot-vision.jpg', alt: 'flying with her parents — envisioned' }],
     },
     pawhearth: {
-      title: 'PawHearth — a company for small, warm creatures',
+      title: 'Pawhearth',
       body: [
-        '[placeholder] What PawHearth is, in one warm sentence.',
-        '[placeholder] Where it stands today, and what comes next.',
+        "Most mental-health apps are dashboards — charts telling you you're not sleeping enough, guilt disguised as wellness. I wanted the opposite.",
+        "Pawhearth is a companion app for anxiety and depression built around one idea: it's easier to be gentle with an adorable, defenseless creature than with yourself. So you get a small cat, named after you, that mirrors your real life — how you slept, ate, moved. Care for the cat, and you're quietly learning to care for yourself.",
+        'The core feature is a diary that reframes dark thoughts into kinder, truer ones on save — with real guardrails: it acknowledges pain before reframing (no toxic positivity), never claims to diagnose recovery, and points to real help when things look serious.',
+        'Built local-first and privacy-first — because 2am thoughts deserve to stay on your phone — and designed to work the same anywhere on earth :)',
+        "You can't help but be kind to the cat. And I want everyone to go through those tough times as gracefully as possible. That's the message I want to carry to the world.",
         'Try the home-screen prototype — tap the cat:',
       ],
       /** The real liquid-glass prototype, live in the cloud. */

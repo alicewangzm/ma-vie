@@ -1,0 +1,1083 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pawhearth — Diary (Liquid Glass)</title>
+
+  <!-- Canonical design tokens (source of truth: ../tokens.json).
+       Like insights.html, this screen consumes the canonical vars
+       directly: --color-pastel-*, --effect-glassBlur, ink/space/
+       radius/type/elevation/motion. -->
+  <link rel="stylesheet" href="./tokens.css" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;800&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      /* cat art palette — not a system token, same convention/values
+         as home.html's --cat-* vars so the diary cat matches exactly. */
+      --cat-body:  #FBEFE6;
+      --cat-shade: #EBD9CC;
+      --cat-inner: #F3C2D6;
+      --cat-face:  #5A4B3E;
+      --cat-blush: #F3AFAF;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; }
+    body {
+      font-family: var(--type-family-base);
+      color: var(--color-ink-primary);
+      background: var(--color-bg-surfaceAlt);
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      gap: var(--space-lg);
+      padding: var(--space-xxl);
+    }
+
+    .concept-tag {
+      max-inline-size: 390px;
+      text-align: center;
+      font-size: var(--type-size-sm);
+      color: var(--color-ink-secondary);
+      line-height: var(--type-lineHeight-body);
+    }
+    .concept-tag strong { color: var(--color-ink-primary); }
+
+    /* =========================================================
+       PHONE FRAME (390 × 844) — same shell as home.html
+       ========================================================= */
+    .phone {
+      position: relative;
+      inline-size: 390px;
+      block-size: 844px;
+      border-radius: 48px;
+      background: #0e0d0c;
+      padding: 6px;
+      box-shadow: var(--elevation-e2);
+    }
+    .screen {
+      position: relative;
+      inline-size: 100%;
+      block-size: 100%;
+      border-radius: 42px;
+      overflow: hidden;                 /* clips content to the rounded corners */
+      background: var(--color-pastel-blush);
+    }
+    .safe-top {
+      position: absolute; inset-block-start: 0; inset-inline: 0;
+      block-size: 54px; z-index: 40; pointer-events: none;
+    }
+    .safe-bottom {
+      position: absolute; inset-block-end: 0; inset-inline: 0;
+      block-size: 34px; z-index: 40; pointer-events: none;
+    }
+    .island {
+      position: absolute; inset-block-start: 12px; inset-inline-start: 50%;
+      transform: translateX(-50%);
+      inline-size: 112px; block-size: 30px;
+      border-radius: var(--radius-pill); background: #14110f;
+    }
+    .home-indicator {
+      position: absolute; inset-block-end: 9px; inset-inline-start: 50%;
+      transform: translateX(-50%);
+      inline-size: 134px; block-size: 5px;
+      border-radius: var(--radius-pill); background: rgb(from var(--color-ink-primary) r g b / 0.35);
+    }
+
+    /* =========================================================
+       BACKDROP — same static cozy gradient + blurred pastel blobs
+       as insights.html, so the frosted glass has something to blur.
+       ========================================================= */
+    .diary-bg {
+      position: absolute; inset: 0; z-index: 0;
+      background: linear-gradient(170deg,
+        var(--color-pastel-blush) 0%,
+        var(--color-pastel-lilac) 55%,
+        var(--color-pastel-sky) 100%);
+    }
+    .bg-blob {
+      position: absolute; border-radius: 50%;
+      filter: blur(34px); opacity: 0.55; pointer-events: none;
+    }
+    .bg-blob-1 { inset-block-start: 70px;  inset-inline-end: -40px; inline-size: 180px; block-size: 180px; background: var(--color-pastel-butter); }
+    .bg-blob-2 { inset-block-start: 440px; inset-inline-start: -60px; inline-size: 200px; block-size: 200px; background: var(--color-pastel-mint); }
+    .bg-blob-3 { inset-block-end: 30px;   inset-inline-end: -30px;  inline-size: 170px; block-size: 170px; background: var(--color-pastel-sky); }
+
+    /* =========================================================
+       INTERNAL SCROLL — same pattern as insights.html. .screen has
+       overflow:hidden for the rounded corners, so we scroll an
+       absolutely-positioned wrapper that fills the space BETWEEN the
+       safe-top (54px) and safe-bottom (34px) insets. Overflow is
+       still clipped to the phone's rounded corners by the parent.
+       ========================================================= */
+    .diary-scroll {
+      position: absolute;
+      inset-block-start: 54px;
+      inset-block-end: 34px;
+      inset-inline: 0;
+      z-index: 10;
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+      scrollbar-width: none;
+    }
+    .diary-scroll::-webkit-scrollbar { width: 0; height: 0; }
+
+    .diary-inner {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-lg);
+      /* header inset (44px back button + gap) so the first card clears
+         the persistent .diary-nav sitting above the scroll layer */
+      padding-block: 64px var(--space-xl);
+      padding-inline: 20px;
+    }
+
+    /* =========================================================
+       GLASS — the reusable frosted materials from home.html.
+       ========================================================= */
+    .glass-chip {
+      background: linear-gradient(155deg, rgba(255,255,255,0.68), rgba(255,255,255,0.26));
+      border: 1px solid rgba(255, 255, 255, 0.65);
+      backdrop-filter: blur(var(--effect-glassBlur)) saturate(150%);
+      -webkit-backdrop-filter: blur(var(--effect-glassBlur)) saturate(150%);
+      box-shadow: 0 1px 0 rgba(255,255,255,0.8) inset, 0 8px 20px var(--color-shadow);
+      border-radius: var(--radius-lg);
+    }
+    .card { padding: var(--space-lg); }
+
+    .section-eyebrow {
+      margin: 0;
+      font-size: var(--type-size-xs);
+      font-weight: var(--type-weight-semibold);
+      letter-spacing: 0.04em;
+      text-transform: lowercase;
+      color: var(--color-ink-secondary);
+    }
+    .section-title {
+      margin: 2px 0 0;
+      font-size: var(--type-size-lg);
+      font-weight: var(--type-weight-bold);
+      color: var(--color-ink-primary);
+      line-height: var(--type-lineHeight-heading);
+    }
+
+    /* =========================================================
+       COMPOSER — warm prompt + glass textarea + mint save button.
+       ========================================================= */
+    .composer-field {
+      display: block;
+      inline-size: 100%;
+      margin-block-start: var(--space-lg);
+      padding: var(--space-touch) var(--space-lg);
+      border-radius: var(--radius-md);
+      background: rgba(255,255,255,0.42);
+      border: 1px solid var(--color-glass-border);
+      box-shadow: 0 1px 0 rgba(255,255,255,0.7) inset;
+    }
+    .composer-field:focus-within { outline: 3px solid var(--color-focusRing); outline-offset: 2px; }
+    .composer-field textarea {
+      display: block;
+      inline-size: 100%;
+      block-size: 140px;
+      border: none; background: transparent; resize: none;
+      font-family: inherit;
+      font-size: var(--type-size-base);
+      line-height: var(--type-lineHeight-body);
+      color: var(--color-ink-primary);
+    }
+    .composer-field textarea::placeholder { color: var(--color-ink-muted); }
+    .composer-field textarea:focus { outline: none; }
+
+    .composer-foot {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: var(--space-md);
+      margin-block-start: var(--space-md);
+    }
+
+    /* low-key privacy reassurance — same weight as onboarding.html /
+       insights.html (a glass chip note, not a modal). Principle 5. */
+    .privacy-note {
+      display: inline-flex; align-items: center; gap: var(--space-sm);
+      padding-block: 8px; padding-inline: var(--space-md);
+      font-size: var(--type-size-xs);
+      font-weight: var(--type-weight-semibold);
+      color: var(--color-ink-secondary);
+      border-radius: var(--radius-pill);
+      line-height: var(--type-lineHeight-body);
+    }
+    .privacy-note svg { inline-size: 15px; block-size: 15px; flex: none; color: var(--color-ink-secondary); }
+
+    /* liquid-glass button (home.html system), mint-tinted for save */
+    .glass-btn {
+      position: relative;
+      flex: none;
+      inline-size: auto; min-block-size: 44px;
+      padding-block: 10px; padding-inline: var(--space-lg);
+      gap: var(--space-sm);
+      border: 1px solid rgba(255, 255, 255, 0.7);
+      border-radius: var(--radius-pill);
+      background:
+        linear-gradient(155deg, rgba(255,255,255,0.78), rgba(255,255,255,0.30) 55%, rgba(255,255,255,0.5)),
+        var(--tint, var(--color-pastel-mint));
+      box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.9) inset,
+        0 -6px 10px rgba(255, 255, 255, 0.35) inset,
+        0 10px 22px rgba(90, 70, 50, 0.16);
+      backdrop-filter: blur(var(--effect-glassBlur)) saturate(165%);
+      -webkit-backdrop-filter: blur(var(--effect-glassBlur)) saturate(165%);
+      display: inline-flex; align-items: center; justify-content: center;
+      color: var(--color-ink-primary);
+      font-family: inherit;
+      font-size: var(--type-size-base);
+      font-weight: var(--type-weight-bold);
+      cursor: pointer;
+      transition: transform 420ms var(--motion-easing-gentleSpring), box-shadow 260ms ease, opacity 200ms ease;
+    }
+    .glass-btn::before {
+      content: "";
+      position: absolute; inset: -16px;
+      border-radius: inherit;
+      background: radial-gradient(circle, var(--tint, var(--color-pastel-mint)) 0%, transparent 70%);
+      filter: blur(14px);
+      opacity: 0.55;
+      z-index: -1;
+    }
+    .glass-btn::after {
+      content: "";
+      position: absolute; inset: 2px 2px auto 2px;
+      block-size: 45%;
+      border-radius: 999px 999px 60% 60% / 100% 100% 30% 30%;
+      background: linear-gradient(180deg, rgba(255,255,255,0.85), rgba(255,255,255,0));
+      opacity: 0.8;
+      pointer-events: none;
+    }
+    .glass-btn:hover { transform: translateY(-1px); }
+    .glass-btn:active { transform: scale(0.96); }
+    .glass-btn:focus-visible { outline: 3px solid var(--color-focusRing); outline-offset: 2px; }
+    .glass-btn svg { position: relative; z-index: 1; inline-size: 18px; block-size: 18px; }
+    .glass-btn[disabled] { opacity: 0.45; pointer-events: none; }
+    .tint-mint { --tint: var(--color-pastel-mint); }
+
+    /* icon-only circular variant — the plain 44×44 form from home.html,
+       used here for the persistent back button. */
+    .glass-btn.is-icon {
+      inline-size: 44px; block-size: 44px;
+      min-block-size: 0; padding: 0;
+      text-decoration: none;
+    }
+    .glass-btn.is-icon svg { inline-size: 20px; block-size: 20px; }
+
+    /* =========================================================
+       NAV — a persistent back affordance. Lives ABOVE the scroll
+       layer (z-index 20 > .diary-scroll's 10) so it stays put while
+       content scrolls, and BELOW the reframe overlay (z-index 30) so
+       the save animation naturally covers it, then it reappears.
+       Same vertical position as home.html's .chrome-top.
+       ========================================================= */
+    .diary-nav {
+      position: absolute;
+      inset-block-start: calc(54px + 14px);
+      inset-inline-start: 20px;
+      z-index: 20;
+    }
+
+    /* =========================================================
+       HISTORY — revisitable list of past entries. Each entry is a
+       "thread" of one-or-more acknowledge → reframe pairs, and can be
+       added to. Same acknowledge/reframe language as insights.html.
+       ========================================================= */
+    .history-head { display: flex; flex-direction: column; }
+
+    .thread-pair {
+      padding: var(--space-md);
+      border-radius: var(--radius-md);
+      background: rgba(255,255,255,0.42);
+      border: 1px solid var(--color-glass-surface);
+    }
+    .thread-pair + .thread-pair { margin-block-start: var(--space-md); }
+    /* a follow-up (added-to) pair reads as a continuation of the thread */
+    .thread-pair.is-addon {
+      margin-inline-start: var(--space-md);
+      border-inline-start: 3px solid var(--color-pastel-mint);
+      background: rgba(255,255,255,0.34);
+    }
+    .thread-pair.is-fresh { animation: pair-in 460ms var(--motion-easing-gentleSpring) both; }
+    @keyframes pair-in {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: none; }
+    }
+
+    .pair-time {
+      margin: 0 0 var(--space-sm);
+      font-size: var(--type-size-xs);
+      color: var(--color-ink-muted);
+      font-weight: var(--type-weight-semibold);
+    }
+    .pair-felt-label,
+    .pair-kind-label {
+      margin: 0;
+      font-size: var(--type-size-xs);
+      font-weight: var(--type-weight-semibold);
+      letter-spacing: 0.03em;
+    }
+    .pair-felt-label { color: var(--color-ink-muted); }
+    .pair-kind-label { color: var(--color-brand-secondaryStrong); }
+    .pair-felt {
+      margin: 4px 0 0;
+      font-size: var(--type-size-sm);
+      color: var(--color-ink-secondary);
+      font-style: italic;
+      line-height: var(--type-lineHeight-body);
+    }
+    .pair-bridge {
+      display: flex; align-items: center; gap: var(--space-sm);
+      margin-block: var(--space-md);
+      color: var(--color-ink-muted);
+    }
+    .pair-bridge::before,
+    .pair-bridge::after { content: ""; flex: 1; block-size: 1px; background: rgba(90,70,50,0.14); }
+    .pair-bridge svg { inline-size: 16px; block-size: 16px; flex: none; }
+    .pair-kind {
+      margin: 4px 0 0;
+      font-size: var(--type-size-base);
+      color: var(--color-ink-primary);
+      font-weight: var(--type-weight-semibold);
+      line-height: var(--type-lineHeight-body);
+    }
+
+    /* "add to this entry" affordance + its inline mini-composer */
+    .entry-add-btn {
+      display: inline-flex; align-items: center; gap: var(--space-xs);
+      margin-block-start: var(--space-md);
+      padding-block: 8px; padding-inline: var(--space-md);
+      border: 1px dashed rgba(90,70,50,0.22);
+      border-radius: var(--radius-pill);
+      background: transparent;
+      font-family: inherit;
+      font-size: var(--type-size-xs);
+      font-weight: var(--type-weight-semibold);
+      color: var(--color-ink-secondary);
+      cursor: pointer;
+      transition: background 200ms ease, border-color 200ms ease;
+    }
+    .entry-add-btn:hover { background: rgba(255,255,255,0.4); border-color: rgba(90,70,50,0.32); }
+    .entry-add-btn:focus-visible { outline: 3px solid var(--color-focusRing); outline-offset: 2px; }
+    .entry-add-btn svg { inline-size: 14px; block-size: 14px; }
+
+    .addon { margin-block-start: var(--space-md); }
+    .addon[hidden] { display: none; }
+    .addon-field {
+      display: block;
+      inline-size: 100%;
+      padding: 12px var(--space-md);
+      border-radius: var(--radius-md);
+      background: rgba(255,255,255,0.5);
+      border: 1px solid var(--color-glass-border);
+    }
+    .addon-field:focus-within { outline: 3px solid var(--color-focusRing); outline-offset: 2px; }
+    .addon-field textarea {
+      display: block; inline-size: 100%; block-size: 74px;
+      border: none; background: transparent; resize: none;
+      font-family: inherit;
+      font-size: var(--type-size-sm);
+      line-height: var(--type-lineHeight-body);
+      color: var(--color-ink-primary);
+    }
+    .addon-field textarea::placeholder { color: var(--color-ink-muted); }
+    .addon-field textarea:focus { outline: none; }
+    .addon-foot { display: flex; justify-content: flex-end; margin-block-start: var(--space-sm); }
+    .addon .glass-btn { font-size: var(--type-size-sm); min-block-size: 40px; padding-block: 8px; }
+
+    /* the short acknowledge beat shown inline while an add-on saves */
+    .addon-ack {
+      margin-block-start: var(--space-md);
+      padding: var(--space-md);
+      border-radius: var(--radius-md);
+      background: rgba(255,255,255,0.42);
+      border: 1px solid var(--color-glass-surface);
+    }
+    .addon-ack .ack-felt {
+      margin: 0; font-size: var(--type-size-sm); font-style: italic;
+      color: var(--color-ink-secondary); line-height: var(--type-lineHeight-body);
+    }
+    .addon-ack .ack-listen {
+      display: flex; align-items: center; gap: var(--space-sm);
+      margin-block-start: var(--space-sm);
+      font-size: var(--type-size-xs); color: var(--color-ink-muted);
+      font-weight: var(--type-weight-semibold);
+    }
+
+    /* three pulsing "listening" dots (reused by overlay + add-ons) */
+    .dots { display: inline-flex; gap: 6px; }
+    .dots span {
+      inline-size: 7px; block-size: 7px; border-radius: 50%;
+      background: var(--color-ink-muted);
+      animation: dot-pulse 1200ms ease-in-out infinite;
+    }
+    .dots span:nth-child(2) { animation-delay: 160ms; }
+    .dots span:nth-child(3) { animation-delay: 320ms; }
+    @keyframes dot-pulse {
+      0%, 100% { opacity: 0.3; transform: translateY(0); }
+      50%      { opacity: 1;   transform: translateY(-3px); }
+    }
+
+    /* =========================================================
+       REFRAME OVERLAY — the save animation. A frosted veil over the
+       whole screen with the idle cat, a two-beat acknowledge →
+       reframe reveal, and a caption about the real ~30–60s timing.
+       The original words are NEVER removed when the reframe appears
+       (Principle 1 — reframe, don't erase).
+       ========================================================= */
+    .reframe-overlay {
+      position: absolute; inset: 0; z-index: 30;
+      display: none;
+    }
+    .reframe-overlay.is-active { display: block; }
+    .reframe-veil {
+      position: absolute; inset: 0;
+      background: linear-gradient(170deg,
+        rgba(240,221,214,0.86) 0%,
+        rgba(222,218,244,0.86) 55%,
+        rgba(217,237,248,0.86) 100%);
+      backdrop-filter: blur(10px) saturate(140%);
+      -webkit-backdrop-filter: blur(10px) saturate(140%);
+    }
+    .reframe-body {
+      position: absolute;
+      inset-block-start: 54px; inset-block-end: 34px; inset-inline: 0;
+      overflow-y: auto; overflow-x: hidden;
+      scrollbar-width: none;
+      display: flex; flex-direction: column; align-items: center;
+      padding-block: var(--space-lg) var(--space-xl);
+      padding-inline: 20px;
+    }
+    .reframe-body::-webkit-scrollbar { width: 0; height: 0; }
+
+    .stage-cat-wrap {
+      position: relative;
+      display: flex; justify-content: center;
+      inline-size: 130px; block-size: 92px;
+      transform: scale(0.72);
+      transform-origin: bottom center;
+      margin-block-end: var(--space-sm);
+    }
+    .stage-cat-shadow {
+      position: absolute; inset-block-end: -8px; inset-inline-start: 50%;
+      transform: translateX(-50%);
+      inline-size: 92px; block-size: 16px;
+      background: radial-gradient(ellipse at center, rgba(90,70,50,0.18), transparent 72%);
+      border-radius: 50%;
+    }
+    .stage-presence {
+      display: flex; align-items: center; gap: var(--space-sm);
+      margin-block-end: var(--space-lg);
+      font-size: var(--type-size-sm);
+      font-weight: var(--type-weight-semibold);
+      color: var(--color-ink-secondary);
+    }
+
+    .stage-card {
+      inline-size: 100%;
+      padding: var(--space-lg);
+      border-radius: var(--radius-lg);
+    }
+    .stage-original {
+      opacity: 0; transform: translateY(10px);
+      transition: opacity 520ms var(--motion-easing-standard), transform 520ms var(--motion-easing-gentleSpring);
+    }
+    .reframe-overlay.is-active .stage-original { opacity: 1; transform: none; }
+
+    .stage-label {
+      margin: 0; font-size: var(--type-size-xs);
+      font-weight: var(--type-weight-semibold); letter-spacing: 0.03em;
+    }
+    .stage-original .stage-label { color: var(--color-ink-muted); }
+    .stage-original .stage-text {
+      margin: 6px 0 0; font-size: var(--type-size-base);
+      color: var(--color-ink-secondary); font-style: italic;
+      line-height: var(--type-lineHeight-body);
+      white-space: pre-wrap; word-break: break-word;
+    }
+
+    .stage-bridge {
+      display: flex; align-items: center; gap: var(--space-sm);
+      inline-size: 100%;
+      margin-block: var(--space-lg);
+      color: var(--color-ink-muted);
+      opacity: 0;
+      transition: opacity 400ms ease;
+    }
+    .stage-bridge::before, .stage-bridge::after { content: ""; flex: 1; block-size: 1px; background: rgba(90,70,50,0.16); }
+    .stage-bridge svg { inline-size: 18px; block-size: 18px; flex: none; }
+    .reframe-overlay.show-reframe .stage-bridge { opacity: 1; }
+
+    .stage-reframe {
+      opacity: 0; transform: translateY(12px);
+      transition: opacity 620ms var(--motion-easing-standard), transform 620ms var(--motion-easing-gentleSpring);
+    }
+    .reframe-overlay.show-reframe .stage-reframe { opacity: 1; transform: none; }
+    .stage-reframe .stage-label { color: var(--color-brand-secondaryStrong); }
+    .stage-reframe .stage-text {
+      margin: 6px 0 0; font-size: var(--type-size-lg);
+      color: var(--color-ink-primary); font-weight: var(--type-weight-semibold);
+      line-height: var(--type-lineHeight-body);
+    }
+    .stage-affirm {
+      display: flex; align-items: center; gap: var(--space-sm);
+      margin-block-start: var(--space-lg);
+      padding-block-start: var(--space-md);
+      border-block-start: 1px solid rgba(90,70,50,0.10);
+    }
+    .stage-affirm .affirm-paw {
+      flex: none; inline-size: 22px; block-size: 22px; border-radius: 50%;
+      background: var(--cat-inner);
+      display: grid; place-items: center;
+    }
+    .stage-affirm .affirm-paw::after {
+      content: ""; inline-size: 8px; block-size: 6px; border-radius: 50%;
+      background: var(--cat-blush);
+    }
+    .stage-affirm p { margin: 0; font-size: var(--type-size-sm); color: var(--color-ink-secondary); line-height: var(--type-lineHeight-body); }
+    .stage-affirm .affirm-by { color: var(--color-ink-muted); font-weight: var(--type-weight-semibold); }
+
+    /* the "listening" line during beat 1, hidden once beat 2 arrives */
+    .stage-listening {
+      display: flex; align-items: center; gap: var(--space-sm);
+      margin-block-start: var(--space-lg);
+      font-size: var(--type-size-xs); color: var(--color-ink-muted);
+      font-weight: var(--type-weight-semibold);
+    }
+    .reframe-overlay.show-reframe .stage-listening { display: none; }
+
+    .stage-note {
+      margin-block-start: var(--space-lg);
+      inline-size: 100%;
+      font-size: var(--type-size-xs);
+      color: var(--color-ink-muted);
+      text-align: center;
+      line-height: var(--type-lineHeight-body);
+    }
+
+    /* =========================================================
+       IDLE LIQUID-CAT — home.html's anatomy, idle-only (blink +
+       tail sway + jelly), same as insights.html's portrait. No
+       walk/groom logic on this screen.
+       ========================================================= */
+    .liquid-cat {
+      position: relative;
+      inline-size: 130px; block-size: 112px;
+    }
+    .lc-tail {
+      position: absolute; inset-inline-end: -22px; inset-block-end: 6px;
+      inline-size: 46px; block-size: 46px;
+      border-block-start: 13px solid var(--cat-body);
+      border-inline-end: 13px solid var(--cat-body);
+      border-start-end-radius: 36px;
+      transform-origin: 0% 100%;
+      animation: lc-tail-sway 2400ms ease-in-out infinite alternate;
+      z-index: 1;
+    }
+    .lc-body {
+      position: absolute; inset-inline-start: 50%; inset-block-end: 0;
+      inline-size: 100px; block-size: 74px;
+      background: var(--cat-body);
+      border-radius: 50% 50% 50% 50% / 90% 90% 30% 30%;
+      z-index: 2;
+      animation: lc-jelly 3400ms ease-in-out infinite alternate;
+    }
+    .lc-head {
+      position: absolute; inset-inline-start: 50%; inset-block-start: -6px;
+      inline-size: 92px; block-size: 78px;
+      background: var(--cat-body);
+      border-radius: 50% 50% 46% 46% / 58% 58% 42% 42%;
+      transform: translateX(-50%);
+      z-index: 3;
+    }
+    .lc-ear {
+      position: absolute; inset-block-start: -18px;
+      inline-size: 32px; block-size: 36px;
+      background: var(--cat-body);
+      clip-path: polygon(50% 0%, 82% 30%, 88% 82%, 68% 100%, 32% 100%, 12% 82%, 18% 30%);
+    }
+    .lc-ear-l { inset-inline-start: 6px; transform: rotate(-10deg); }
+    .lc-ear-r { inset-inline-end: 6px; transform: rotate(10deg); }
+    .lc-ear-inner {
+      position: absolute; inset: 10px 9px 7px 9px;
+      background: var(--cat-inner);
+      clip-path: polygon(50% 0%, 82% 30%, 88% 82%, 68% 100%, 32% 100%, 12% 82%, 18% 30%);
+      opacity: 0.85;
+    }
+    .lc-eye {
+      position: absolute; inset-block-start: 32px;
+      inline-size: 15px; block-size: 15px;
+      background: var(--cat-face);
+      border-radius: 50%;
+      transform-origin: center;
+      animation: lc-blink 5200ms ease-in-out infinite;
+    }
+    .lc-eye::after {
+      content: ""; position: absolute; inset-block-start: 3px; inset-inline-start: 3px;
+      inline-size: 5px; block-size: 5px; background: #fff; border-radius: 50%; opacity: 0.95;
+    }
+    .lc-eye-l { inset-inline-start: 21px; }
+    .lc-eye-r { inset-inline-end: 21px; }
+    .lc-nose {
+      position: absolute; inset-block-start: 47px; inset-inline-start: 50%;
+      transform: translateX(-50%);
+      inline-size: 8px; block-size: 6px;
+      background: var(--cat-inner);
+      border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+    }
+    .lc-mouth {
+      position: absolute; inset-block-start: 53px; inset-inline-start: 50%;
+      transform: translateX(-50%);
+      inline-size: 14px; block-size: 7px;
+      border-block-end: 2px solid var(--cat-shade);
+      border-radius: 0 0 50% 50% / 0 0 100% 100%;
+      opacity: 0.7;
+    }
+    .lc-whisker {
+      position: absolute; inset-block-start: 49px;
+      inline-size: 20px; block-size: 1.5px;
+      background: var(--cat-shade);
+      opacity: 0.75;
+    }
+    .lc-whisker-l { inset-inline-start: -10px; transform: rotate(5deg); }
+    .lc-whisker-r { inset-inline-end: -10px; transform: rotate(-5deg); }
+    .lc-blush { position: absolute; inset-block-start: 45px; inline-size: 11px; block-size: 6px; border-radius: 50%; background: var(--cat-blush); opacity: 0.5; }
+    .lc-blush-l { inset-inline-start: 8px; }
+    .lc-blush-r { inset-inline-end: 8px; }
+    .lc-foot { position: absolute; inset-block-end: -4px; inline-size: 26px; block-size: 16px; background: var(--cat-body); border-radius: 50%; z-index: 1; }
+    .lc-foot-l { inset-inline-start: 12px; }
+    .lc-foot-r { inset-inline-end: 12px; }
+
+    @keyframes lc-jelly {
+      0%   { transform: translateX(-50%) scaleY(1);    border-radius: 48% 48% 46% 46% / 60% 60% 40% 40%; }
+      100% { transform: translateX(-50%) scaleY(1.03); border-radius: 46% 46% 48% 48% / 58% 58% 42% 42%; }
+    }
+    @keyframes lc-tail-sway {
+      from { transform: rotate(-8deg); }
+      to   { transform: rotate(14deg); }
+    }
+    @keyframes lc-blink {
+      0%, 92%, 100% { transform: scaleY(1); }
+      96%           { transform: scaleY(0.12); }
+    }
+
+    /* =========================================================
+       REDUCED MOTION — same posture as home.html / insights.html:
+       drop the idle + reveal animations, keep the settled states.
+       The two-beat overlay still shows BOTH beats — just instantly.
+       ========================================================= */
+    @media (prefers-reduced-motion: reduce) {
+      .lc-body, .lc-tail, .lc-eye, .dots span, .thread-pair.is-fresh { animation: none; }
+      .stage-original, .stage-reframe, .stage-bridge { transition-duration: 1ms; }
+    }
+  </style>
+</head>
+
+<body>
+  <p class="concept-tag">
+    <strong>Diary — Liquid Glass · Reframe-on-save.</strong>
+    Free-write, then watch the two-beat acknowledge → reframe animation, and revisit
+    or add to past entries. Extends the locked <code>home.html</code> / <code>insights.html</code> language.
+  </p>
+
+  <div class="phone">
+    <div class="screen">
+
+      <!-- ---------- static backdrop (gives the glass something to blur) ---------- -->
+      <div class="diary-bg" aria-hidden="true">
+        <span class="bg-blob bg-blob-1"></span>
+        <span class="bg-blob bg-blob-2"></span>
+        <span class="bg-blob bg-blob-3"></span>
+      </div>
+
+      <!-- ---------- persistent nav: back to home (above scroll, below overlay) ---------- -->
+      <nav class="diary-nav">
+        <a class="glass-btn tint-mint is-icon" href="./pawHearthHome.html" aria-label="back to home">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M19 12H5" /><path d="M12 19l-7-7 7-7" />
+          </svg>
+        </a>
+      </nav>
+
+      <!-- ---------- internal scroll layer (between the safe insets) ---------- -->
+      <div class="diary-scroll">
+        <div class="diary-inner">
+
+          <!-- 1 · COMPOSER -->
+          <section class="glass-chip card">
+            <p class="section-eyebrow">a quiet place to write</p>
+            <h1 class="section-title">What's on your mind?</h1>
+
+            <label class="composer-field">
+              <textarea id="composerInput"
+                placeholder="Write freely — there's no wrong way to feel. Alice is here to read it with you."></textarea>
+            </label>
+
+            <div class="composer-foot">
+              <span class="privacy-note glass-chip">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <rect x="5" y="11" width="14" height="10" rx="2" />
+                  <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+                </svg>
+                Just for you — stays on your device.
+              </span>
+
+              <button class="glass-btn tint-mint" id="saveBtn" type="button">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M12 6c-2-1.5-5-1.5-7 0v12c2-1.5 5-1.5 7 0 2-1.5 5-1.5 7 0V6c-2-1.5-5-1.5-7 0Z" /><path d="M12 6v12" />
+                </svg>
+                Save &amp; reframe
+              </button>
+            </div>
+          </section>
+
+          <!-- 2 · HISTORY -->
+          <section class="history-head">
+            <p class="section-eyebrow" style="padding-inline-start: 4px;">yours to revisit</p>
+            <h2 class="section-title" style="padding-inline-start: 4px;">Earlier entries</h2>
+          </section>
+
+          <div id="history">
+            <!-- pre-seeded entry A -->
+            <article class="entry glass-chip card">
+              <div class="entry-thread">
+                <div class="thread-pair">
+                  <p class="pair-time">Yesterday · 9:14 PM</p>
+                  <p class="pair-felt-label">You wrote</p>
+                  <p class="pair-felt">"I snapped at my roommate over nothing and spent the whole evening convinced I'm a horrible person to be around."</p>
+                  <div class="pair-bridge" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                         stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14" /><path d="M6 13l6 6 6-6" /></svg>
+                  </div>
+                  <p class="pair-kind-label">And what was also true</p>
+                  <p class="pair-kind">One short moment isn't the whole of who you are. That it's still sitting heavy with you shows how much you care about being kind — that care is the real you, not the snap.</p>
+                </div>
+              </div>
+              <div class="addon" hidden>
+                <label class="addon-field">
+                  <textarea placeholder="Add to this entry — a second thought, or how it feels now."></textarea>
+                </label>
+                <div class="addon-foot">
+                  <button class="glass-btn tint-mint addon-save" type="button">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M12 6c-2-1.5-5-1.5-7 0v12c2-1.5 5-1.5 7 0 2-1.5 5-1.5 7 0V6c-2-1.5-5-1.5-7 0Z" /><path d="M12 6v12" />
+                    </svg>
+                    Save &amp; reframe
+                  </button>
+                </div>
+              </div>
+              <button class="entry-add-btn" type="button">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14" /><path d="M5 12h14" /></svg>
+                add to this entry
+              </button>
+            </article>
+
+            <!-- pre-seeded entry B -->
+            <article class="entry glass-chip card" style="margin-block-start: var(--space-lg);">
+              <div class="entry-thread">
+                <div class="thread-pair">
+                  <p class="pair-time">Sun · 8:02 AM</p>
+                  <p class="pair-felt-label">You wrote</p>
+                  <p class="pair-felt">"Didn't leave the apartment again. Everyone else seems to have their life together and I'm just stuck."</p>
+                  <div class="pair-bridge" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                         stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14" /><path d="M6 13l6 6 6-6" /></svg>
+                  </div>
+                  <p class="pair-kind-label">And what was also true</p>
+                  <p class="pair-kind">Measuring your inside against everyone else's outside will always feel unfair. You still moved through a hard day at home — that counts, even when it's quiet and no one else sees it.</p>
+                </div>
+              </div>
+              <div class="addon" hidden>
+                <label class="addon-field">
+                  <textarea placeholder="Add to this entry — a second thought, or how it feels now."></textarea>
+                </label>
+                <div class="addon-foot">
+                  <button class="glass-btn tint-mint addon-save" type="button">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <path d="M12 6c-2-1.5-5-1.5-7 0v12c2-1.5 5-1.5 7 0 2-1.5 5-1.5 7 0V6c-2-1.5-5-1.5-7 0Z" /><path d="M12 6v12" />
+                    </svg>
+                    Save &amp; reframe
+                  </button>
+                </div>
+              </div>
+              <button class="entry-add-btn" type="button">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                     stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14" /><path d="M5 12h14" /></svg>
+                add to this entry
+              </button>
+            </article>
+          </div>
+
+        </div><!-- /.diary-inner -->
+      </div><!-- /.diary-scroll -->
+
+      <!-- ---------- REFRAME OVERLAY (save animation) ---------- -->
+      <div class="reframe-overlay" id="overlay" role="status" aria-live="polite">
+        <div class="reframe-veil" aria-hidden="true"></div>
+        <div class="reframe-body">
+
+          <div class="stage-cat-wrap" aria-hidden="true">
+            <span class="stage-cat-shadow"></span>
+            <div class="liquid-cat">
+              <span class="lc-tail"></span>
+              <span class="lc-body"></span>
+              <span class="lc-head">
+                <span class="lc-ear lc-ear-l"><span class="lc-ear-inner"></span></span>
+                <span class="lc-ear lc-ear-r"><span class="lc-ear-inner"></span></span>
+                <span class="lc-whisker lc-whisker-l"></span>
+                <span class="lc-whisker lc-whisker-r"></span>
+                <span class="lc-eye lc-eye-l"></span>
+                <span class="lc-eye lc-eye-r"></span>
+                <span class="lc-nose"></span>
+                <span class="lc-mouth"></span>
+                <span class="lc-blush lc-blush-l"></span>
+                <span class="lc-blush lc-blush-r"></span>
+              </span>
+              <span class="lc-foot lc-foot-l"></span>
+              <span class="lc-foot lc-foot-r"></span>
+            </div>
+          </div>
+          <p class="stage-presence">Alice is here with you.</p>
+
+          <!-- beat 1 — acknowledge (verbatim, never edited) -->
+          <div class="stage-card glass-chip stage-original">
+            <p class="stage-label">Your words</p>
+            <p class="stage-text" id="stageOriginal"></p>
+            <div class="stage-listening">
+              <span>Alice is sitting with what you wrote</span>
+              <span class="dots" aria-hidden="true"><span></span><span></span><span></span></span>
+            </div>
+          </div>
+
+          <div class="stage-bridge" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14" /><path d="M6 13l6 6 6-6" /></svg>
+          </div>
+
+          <!-- beat 2 — reframe (appears ALONGSIDE the original) -->
+          <div class="stage-card glass-chip stage-reframe">
+            <p class="stage-label">And what was also true</p>
+            <p class="stage-text" id="stageReframe"></p>
+            <div class="stage-affirm">
+              <span class="affirm-paw" aria-hidden="true"></span>
+              <p><span id="stageAffirm"></span> <span class="affirm-by">— Alice</span></p>
+            </div>
+          </div>
+
+          <p class="stage-note">
+            In the app this takes about 30–60 seconds while a reframe is written just for you.
+            Sped up here for review.
+          </p>
+
+        </div>
+      </div>
+
+      <div class="safe-top"><span class="island"></span></div>
+      <div class="safe-bottom"><span class="home-indicator"></span></div>
+
+    </div><!-- /.screen -->
+  </div><!-- /.phone -->
+
+  <script>
+    var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+    /* ---------------------------------------------------------
+       Reframe templates. No real AI here — these stand in for the
+       on-device fallback library (CLAUDE.md: templated
+       acknowledge-then-reframe). They acknowledge the feeling as
+       real and never erase or contradict it (Principle 1). Rotated
+       so repeated saves during review never look identical.
+       --------------------------------------------------------- */
+    var REFRAMES = [
+      "That sounds genuinely heavy, and you carried it anyway. Writing it down instead of holding it alone is its own quiet kind of brave — you showed up for yourself today.",
+      "What you're feeling is real, and it makes sense. Naming it here doesn't make it smaller, but it does mean you're no longer facing it in silence — and that matters.",
+      "You're being far harder on yourself than you'd ever be with someone you love. The same gentleness you'd offer a friend belongs to you too — you're doing more than you're giving yourself credit for.",
+      "Hard days are part of a real life, not proof you're failing at it. You noticed how you felt and put it into words — that's you tending to yourself, even now."
+    ];
+    var AFFIRMATIONS = [
+      "I'm right here, and I'm not going anywhere.",
+      "You did a brave thing just by writing this down.",
+      "We can be gentle with today, together.",
+      "I'm proud of you for showing up."
+    ];
+    var reframeCursor = 0;
+    function nextReframe() {
+      var r = REFRAMES[reframeCursor % REFRAMES.length];
+      reframeCursor += 1;
+      return r;
+    }
+    function randomAffirmation() {
+      return AFFIRMATIONS[Math.floor(Math.random() * AFFIRMATIONS.length)];
+    }
+
+    var BRIDGE_SVG =
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
+      'stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14" /><path d="M6 13l6 6 6-6" /></svg>';
+
+    function escapeHtml(s) {
+      return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    /* build one acknowledge → reframe pair for the history thread */
+    function buildPair(felt, kind, time, isAddon) {
+      var el = document.createElement('div');
+      el.className = 'thread-pair is-fresh' + (isAddon ? ' is-addon' : '');
+      el.innerHTML =
+        '<p class="pair-time">' + escapeHtml(time) + '</p>' +
+        '<p class="pair-felt-label">You wrote</p>' +
+        '<p class="pair-felt">"' + escapeHtml(felt) + '"</p>' +
+        '<div class="pair-bridge" aria-hidden="true">' + BRIDGE_SVG + '</div>' +
+        '<p class="pair-kind-label">And what was also true</p>' +
+        '<p class="pair-kind">' + escapeHtml(kind) + '</p>';
+      return el;
+    }
+
+    /* build a fresh history entry (from the top composer) */
+    function buildEntry(felt, kind, time) {
+      var article = document.createElement('article');
+      article.className = 'entry glass-chip card';
+      article.innerHTML =
+        '<div class="entry-thread"></div>' +
+        '<div class="addon" hidden>' +
+          '<label class="addon-field">' +
+            '<textarea placeholder="Add to this entry — a second thought, or how it feels now."></textarea>' +
+          '</label>' +
+          '<div class="addon-foot">' +
+            '<button class="glass-btn tint-mint addon-save" type="button">' +
+              '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
+              'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+              '<path d="M12 6c-2-1.5-5-1.5-7 0v12c2-1.5 5-1.5 7 0 2-1.5 5-1.5 7 0V6c-2-1.5-5-1.5-7 0Z" /><path d="M12 6v12" /></svg>' +
+              'Save &amp; reframe</button>' +
+          '</div>' +
+        '</div>' +
+        '<button class="entry-add-btn" type="button">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
+          'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14" /><path d="M5 12h14" /></svg>' +
+          'add to this entry</button>';
+      article.querySelector('.entry-thread').appendChild(buildPair(felt, kind, time, false));
+      wireEntry(article);
+      return article;
+    }
+
+    /* ---------------------------------------------------------
+       Top composer — the full two-beat overlay animation.
+       Timeline (~6.6s): beat 1 acknowledge holds ~3.2s, then beat 2
+       reframe reveals alongside it and settles ~3s before committing
+       to history. Reduced motion shows both beats at once, holds,
+       then commits.
+       --------------------------------------------------------- */
+    var composerInput = document.getElementById('composerInput');
+    var saveBtn = document.getElementById('saveBtn');
+    var overlay = document.getElementById('overlay');
+    var stageOriginal = document.getElementById('stageOriginal');
+    var stageReframe = document.getElementById('stageReframe');
+    var stageAffirm = document.getElementById('stageAffirm');
+    var historyList = document.getElementById('history');
+    var busy = false;
+
+    saveBtn.addEventListener('click', function () {
+      if (busy) return;
+      var text = composerInput.value.trim();
+      if (!text) { composerInput.focus(); return; }
+      busy = true;
+      saveBtn.disabled = true;
+
+      var reframe = nextReframe();
+      var affirm = randomAffirmation();
+
+      stageOriginal.textContent = text;
+      stageReframe.textContent = reframe;
+      stageAffirm.textContent = affirm;
+
+      overlay.classList.add('is-active');
+
+      function commit() {
+        historyList.insertBefore(buildEntry(text, reframe, 'Just now'), historyList.firstChild);
+        composerInput.value = '';
+        overlay.classList.remove('is-active', 'show-reframe');
+        saveBtn.disabled = false;
+        busy = false;
+      }
+
+      if (reduceMotion.matches) {
+        overlay.classList.add('show-reframe');   // both beats settled at once
+        setTimeout(commit, 1400);
+      } else {
+        setTimeout(function () { overlay.classList.add('show-reframe'); }, 3200);
+        setTimeout(commit, 6600);
+      }
+    });
+
+    /* ---------------------------------------------------------
+       History entries — reveal the inline add-on composer, then a
+       shorter acknowledge → reframe: the just-written words are held
+       (acknowledge) while Alice "reads", then the reframe pair is
+       appended to that entry's thread with its own timestamp.
+       --------------------------------------------------------- */
+    function wireEntry(entry) {
+      var addBtn = entry.querySelector('.entry-add-btn');
+      var addon = entry.querySelector('.addon');
+      var thread = entry.querySelector('.entry-thread');
+      var input = addon.querySelector('textarea');
+      var addonSave = addon.querySelector('.addon-save');
+      var addonBusy = false;
+
+      addBtn.addEventListener('click', function () {
+        var opening = addon.hasAttribute('hidden');
+        if (opening) {
+          addon.removeAttribute('hidden');
+          addBtn.setAttribute('hidden', '');
+          input.focus();
+        }
+      });
+
+      addonSave.addEventListener('click', function () {
+        if (addonBusy) return;
+        var text = input.value.trim();
+        if (!text) { input.focus(); return; }
+        addonBusy = true;
+        addonSave.disabled = true;
+
+        // acknowledge beat: show the written words + a listening line
+        var ack = document.createElement('div');
+        ack.className = 'addon-ack';
+        ack.innerHTML =
+          '<p class="ack-felt">"' + escapeHtml(text) + '"</p>' +
+          '<div class="ack-listen"><span>Alice is reading your words</span>' +
+          '<span class="dots" aria-hidden="true"><span></span><span></span><span></span></span></div>';
+        addon.setAttribute('hidden', '');
+        entry.insertBefore(ack, addon);
+
+        function commitAddon() {
+          entry.removeChild(ack);
+          thread.appendChild(buildPair(text, nextReframe(), 'Just now', true));
+          input.value = '';
+          addonSave.disabled = false;
+          addBtn.removeAttribute('hidden');
+          addonBusy = false;
+        }
+        setTimeout(commitAddon, reduceMotion.matches ? 500 : 2000);
+      });
+    }
+
+    // wire the two pre-seeded entries present in the markup
+    Array.prototype.forEach.call(document.querySelectorAll('#history .entry'), wireEntry);
+  </script>
+</body>
+</html>
