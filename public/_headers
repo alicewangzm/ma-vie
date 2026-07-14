@@ -1,0 +1,19 @@
+# Security headers applied at the Cloudflare edge to every response.
+# Cloudflare Workers static assets reads this file (same syntax as Pages);
+# it is treated as config and never served as a public asset.
+# Defense-in-depth only — this is a static site with no backend, no secrets,
+# and no server-side input handling.
+/*
+  # Anti-clickjacking: no OTHER origin may frame this site. SAMEORIGIN (not
+  # DENY) is deliberate — the PawHearth cloud embeds a same-origin prototype
+  # page, which SAMEORIGIN allows and DENY would break. frame-ancestors is the
+  # modern equivalent; both are set so older and newer browsers are covered.
+  X-Frame-Options: SAMEORIGIN
+  Content-Security-Policy: frame-ancestors 'self'
+  # Stop the browser from MIME-sniffing a response into a different type.
+  X-Content-Type-Options: nosniff
+  # Don't leak the full URL to sites the visitor clicks through to.
+  Referrer-Policy: strict-origin-when-cross-origin
+  # This site uses none of these device features — disable them entirely,
+  # and opt out of the ad-targeting Topics API.
+  Permissions-Policy: geolocation=(), camera=(), microphone=(), usb=(), browsing-topics=()
