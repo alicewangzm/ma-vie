@@ -126,8 +126,8 @@ class Block02University implements StoryBlock {
         // from somewhere. Laurier↔Finance (the pair Alice likes) are 10.4
         // apart; the left fan keeps every pair at least that far, heights
         // alternating low/high as a second guard.
-        this.addPanel('Banking APIs', 'Java + Spring Boot', new THREE.Vector3(-13, 7, -19));
-        this.addQMark(new THREE.Vector3(-13, 3.6, -19), modals.banking);
+        this.addPanel('Banking APIs', 'Java + Spring Boot', new THREE.Vector3(-13, 8, -19));
+        this.addQMark(new THREE.Vector3(-13, 4.6, -19), modals.banking);
         this.addPanel('Supplier Upload', 'React + Google Maps', new THREE.Vector3(-15, 7.4, 0));
         this.addQMark(new THREE.Vector3(-15, 3.8, 0), modals.supplier);
         this.addPanel('Finance Research', 'Data analysis · Python', new THREE.Vector3(17, 3.5, -4));
