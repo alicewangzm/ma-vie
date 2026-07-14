@@ -16,7 +16,6 @@ export const letterContent = {
     "When it fades and flickers, it's a wish still on its way.",
     'Follow the light. Take your time.',
     "There's a small reward waiting at the end.",
-    '(Maybe a smile. Maybe a little more.)',
   ],
   acceptLabel: 'Accept',
   clickHint: 'click the letter',

@@ -119,15 +119,11 @@ class Block02University implements StoryBlock {
         this.addQMark(new THREE.Vector3(14, 3.9, -14), modals.laurier);
         break;
       case 'projects':
-        this.addPanel('Banking APIs', 'Java + Spring Boot', new THREE.Vector3(-13, 4.8, -20));
-        this.addQMark(new THREE.Vector3(-13, 2.4, -20), modals.banking);
+        this.addPanel('Banking APIs', 'Java + Spring Boot', new THREE.Vector3(-1, 6.8, -20));
+        this.addQMark(new THREE.Vector3(-1, 3.4, -20), modals.banking);
         this.addPanel('Supplier Upload', 'React + Google Maps', new THREE.Vector3(-17, 7.6, -24));
         this.addQMark(new THREE.Vector3(-17, 3.6, -24), modals.supplier);
-        this.addPanel(
-          'Finance Research',
-          '14,000 SEC files · Python',
-          new THREE.Vector3(17, 3.5, -4),
-        );
+        this.addPanel('Finance Research', 'Data analysis · Python', new THREE.Vector3(17, 3.5, -4));
         this.addQMark(new THREE.Vector3(17, 1.8, -4), modals.finance);
         break;
       case 'coop':
