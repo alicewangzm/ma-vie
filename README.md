@@ -163,8 +163,8 @@ them; these are polish, not gaps.
   Photo into `public/assets` and pair them by name.
 - ~~**PawHearth live demo**~~ — shipped: the liquid-glass home-screen prototype
   runs fully interactive in the PawHearth cloud (scaled same-origin iframe).
-  
-- - **A living cat.** The cat is currently a static mesh with its walk gait faked
+
+- **A living cat.** The cat is currently a static mesh with its walk gait faked
   in the vertex shader (leg trot + tail wag); the rig-driven clip system is
   wired but dormant. The next step is a proper idle state machine for when the
   player stops: resting poses that cycle — sit, tail-curl, a paw-lick — with a
