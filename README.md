@@ -50,7 +50,9 @@ changes.
   desaturates toward luminance, lifts fog, adds a slow flicker. Reality is saturated;
   envisioned futures are faded and gently blinking.
 - **Selective-by-threshold bloom** — a single `UnrealBloomPass` with a high threshold so
-  only the sun core and glow sprites bloom. <!-- TODO(stage-3): layer-based selective bloom if budget allows -->
+  only the sun core and glow sprites bloom. One pass, no second render target — cheaper
+  than layer-masked selective bloom, and at this palette the threshold cleanly isolates
+  the halos anyway.
 - **Sky** — gradient shader on an inverted sphere; colors are uniforms, so blocks lerp
   time-of-day (the Google block goes pre-sunrise pink → storm grey).
 
@@ -68,6 +70,11 @@ changes.
   k-means-sampled from a region of Alice's actual photo (cloth, skin, hair…);
   clicking sends that color back into the pixel-art portrait at exactly the
   cells it was sampled from.
+- **The envisioned map moves.** The pilot ("faded road") cloud shows a hand-authored
+  animated SVG — a private jet tracing a flight arc over Canada and the U.S., laying a
+  gold trail beneath the wings, in the same desaturated blue as every other envisioned
+  future. Pure SMIL/CSS, no runtime and no raster frames, so it animates inside a plain
+  `<img>` and weighs a few KB.
 
 ## Accessibility
 
@@ -139,6 +146,16 @@ with full feature parity. Same edge delivery, same per-push previews.
 
 ## Further enhancements
 
+Deliberately deferred past v1.0 — the experience is complete and shipped without
+them; these are polish, not gaps.
+
+- **Audio pass.** A soft piano ambient bed layered under the procedural white-noise
+  wind, per-chapter mix levels, and a gentle duck when cloud modals open. The wind,
+  thunder, and mute toggle already ship; this is tone, not plumbing.
+- **Deeper performance pass.** The steady-state 60 fps and <2 MB payload targets are
+  met (see below); the remaining work is cosmetic-metric polish — pre-warming shader
+  compilation during the intro to lift the one-time-cost-dominated Lighthouse score,
+  and a texture-atlas pass on the cloud sprites.
 - **Live Photos** — the memory clouds already play videos; the next step is
   Apple-style live tiles: a still photo that plays its paired 3-second clip on
   hover / press-and-hold (still `.jpg` + motion `.mp4` with the same basename,
