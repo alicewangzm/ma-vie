@@ -163,6 +163,31 @@ them; these are polish, not gaps.
   Photo into `public/assets` and pair them by name.
 - ~~**PawHearth live demo**~~ — shipped: the liquid-glass home-screen prototype
   runs fully interactive in the PawHearth cloud (scaled same-origin iframe).
+  
+- - **A living cat.** The cat is currently a static mesh with its walk gait faked
+  in the vertex shader (leg trot + tail wag); the rig-driven clip system is
+  wired but dormant. The next step is a proper idle state machine for when the
+  player stops: resting poses that cycle — sit, tail-curl, a paw-lick — with a
+  soft purr loop on the audio bus. And a reaction to weather: in the storm and
+  drizzle chapters the cat flattens its ears, hunches, and gives a shake-off
+  once the rain eases, so it reads as alive rather than placed.
+
+- **Richer grass.** The wind-swayed instanced grass works; small touches would
+  lift it — more blade variation (height, hue, a few flowering tufts), a gentle
+  gust that travels as a wave rather than a uniform sway, and blades that part
+  and spring back as the cat walks through them.
+
+- **Depth-aware narrative text.** The story text is a DOM overlay, so it
+  occasionally sits on top of a floating panel or the cat and competes for the
+  same pixels. The fix is to make the overlay depth-aware — nudge a line aside,
+  fade it, or add a soft scrim only where it crosses a 3D object — so words and
+  world never fight for the same space.
+
+- **Cloud-shaped "look closer" markers.** The ? markers are meant to read as
+  little clouds but currently render as a plain glowing disc. Redesign them as a
+  soft, hand-drawn cloud puff (layered SVG, gentle inner glow, a slow bob and a
+  faint drift) so they belong to the sky instead of sitting on top of it — the
+  same soft-particle language as the billboard clouds, in miniature.
 
 ## Credits & inspiration
 
