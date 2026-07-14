@@ -66,7 +66,7 @@ class Block04Alethea implements StoryBlock {
       if (i === 2) {
         // "A medical-software team in Calgary." — the card floats up
         this.panel = makePanel('Alethea Medical', 'Calgary — medical software', '#3b7a6d');
-        this.panel.mesh.position.set(0, 2.5, -18);
+        this.panel.mesh.position.set(0, 2.5, -8);
         this.panel.mesh.scale.setScalar(1.5);
         this.panel.mesh.lookAt(this.ctx.camera.position);
         this.ctx.scene.add(this.panel.mesh);
