@@ -8,6 +8,7 @@ import { skyPresets, lerpEnvToPreset } from '../render/skyPresets';
 import {
   typewriterLines,
   chapterTitle,
+  TITLE_LEAD_MS,
   type TypewriterHandle,
   type OverlayHandle,
 } from '../ui/overlay';
@@ -62,9 +63,16 @@ class Block05Teaching implements StoryBlock {
     );
 
     this.title = chapterTitle(ctx.overlay, teachingContent.title);
-    this.typewriter = typewriterLines(ctx.overlay, teachingContent.lines, 2400, 3, (i) => {
-      if (i === WARMTH_BEAT) this.kindle();
-    });
+    this.typewriter = typewriterLines(
+      ctx.overlay,
+      teachingContent.lines,
+      2400,
+      3,
+      (i) => {
+        if (i === WARMTH_BEAT) this.kindle();
+      },
+      TITLE_LEAD_MS,
+    );
     void this.typewriter.done.then(() => this.showBeacon());
   }
 

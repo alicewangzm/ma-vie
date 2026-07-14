@@ -277,9 +277,18 @@ export interface TypewriterHandle {
 }
 
 /**
+ * Give the chapter title a solo beat before narration starts. Blocks enter
+ * mid-cloud-wipe, so ~1s of this is spent behind the clouds — the constant
+ * must stay comfortably above that for the title to read alone on screen.
+ */
+export const TITLE_LEAD_MS = 2600;
+
+/**
  * Reveal lines one at a time with a soft fade — typewriter-with-fade.
  * Older lines fade back out so long passages breathe instead of stacking
  * into a wall of text (Sky-style: short lines, lots of breath).
+ * `startDelayMs` holds the first line back — chapter openings pass
+ * TITLE_LEAD_MS so the chapter name always lands first.
  */
 export function typewriterLines(
   parent: HTMLElement,
@@ -287,6 +296,7 @@ export function typewriterLines(
   msPerLine = 1400,
   maxVisible = 4,
   onLine?: (index: number) => void,
+  startDelayMs = 0,
 ): TypewriterHandle {
   ensureOverlayStyles();
   const root = document.createElement('div');
@@ -325,12 +335,20 @@ export function typewriterLines(
       dwellTimer = setTimeout(resolveDone, msPerLine * 1.5);
     }
   };
-  revealNext();
-  timer = setInterval(revealNext, msPerLine);
+  let startTimer: ReturnType<typeof setTimeout> | null = null;
+  const begin = () => {
+    startTimer = null;
+    revealNext();
+    timer = setInterval(revealNext, msPerLine);
+  };
+  if (startDelayMs > 0) startTimer = setTimeout(begin, startDelayMs);
+  else begin();
 
   return {
     done,
     skip() {
+      if (startTimer) clearTimeout(startTimer);
+      startTimer = null;
       for (let j = i; j < els.length; j++) onLine?.(j); // cues still fire
       els.forEach((el, idx) => {
         if (idx >= els.length - maxVisible) el.classList.add('visible');
@@ -343,6 +361,7 @@ export function typewriterLines(
       resolveDone();
     },
     destroy() {
+      if (startTimer) clearTimeout(startTimer);
       if (timer) clearInterval(timer);
       // a destroyed typewriter must never resolve later and re-trigger
       // its owner (the dwell timeout would outlive a disposed block)

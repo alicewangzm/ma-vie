@@ -7,6 +7,7 @@ import { skyPresets, lerpEnvToPreset } from '../render/skyPresets';
 import {
   typewriterLines,
   chapterTitle,
+  TITLE_LEAD_MS,
   type TypewriterHandle,
   type OverlayHandle,
 } from '../ui/overlay';
@@ -209,7 +210,7 @@ class Block06ThreePaths implements StoryBlock {
     }
 
     this.title = chapterTitle(ctx.overlay, c.title);
-    this.typewriter = typewriterLines(ctx.overlay, [c.intro], 2200);
+    this.typewriter = typewriterLines(ctx.overlay, [c.intro], 2200, 4, undefined, TITLE_LEAD_MS);
   }
 
   private visit(path: PathDef & { visited: boolean }): void {

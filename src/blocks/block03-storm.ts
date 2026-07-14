@@ -10,6 +10,7 @@ import {
   typewriterLines,
   chapterTitle,
   sideLog,
+  TITLE_LEAD_MS,
   type TypewriterHandle,
   type OverlayHandle,
   type SideLogHandle,
@@ -27,34 +28,39 @@ const RAIN_COUNT_LOW = 500;
  */
 function googleDoorTexture(saturated: boolean): THREE.CanvasTexture {
   const c = document.createElement('canvas');
-  c.width = 512;
-  c.height = 320;
+  c.width = 1024;
+  c.height = 640;
   const g = c.getContext('2d')!;
   g.fillStyle = '#fff3dd'; // warm cream — survives the sun glare better than white
   g.beginPath();
-  g.roundRect(8, 8, 496, 304, 28);
+  g.roundRect(16, 16, 992, 608, 56);
   g.fill();
-  g.strokeStyle = 'rgba(74, 63, 92, 0.25)';
-  g.lineWidth = 5;
+  g.strokeStyle = 'rgba(74, 63, 92, 0.45)';
+  g.lineWidth = 10;
   g.stroke();
   const colors = saturated
     ? ['#4285f4', '#ea4335', '#fbbc05', '#4285f4', '#34a853', '#ea4335']
     : ['#9aa0a6', '#9aa0a6', '#b7babf', '#9aa0a6', '#a6aaaf', '#9aa0a6'];
-  g.font = '700 92px ui-sans-serif, system-ui, sans-serif';
+  g.font = '700 224px ui-sans-serif, system-ui, sans-serif';
   g.textBaseline = 'middle';
+  // soft drop shadow lifts the wordmark off the glare-washed card
+  g.shadowColor = 'rgba(50, 45, 70, 0.35)';
+  g.shadowBlur = 18;
+  g.shadowOffsetY = 8;
   const word = 'Google';
   let width = 0;
   for (const ch of word) width += g.measureText(ch).width;
   let x = (c.width - width) / 2;
   word.split('').forEach((ch, i) => {
     g.fillStyle = colors[i];
-    g.fillText(ch, x, 148);
+    g.fillText(ch, x, 300);
     x += g.measureText(ch).width;
   });
+  g.shadowColor = 'transparent';
   g.textAlign = 'center';
-  g.fillStyle = 'rgba(74, 63, 92, 0.6)';
-  g.font = 'italic 26px ui-sans-serif, system-ui, sans-serif';
-  g.fillText('a door appeared', c.width / 2, 248);
+  g.fillStyle = 'rgba(74, 63, 92, 0.7)';
+  g.font = 'italic 52px ui-sans-serif, system-ui, sans-serif';
+  g.fillText('a door appeared', c.width / 2, 500);
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;
   return tex;
@@ -135,14 +141,25 @@ class Block03Storm implements StoryBlock {
     const colorMesh = new THREE.Mesh(doorGeo, this.doorColorMat);
     const grayMesh = new THREE.Mesh(doorGeo, this.doorGrayMat);
     grayMesh.position.z = 0.02; // in front, so the grey version wins as it fades in
+    // draw after the sky sprites so the additive sun halo can't wash the
+    // wordmark out — the upper sky band bloomed right over the old placement
+    colorMesh.renderOrder = 5;
+    grayMesh.renderOrder = 6;
     this.door.add(colorMesh, grayMesh);
-    // left of center, out of the sun halo's additive glare
-    this.door.position.set(-8.5, 7.5, -26);
-    this.door.scale.setScalar(2.0); // reads from the start of the road
+    // left of center, standing at the horizon where the sky still has color
+    this.door.position.set(-10, 5.6, -18);
+    this.door.scale.setScalar(2.2);
     this.door.lookAt(ctx.camera.position);
     ctx.scene.add(this.door);
 
-    this.typewriter = typewriterLines(ctx.overlay, stormContent.intro, 2200);
+    this.typewriter = typewriterLines(
+      ctx.overlay,
+      stormContent.intro,
+      2200,
+      4,
+      undefined,
+      TITLE_LEAD_MS,
+    );
     void this.typewriter.done.then(() => this.startMilestones());
 
     // full-screen lightning flash element
@@ -256,8 +273,8 @@ class Block03Storm implements StoryBlock {
 
     if (this.doorColorMat && this.doorGrayMat) {
       // storm: the brand colors drain away and a dim grey door remains
-      const colorTarget = stormy ? 0 : 0.9;
-      const grayTarget = stormy ? 0.35 : 0;
+      const colorTarget = stormy ? 0 : 1;
+      const grayTarget = stormy ? 0.5 : 0;
       this.doorColorMat.opacity +=
         (colorTarget - this.doorColorMat.opacity) * Math.min(dt * 0.7, 1);
       this.doorGrayMat.opacity += (grayTarget - this.doorGrayMat.opacity) * Math.min(dt * 0.7, 1);

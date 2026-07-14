@@ -8,6 +8,7 @@ import {
   typewriterLines,
   chapterTitle,
   createButton,
+  TITLE_LEAD_MS,
   type TypewriterHandle,
   type OverlayHandle,
 } from '../ui/overlay';
@@ -147,7 +148,14 @@ class Block07ConnectingDots implements StoryBlock {
     this.title = chapterTitle(ctx.overlay, dotsContent.title);
 
     // opening beats → then the thread draws while the gratitude beats speak
-    this.typewriter = typewriterLines(ctx.overlay, dotsContent.opening, 2600);
+    this.typewriter = typewriterLines(
+      ctx.overlay,
+      dotsContent.opening,
+      2600,
+      4,
+      undefined,
+      TITLE_LEAD_MS,
+    );
     void this.typewriter.done.then(() => {
       if (!this.lineGeo) return; // disposed mid-opening
       this.typewriter?.destroy();

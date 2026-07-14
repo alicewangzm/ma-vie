@@ -9,9 +9,12 @@ import { skyPresets, lerpEnvToPreset } from '../render/skyPresets';
 import {
   typewriterLines,
   chapterTitle,
+  TITLE_LEAD_MS,
   type TypewriterHandle,
   type OverlayHandle,
 } from '../ui/overlay';
+import { createQMark, type QMark } from '../ui/qmark';
+import { openCloudModal } from '../ui/cloudModal';
 import { aletheaContent } from '../content/block04';
 import { hillY, stageCat } from './block01-who-is-alice';
 
@@ -30,6 +33,7 @@ class Block04Alethea implements StoryBlock {
   private walk: WalkController | null = null;
   private rain: Rain | null = null;
   private panel: ReturnType<typeof makePanel> | null = null;
+  private qmark: QMark | null = null;
   private title: OverlayHandle | null = null;
   private typewriter: TypewriterHandle | null = null;
   private hintEl: HTMLElement | null = null;
@@ -62,16 +66,29 @@ class Block04Alethea implements StoryBlock {
     ctx.scene.add(this.rain.points);
 
     this.title = chapterTitle(ctx.overlay, aletheaContent.title);
-    this.typewriter = typewriterLines(ctx.overlay, aletheaContent.lines, 2400, 3, (i) => {
-      if (i === 2) {
-        // "A medical-software team in Calgary." — the card floats up
-        this.panel = makePanel('Alethea Medical', 'Calgary — medical software', '#3b7a6d');
-        this.panel.mesh.position.set(0, 2.5, -8);
-        this.panel.mesh.scale.setScalar(1.5);
-        this.panel.mesh.lookAt(this.ctx.camera.position);
-        this.ctx.scene.add(this.panel.mesh);
-      }
-    });
+    this.typewriter = typewriterLines(
+      ctx.overlay,
+      aletheaContent.lines,
+      2400,
+      3,
+      (i) => {
+        if (i === 2) {
+          // "A medical-software team in Calgary." — the card floats up
+          this.panel = makePanel('Alethea Medical', 'Calgary — medical software', '#3b7a6d');
+          this.panel.mesh.position.set(0, 2.5, -8);
+          this.panel.mesh.scale.setScalar(1.5);
+          this.panel.mesh.lookAt(this.ctx.camera.position);
+          this.ctx.scene.add(this.panel.mesh);
+          this.qmark = createQMark(
+            this.ctx.overlay,
+            new THREE.Vector3(0, 3.4, -8),
+            aletheaContent.modal.title,
+            () => openCloudModal(this.ctx.overlay, aletheaContent.modal),
+          );
+        }
+      },
+      TITLE_LEAD_MS,
+    );
     void this.typewriter.done.then(() => this.showBeacon());
   }
 
@@ -101,6 +118,7 @@ class Block04Alethea implements StoryBlock {
       const target = 6.5;
       this.panel.mesh.position.y += (target - this.panel.mesh.position.y) * Math.min(dt * 1.2, 1);
     }
+    this.qmark?.update(this.ctx.camera, cat.position);
 
     if (this.beacon) {
       pulseWisp(this.beacon, t, 0.2);
@@ -138,6 +156,8 @@ class Block04Alethea implements StoryBlock {
       this.ctx.scene.remove(this.panel.mesh);
       this.panel.dispose();
     }
+    this.qmark?.dispose();
+    this.qmark = null;
     if (this.beacon) {
       this.ctx.scene.remove(this.beacon.sprite);
       this.beacon.dispose();

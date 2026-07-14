@@ -8,6 +8,7 @@ import { skyPresets, lerpEnvToPreset } from '../render/skyPresets';
 import {
   typewriterLines,
   chapterTitle,
+  TITLE_LEAD_MS,
   type TypewriterHandle,
   type OverlayHandle,
 } from '../ui/overlay';
@@ -72,6 +73,7 @@ class Block02University implements StoryBlock {
         const cue = beats[i].cue;
         if (cue) this.trigger(cue);
       },
+      TITLE_LEAD_MS,
     );
     void this.typewriter.done.then(() => this.showBeacon());
   }
@@ -99,8 +101,8 @@ class Block02University implements StoryBlock {
     const modals = universityContent.modals;
     switch (cue) {
       case 'waterloo':
-        // the CS story lines the left road — Waterloo, Replicant, Banking
-        // APIs, Supplier Upload — zigzagging high/low so no card hides another
+        // the CS story fans across the left half — Waterloo, Banking APIs,
+        // Replicant, Supplier Upload — one bearing each, heights alternating
         this.addPanel(
           'University of Waterloo',
           'Computer Science — with Distinction',
@@ -119,10 +121,15 @@ class Block02University implements StoryBlock {
         this.addQMark(new THREE.Vector3(14, 3.9, -14), modals.laurier);
         break;
       case 'projects':
-        this.addPanel('Banking APIs', 'Java + Spring Boot', new THREE.Vector3(-1, 6.8, -20));
-        this.addQMark(new THREE.Vector3(-1, 3.4, -20), modals.banking);
-        this.addPanel('Supplier Upload', 'React + Google Maps', new THREE.Vector3(-17, 7.6, -24));
-        this.addQMark(new THREE.Vector3(-17, 3.6, -24), modals.supplier);
+        // separation must hold in 3D, not just from the spawn viewpoint —
+        // the camera is free, so cards closer than ~10 world units line up
+        // from somewhere. Laurier↔Finance (the pair Alice likes) are 10.4
+        // apart; the left fan keeps every pair at least that far, heights
+        // alternating low/high as a second guard.
+        this.addPanel('Banking APIs', 'Java + Spring Boot', new THREE.Vector3(-13, 7, -19));
+        this.addQMark(new THREE.Vector3(-13, 3.6, -19), modals.banking);
+        this.addPanel('Supplier Upload', 'React + Google Maps', new THREE.Vector3(-15, 7.4, 0));
+        this.addQMark(new THREE.Vector3(-15, 3.8, 0), modals.supplier);
         this.addPanel('Finance Research', 'Data analysis · Python', new THREE.Vector3(17, 3.5, -4));
         this.addQMark(new THREE.Vector3(17, 1.8, -4), modals.finance);
         break;
@@ -130,10 +137,10 @@ class Block02University implements StoryBlock {
         this.addPanel(
           'Replicant',
           'co-op · San Francisco',
-          new THREE.Vector3(-9, 7.8, -17),
+          new THREE.Vector3(-17, 4.9, -9),
           '#b3552d',
         );
-        this.addQMark(new THREE.Vector3(-9, 3.6, -17), modals.replicant);
+        this.addQMark(new THREE.Vector3(-17, 2.5, -9), modals.replicant);
         break;
       case 'awards':
         // gold award motes drifting up around the crest
