@@ -2,6 +2,10 @@ dist
 node_modules
 lookdev.html
 package-lock.json
+# Prose is hand-managed: keep markdown out of the blocking `prettier --check`
+# so a README edit (incl. GitHub web edits, which skip the pre-commit format
+# hook) can never fail the CI lint gate. Code + config stay strictly formatted.
+*.md
 MASTER_PROMPT.md
 STORY-SCRIPT.md
 # Alice's PawHearth design artifacts — not ours to reformat
