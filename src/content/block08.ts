@@ -15,18 +15,13 @@ export const finaleContent = {
     '(to be continued)',
   ],
   /** Part B — the reveal (voice flips to first person). */
-  reveal: [
-    'So — who is Alice?',
-    'I am.',
-    'Not a traditional UX designer —',
-    'but a little bit of a lot of things.',
-  ],
+  reveal: ['So — who is Alice?', 'I am.', 'Not a traditional UX designer —'],
   rotatingTitles: [
-    'builder',
-    'programmer',
-    'prompt engineer',
-    'teacher',
-    'future pilot (manifesting)',
+    'A Curiosity-Powered Builder',
+    'An AI Engineer',
+    'An Educator',
+    'An Aspiring Recreational Pilot',
+    'A Hello, World Explorer',
   ],
   revealOutro: 'and a little bit of everything.',
   /**
@@ -43,10 +38,22 @@ export const finaleContent = {
       color: '#e8734a',
       modal: {
         title: 'musician',
-        body: ['[placeholder] What Alice plays, since when, and for whom.'],
+        body: [
+          'Finding Peace Through Sound.',
+          'She is not a professional musician, but music is where she rests.',
+          'Alice plays a bit of piano, a little bit of ukulele, and a tiny bit of guitar.',
+        ],
         images: [
-          { src: 'assets/hobby-musician-piano.mp4', alt: 'Alice at the piano', caption: 'piano' },
-          { src: 'assets/hobby-musician-ukulele.mp4', alt: 'Alice on ukulele', caption: 'ukulele' },
+          {
+            src: 'assets/hobby-musician-piano.mp4',
+            alt: 'Alice at the piano playing Pirates of the Caribbean theme song for 8 seconds',
+            caption: 'piano',
+          },
+          {
+            src: 'assets/hobby-musician-ukulele.mp4',
+            alt: 'Alice on ukulele singing Shadow of the Sun',
+            caption: 'ukulele',
+          },
         ],
       },
     },
@@ -55,7 +62,10 @@ export const finaleContent = {
       color: '#d9a441',
       modal: {
         title: 'baker',
-        body: ['[placeholder] The kitchen story — what she bakes on rainy days.'],
+        body: [
+          'Finding sweetness in the unexpected.',
+          'She loves to surprise her family and friends with homemade cakes.',
+        ],
         images: [
           { src: 'assets/hobby-baker-0.jpg', alt: 'fresh from the oven' },
           { src: 'assets/hobby-baker-1.jpg', alt: 'fresh from the oven' },
@@ -75,7 +85,11 @@ export const finaleContent = {
       color: '#7a9e6b',
       modal: {
         title: 'artist',
-        body: ['[placeholder] Small watercolors, big feelings.'],
+        body: [
+          'A collector of small wonders.',
+          'Capturing the magical moments hidden in plain sight.',
+          'Through watercolors, videos, and photography, she records the little spots of unexpected happiness around her.',
+        ],
         images: [
           {
             src: 'assets/hobby-artist-painter.jpg',
@@ -84,24 +98,45 @@ export const finaleContent = {
           },
           {
             src: 'assets/hobby-artist-videoEditor-0.mp4',
-            alt: 'a video Alice edited',
+            alt: 'a video Alice edited about maple leaves in algonquin park, ontario',
             caption: 'video editor',
           },
-          { src: 'assets/hobby-artist-videoEditor-1.mp4', alt: 'a video Alice edited' },
+          {
+            src: 'assets/hobby-artist-videoEditor-1.mp4',
+            alt: 'a video Alice edited about komodo island and scuba diving with manta',
+          },
           {
             src: 'assets/hobby-artist-photographer-0.jpg',
             alt: 'photo by Alice',
             caption: 'photographer',
           },
-          { src: 'assets/hobby-artist-photographer-1.jpg', alt: 'photo by Alice' },
-          { src: 'assets/hobby-artist-photographer-2.jpg', alt: 'photo by Alice' },
-          { src: 'assets/hobby-artist-photographer-3.jpg', alt: 'photo by Alice' },
-          { src: 'assets/hobby-artist-photographer-4.jpg', alt: 'photo by Alice' },
-          { src: 'assets/hobby-artist-photographer-5.jpg', alt: 'photo by Alice' },
-          { src: 'assets/hobby-artist-photographer-6.jpg', alt: 'photo by Alice' },
-          { src: 'assets/hobby-artist-photographer-7.jpg', alt: 'photo by Alice' },
-          { src: 'assets/hobby-artist-photographer-8.jpg', alt: 'photo by Alice' },
-          { src: 'assets/hobby-artist-photographer-9.jpg', alt: 'photo by Alice' },
+          {
+            src: 'assets/hobby-artist-photographer-1.jpg',
+            alt: 'photo by Alice - lightning in clouds',
+          },
+          {
+            src: 'assets/hobby-artist-photographer-2.jpg',
+            alt: 'photo by Alice - clouds with crepuscular rays',
+          },
+          { src: 'assets/hobby-artist-photographer-3.jpg', alt: 'photo by Alice - red sun' },
+          {
+            src: 'assets/hobby-artist-photographer-4.jpg',
+            alt: 'photo by Alice - sunset after rain',
+          },
+          { src: 'assets/hobby-artist-photographer-5.jpg', alt: 'photo by Alice - rainbow clouds' },
+          { src: 'assets/hobby-artist-photographer-6.jpg', alt: 'photo by Alice - sunset' },
+          {
+            src: 'assets/hobby-artist-photographer-7.jpg',
+            alt: 'photo by Alice - one giant tree with blue sky and green grass at the back',
+          },
+          {
+            src: 'assets/hobby-artist-photographer-8.jpg',
+            alt: 'photo by Alice - maple leave with red,yellow,green leaves',
+          },
+          {
+            src: 'assets/hobby-artist-photographer-9.jpg',
+            alt: 'photo by Alice - Milky way at Torrance Barrens Dark-Sky Preserve, Toronto',
+          },
         ],
       },
     },
@@ -110,14 +145,19 @@ export const finaleContent = {
       color: '#5b8bd9',
       modal: {
         title: 'athlete',
-        body: ['[placeholder] The sport that clears her head.'],
+        body: [
+          'Chasing the joy of staying active.',
+          'Bungee jumping, hiking, archery, rock climbing, table tennis, badminton, pilates, running...',
+          'She loves to collect experiences, touching every sport here and there.',
+          'Enjoying every bit of this game called life.',
+        ],
         images: [
           {
             src: 'assets/hobby-athlete-bungeeJumping.mp4',
             alt: 'Alice bungee jumping',
             caption: 'bungee jumping',
           },
-          { src: 'assets/hobby-athlete-hiking.jpg', alt: 'Alice hiking', caption: 'hiking' },
+          { src: 'assets/hobby-athlete-hiking.jpg', alt: 'Alice hiking in ice', caption: 'hiking' },
           {
             src: 'assets/hobby-athlete-tabletennis-0.jpg',
             alt: 'table tennis',
@@ -133,7 +173,10 @@ export const finaleContent = {
       modal: {
         title: 'storyteller',
         body: [
-          '[placeholder] Behind and in front of the camera — directing, acting, cutting the reel.',
+          'The storyteller behind the camera and the screen.',
+          'Pitching Pika to content creators by writing scripts and acting through three entirely different minds:',
+          'the fast-paced driver, the logical analyst, and the warm, amiable connector.',
+          'An amateur director exploring the world, one story and one role at a time.',
         ],
         images: [
           {
@@ -149,9 +192,9 @@ export const finaleContent = {
   rgb: [
     'Three colors make everything on your screen.',
     "Zoom into me, and it's the same —",
-    'one channel is me at the piano.',
-    'one is me in the kitchen.',
-    "one is the part of me that won't stop dreaming.",
+    'one channel is the builder, shaping code and character behind the screen.',
+    'one is the quiet soul, finding peace in micro-moments, music, and baking.',
+    "and one is the endless sky, and the part of me that won't stop dreaming.",
     "Apart, they're just light.",
     "Together, they're a whole person.",
   ],
@@ -160,7 +203,7 @@ export const finaleContent = {
     'Remember the reward from the letter?',
     'If walking through this brought a small smile —',
     'that was it. 🥇',
-    '(a tiny gold drop of happiness)',
+    'Here is your tiny drop of happiness.',
     "And if it didn't — here are my wishes for you instead:",
     'Stay curious.',
     'Stay happy.',
@@ -175,12 +218,13 @@ export const finaleContent = {
   /** Part F — goodbye + signoff. */
   thanks: [
     'Thank you for wandering through a little of my life.',
-    'No pressure at all…',
-    '(life may or may not depend on it 😏 — kidding.)',
+    'No pressure at all...',
+    'Even if making this dream a reality is just one "Offer" button away. 😉 (No pressure, JUST kidding!)',
     'Hope you enjoyed it.',
-    'Thank you, Ran — for the 3D pond, and for the door.', // [confirm wording]
+    'Thank you, Ran — for sharing this amazing opportunity!',
+    'And thank you, everyone, for watching until the very end.',
   ],
-  goodbyes: ['再见', 'see you next time', 'ciao', 'à bientôt'],
+  goodbyes: ['再见', 'See you next time', 'À bientôt', 'Ciao'],
   signoff: [
     '— Alice (Zimeng) Wang.',
     'Still making my way through the mist.',

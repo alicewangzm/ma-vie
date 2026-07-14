@@ -17,16 +17,20 @@ export const teachingContent = {
   modal: {
     title: 'What Alice teaches',
     body: [
-      '[placeholder] The course / subjects Alice teaches at school.',
-      '[placeholder] The science projects her students built.',
-      '[placeholder] Why handing people tools feels like magic.',
+      'She builds spaces where wonder becomes creation',
+      "Teaching middle and high school STEM isn't about memorizing formulas.",
+      'It is about building the future with your own hands.',
+      'Whether it is tracing logic with Scratch Cat or mapping the basics of autonomous driving,',
+      'her classroom turns science and technology into active verbs. ',
+      'Because she believes passion drives everything forward,',
+      'she tells her kids to stay curious.',
     ],
     images: [
-      { src: 'assets/teacher-science-0.jpg', alt: 'science class' },
-      { src: 'assets/teacher-science-1.mp4', alt: 'science class clip' },
-      { src: 'assets/teacher-science-2.jpg', alt: 'science class' },
-      { src: 'assets/teacher-science-3.jpg', alt: 'student project' },
-      { src: 'assets/teacher-science-4.jpg', alt: 'student project' },
+      { src: 'assets/teacher-science-0.jpg', alt: 'Tensegrity Structure' },
+      { src: 'assets/teacher-science-1.mp4', alt: 'Solar Updraft Tower' },
+      { src: 'assets/teacher-science-2.jpg', alt: "Owl' Pellet" },
+      { src: 'assets/teacher-science-3.jpg', alt: 'Skull and Claw' },
+      { src: 'assets/teacher-science-4.jpg', alt: 'Traditional Chinese Lacquer Fan' },
     ],
   },
 } as const;

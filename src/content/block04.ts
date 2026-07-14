@@ -5,15 +5,8 @@ export const aletheaContent = {
   lines: [
     "The sky didn't clear all at once.",
     'But she kept building anyway.',
-    'A medical-software team in Calgary.',
-    'Stripe payments, wired end to end.',
-    'A whole UI rebuilt in React and TypeScript —',
-    'hot-reload that cut the test cycle by three quarters.',
-    'Data taught to stay honest across two systems.',
-    'Tests for everything —',
-    "because she'd learned that careful is a kind of kindness.",
-    'Quiet, solid work.',
-    'The kind that never trends, but always holds.',
+    'On a medical-software team in Calgary, ',
+    'that is where you could find her, doing Full Stack development work',
   ],
   continueHint: 'follow the gold light',
 } as const;

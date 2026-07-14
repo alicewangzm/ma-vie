@@ -1,0 +1,189 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 800 800" role="img">
+  <title>Envisioned: a private jet flying her parents over Canada and the U.S.</title>
+
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#dfe7f4"/>
+      <stop offset="0.55" stop-color="#ecebf3"/>
+      <stop offset="1" stop-color="#f4e9ef"/>
+    </linearGradient>
+    <radialGradient id="halo" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#ffe9c9" stop-opacity="0.85"/>
+      <stop offset="0.6" stop-color="#ffe9c9" stop-opacity="0.25"/>
+      <stop offset="1" stop-color="#ffe9c9" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="goldGlow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#f5c76a" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#f5c76a" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="7"/>
+    </filter>
+    <filter id="softer" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="14"/>
+    </filter>
+
+    <path id="flightPath" d="M 600 380 C 480 250, 300 260, 165 455" fill="none"/>
+
+    <g id="cloud">
+      <ellipse cx="0" cy="0" rx="58" ry="20" fill="#ffffff"/>
+      <ellipse cx="-32" cy="8" rx="36" ry="15" fill="#ffffff"/>
+      <ellipse cx="34" cy="7" rx="40" ry="16" fill="#ffffff"/>
+      <ellipse cx="6" cy="-12" rx="30" ry="14" fill="#ffffff"/>
+    </g>
+
+    <g id="sparkle">
+      <path d="M 0 -7 C 1 -2, 2 -1, 7 0 C 2 1, 1 2, 0 7 C -1 2, -2 1, -7 0 C -2 -1, -1 -2, 0 -7 Z" fill="#fff6e3"/>
+    </g>
+  </defs>
+
+  <!-- everything breathes very slightly: envisioned things gently blink -->
+  <g>
+    <animate attributeName="opacity" values="1;0.93;1" dur="5.2s" repeatCount="indefinite"/>
+
+    <rect width="800" height="800" fill="url(#sky)"/>
+    <circle cx="655" cy="130" r="190" fill="url(#halo)"/>
+
+    <!-- CANADA -->
+    <path fill="#cfe0d8" stroke="#b9cfc4" stroke-width="2" stroke-linejoin="round" d="
+      M 140 400
+      L 148 340 Q 142 290 158 245 Q 168 205 200 190
+      Q 260 168 330 162 Q 390 156 428 168
+      Q 448 176 452 205 Q 455 240 474 258 Q 492 272 502 252 Q 512 228 508 196
+      Q 520 172 560 164 Q 615 156 648 178
+      Q 682 205 694 258 Q 700 300 676 326 Q 654 348 636 372 Q 622 390 600 396
+      L 560 400 Z"/>
+
+    <!-- U.S.A. -->
+    <path fill="#ead9c8" stroke="#d9c3ac" stroke-width="2" stroke-linejoin="round" d="
+      M 140 400 L 560 400 L 600 396
+      Q 626 420 634 452 Q 640 490 622 528 Q 612 548 614 562
+      Q 636 600 650 648 Q 658 678 648 692 Q 636 700 626 676 Q 612 636 596 610
+      Q 574 626 536 632 Q 496 638 464 634 Q 452 660 448 682 Q 440 700 428 684 Q 414 660 404 638
+      Q 340 616 282 584 Q 240 562 206 546 Q 176 530 162 496 Q 148 452 140 400 Z"/>
+
+    <!-- great lakes -->
+    <g fill="#cfdcee" stroke="#bccde6" stroke-width="1.5">
+      <ellipse cx="492" cy="392" rx="20" ry="9" transform="rotate(-18 492 392)"/>
+      <ellipse cx="536" cy="402" rx="16" ry="8" transform="rotate(14 536 402)"/>
+      <ellipse cx="460" cy="405" rx="13" ry="6" transform="rotate(-8 460 405)"/>
+    </g>
+
+    <!-- labels -->
+    <g font-family="Georgia, 'Times New Roman', serif" fill="#6d7b8f" opacity="0.55" text-anchor="middle">
+      <text x="330" y="268" font-size="30" letter-spacing="12">C A N A D A</text>
+      <text x="360" y="540" font-size="30" letter-spacing="12">U. S. A.</text>
+    </g>
+
+    <!-- full route, faint and dashed: the dream as drawn on a map -->
+    <use href="#flightPath" xlink:href="#flightPath" stroke="#8ea6c8" stroke-width="2.5"
+         stroke-dasharray="2 10" stroke-linecap="round" opacity="0.5"/>
+
+    <!-- endpoints: where she is, where the dream lands -->
+    <g>
+      <circle cx="600" cy="380" r="6" fill="#f0b95c"/>
+      <circle cx="600" cy="380" r="12" fill="none" stroke="#f0b95c" stroke-width="2" opacity="0.6">
+        <animate attributeName="r" values="8;16" dur="2.6s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0.6;0" dur="2.6s" repeatCount="indefinite"/>
+      </circle>
+      <circle cx="165" cy="455" r="6" fill="#f0b95c"/>
+      <circle cx="165" cy="455" r="12" fill="none" stroke="#f0b95c" stroke-width="2" opacity="0.6">
+        <animate attributeName="r" values="8;16" dur="2.6s" begin="1.3s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="0.6;0" dur="2.6s" begin="1.3s" repeatCount="indefinite"/>
+      </circle>
+    </g>
+
+    <!-- the map goes gold beneath the wings: drawn-on gold trail behind the jet -->
+    <path d="M 600 380 C 480 250, 300 260, 165 455" fill="none"
+          stroke="#f0b95c" stroke-width="3.5" stroke-linecap="round"
+          pathLength="100" stroke-dasharray="100" stroke-dashoffset="100" opacity="0.85">
+      <animate attributeName="stroke-dashoffset" values="100;0" dur="12s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.85;0.85;0" keyTimes="0;0.94;1" dur="12s" repeatCount="indefinite"/>
+    </path>
+
+    <!-- warm glow travelling with the jet -->
+    <circle r="34" fill="url(#goldGlow)">
+      <animateMotion dur="12s" repeatCount="indefinite">
+        <mpath href="#flightPath" xlink:href="#flightPath"/>
+      </animateMotion>
+      <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.06;0.94;1" dur="12s" repeatCount="indefinite"/>
+    </circle>
+
+    <!-- a small heart trailing the jet — her parents, along for the ride -->
+    <g opacity="0">
+      <animateMotion dur="12s" begin="0.7s" repeatCount="indefinite">
+        <mpath href="#flightPath" xlink:href="#flightPath"/>
+      </animateMotion>
+      <animate attributeName="opacity" values="0;0.8;0.8;0" keyTimes="0;0.1;0.9;1" dur="12s" begin="0.7s" repeatCount="indefinite"/>
+      <path d="M 0 3.2 C -4.5 -0.8 -3.2 -5.4 0 -3.4 C 3.2 -5.4 4.5 -0.8 0 3.2 Z"
+            fill="#e8a0b4" transform="translate(0,-13) scale(1.4)"/>
+    </g>
+
+    <!-- the jet (top view, nose to +x; auto-rotate keeps it on heading) -->
+    <g>
+      <animateMotion dur="12s" rotate="auto" repeatCount="indefinite">
+        <mpath href="#flightPath" xlink:href="#flightPath"/>
+      </animateMotion>
+      <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.05;0.95;1" dur="12s" repeatCount="indefinite"/>
+      <g>
+        <animateTransform attributeName="transform" type="translate" values="0 0;0 -2.2;0 0"
+                          dur="2.8s" repeatCount="indefinite" additive="sum"/>
+        <!-- swept main wings -->
+        <path d="M 2 0 L -10 -19 L -15 -18 L -7 0 L -15 18 L -10 19 Z" fill="#f7f9fc" stroke="#9aa8bf" stroke-width="1.4" stroke-linejoin="round"/>
+        <!-- tailplane -->
+        <path d="M -17 0 L -24 -9 L -27 -8.4 L -22 0 L -27 8.4 L -24 9 Z" fill="#f7f9fc" stroke="#9aa8bf" stroke-width="1.2" stroke-linejoin="round"/>
+        <!-- fuselage -->
+        <path d="M 24 0 Q 22 -3.4 14 -3.8 L -20 -2.6 Q -25 -2 -26 0 Q -25 2 -20 2.6 L 14 3.8 Q 22 3.4 24 0 Z"
+              fill="#ffffff" stroke="#9aa8bf" stroke-width="1.4"/>
+        <!-- cockpit + cabin windows -->
+        <path d="M 24 0 Q 22 -2.6 17 -3 L 17 3 Q 22 2.6 24 0 Z" fill="#aebfd8"/>
+        <g fill="#aebfd8">
+          <circle cx="10" cy="0" r="1.2"/><circle cx="5.5" cy="0" r="1.2"/>
+          <circle cx="1" cy="0" r="1.2"/><circle cx="-3.5" cy="0" r="1.2"/>
+        </g>
+        <!-- aft engines -->
+        <circle cx="-14" cy="-5.6" r="2" fill="#e3e9f2" stroke="#9aa8bf" stroke-width="1"/>
+        <circle cx="-14" cy="5.6" r="2" fill="#e3e9f2" stroke="#9aa8bf" stroke-width="1"/>
+      </g>
+    </g>
+
+    <!-- drifting clouds, above the map like the real view from a window seat -->
+    <g opacity="0.8" filter="url(#soft)">
+      <g>
+        <animateTransform attributeName="transform" type="translate" values="-160 205;980 205"
+                          dur="46s" repeatCount="indefinite"/>
+        <use href="#cloud" xlink:href="#cloud" transform="scale(1.15)"/>
+      </g>
+    </g>
+    <g opacity="0.65" filter="url(#soft)">
+      <g>
+        <animateTransform attributeName="transform" type="translate" values="-140 590;960 590"
+                          dur="58s" begin="-24s" repeatCount="indefinite"/>
+        <use href="#cloud" xlink:href="#cloud" transform="scale(0.8)"/>
+      </g>
+    </g>
+    <g opacity="0.55" filter="url(#softer)">
+      <g>
+        <animateTransform attributeName="transform" type="translate" values="1020 420;-260 420"
+                          dur="74s" begin="-30s" repeatCount="indefinite"/>
+        <use href="#cloud" xlink:href="#cloud" transform="scale(1.5)"/>
+      </g>
+    </g>
+
+    <!-- twinkles: the dream flickering at the edges -->
+    <g>
+      <use href="#sparkle" xlink:href="#sparkle" transform="translate(120 120)">
+        <animate attributeName="opacity" values="0.1;0.9;0.1" dur="3.4s" repeatCount="indefinite"/>
+      </use>
+      <use href="#sparkle" xlink:href="#sparkle" transform="translate(715 330) scale(0.8)">
+        <animate attributeName="opacity" values="0.9;0.1;0.9" dur="4.1s" repeatCount="indefinite"/>
+      </use>
+      <use href="#sparkle" xlink:href="#sparkle" transform="translate(90 660) scale(0.9)">
+        <animate attributeName="opacity" values="0.15;0.85;0.15" dur="4.8s" begin="-1.6s" repeatCount="indefinite"/>
+      </use>
+      <use href="#sparkle" xlink:href="#sparkle" transform="translate(700 700) scale(0.7)">
+        <animate attributeName="opacity" values="0.8;0.1;0.8" dur="3.8s" begin="-0.9s" repeatCount="indefinite"/>
+      </use>
+    </g>
+  </g>
+</svg>

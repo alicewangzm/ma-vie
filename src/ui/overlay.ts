@@ -99,10 +99,32 @@ export function ensureOverlayStyles(): void {
       z-index: 16;
     }
     .wl-corner {
+      /* liquid glass: frosted pill that reads on every sky — dawn pink,
+         storm grey, gold finale — because it blurs whatever is behind it */
       font-size: 0.85rem;
-      padding: 0.4em 1.1em;
+      padding: 0.45em 1.15em;
       opacity: 1;
       white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.45em;
+      color: #453a58;
+      background: linear-gradient(155deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.18));
+      border: 1px solid rgba(255, 255, 255, 0.65);
+      backdrop-filter: blur(12px) saturate(150%);
+      -webkit-backdrop-filter: blur(12px) saturate(150%);
+      box-shadow:
+        0 1px 0 rgba(255, 255, 255, 0.75) inset,
+        0 4px 14px rgba(74, 63, 92, 0.18);
+    }
+    .wl-corner:hover {
+      background: linear-gradient(155deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.32));
+    }
+    .wl-corner svg {
+      width: 1.05em;
+      height: 1.05em;
+      display: block;
+      flex: none;
     }
     .wl-hint {
       /* tips read as UI, distinct from narrative: small caps in a pill */

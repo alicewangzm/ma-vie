@@ -30,13 +30,14 @@ export const universityContent = {
     waterloo: {
       title: 'University of Waterloo — Computer Science',
       body: [
-        '[placeholder] Bachelor of Computer Science, with Distinction.',
-        '[placeholder] What those five years actually looked like.',
+        'Bachelor of Computer Science, with Distinction.',
+        'The architecture of a five-year horizon,',
+        'An exploration of the projects, ideas, and spaces she shaped along the way',
       ],
       images: [
-        { src: 'assets/uw-0.jpg', alt: 'Waterloo campus', caption: 'Waterloo [placeholder]' },
-        { src: 'assets/uw-oasis-0.png', alt: 'Oasis project', caption: 'Oasis [placeholder]' },
-        { src: 'assets/uw-oasis-1.png', alt: 'Oasis project', caption: 'Oasis [placeholder]' },
+        { src: 'assets/uw-0.jpg', alt: 'Waterloo campus', caption: 'Waterloo' },
+        { src: 'assets/uw-oasis-0.png', alt: 'Oasis project', caption: 'Oasis' },
+        { src: 'assets/uw-oasis-1.png', alt: 'Oasis project', caption: 'Oasis' },
         {
           src: 'assets/uw-simpleFavour-0.png',
           alt: 'A Little Favour app',
@@ -44,37 +45,54 @@ export const universityContent = {
         },
         { src: 'assets/uw-simpleFavour-1.png', alt: 'A Little Favour app' },
         { src: 'assets/uw-simpleFavour-2.png', alt: 'A Little Favour app' },
-        { src: 'assets/uw-mHeart-0.jpg', alt: 'mHeart project', caption: 'mHeart [placeholder]' },
+        { src: 'assets/uw-mHeart-0.jpg', alt: 'mHeart project', caption: 'mHeart' },
         { src: 'assets/uw-mHeart-1.jpg', alt: 'mHeart project' },
       ],
     },
     laurier: {
-      title: 'Wilfrid Laurier — Business & Finance',
+      title: 'Wilfrid Laurier University — Business & Finance',
       body: [
-        '[placeholder] BBA — Finance, minor in Economics.',
-        '[placeholder] The other side of the same road.',
+        'BBA — Finance, minor in Economics.',
+        'The twin path, where code became conversation and the user became the focus.',
       ],
       images: [{ src: 'assets/wlu-0.jpg', alt: 'Laurier campus' }],
     },
     banking: {
       title: 'Banking APIs',
-      body: ['Java + Spring Boot. [placeholder] What it does, why it mattered.'],
-      links: [{ label: 'Banking APIs ↗', href: '#' }], // [placeholder link]
+      body: [
+        'Java + Spring Boot',
+        'Created several RESTful banking APIs in Java using Spring Boot, enabling account creation,balance management, and secure fund transfers between accounts.',
+        'Implemented a three-layer architecture, Controller-Service-Repository, with DTOs, dependency injection, and in-memory data storage for efficient data handling and maintainability',
+      ],
+      links: [
+        { label: 'Banking APIs ↗', href: 'https://github.com/alicewangzm/banking-transaction' },
+      ],
     },
     supplier: {
       title: 'Supplier Upload',
-      body: ['React + Google Maps. [placeholder] Type an address, watch it finish itself.'],
-      links: [{ label: 'Supplier Upload ↗', href: '#' }], // [placeholder link]
+      body: [
+        'React + Google Maps. Type an address, watch it finish itself.',
+        'Designed and developed a full stack web application using React, Material UI, and TypeScript,enabling users to upload supplier logo, name and address',
+        'Integrated Google Maps API to provide auto-complete address functionality, enhancing user experience and efficiency',
+        'Leveraged Node.js, Express/CORS, and Firebase to create a robust backend server and database, facilitating image and text storage and processing',
+      ],
+      links: [
+        { label: 'Supplier Upload ↗', href: 'https://github.com/alicewangzm/supplier-upload/' },
+      ],
     },
     finance: {
       title: 'Finance Research',
-      body: ['[placeholder] 14,000 SEC files, wrangled by Python while she slept.'],
+      body: [
+        'Built Python scripts using Pandas to process and analyze marketable-to-limit order ratio data from U.S. SEC reports spanning 2012–2023',
+        'Automated the batch download of 14,000+ Excel files from SEC websites using Python for largescale data collection and preprocessing',
+      ],
     },
     replicant: {
-      title: 'Replicant — co-op, San Francisco',
+      title: 'Replicant — co-op, Startup in San Francisco',
       body: [
-        '[placeholder] What Alice built there.',
-        '[placeholder] First taste of the city that keeps turning up in her dreams.',
+        'Replicant automates routine customer service across voice, chat, and text using conversational AI.',
+        'Developed and published an internal NPM package written in Node.js and TypeScript to enable seamless purchasing and configuration of phone numbers by leveraging telephony provider REST APIs, successfully reduced 80% manual phone number configuration time',
+        'Implemented a comprehensive testing suite by mocking HTTP requests using Jest framework, resulting in robust testing and secure compilation',
       ],
     },
   },

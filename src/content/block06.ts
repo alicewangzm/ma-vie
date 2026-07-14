@@ -37,10 +37,13 @@ export const pathsContent = {
     pilot: {
       title: 'The sky, from the other side of the glass',
       body: [
-        '[placeholder] Medical exam — passed. Ground school — next.',
-        '[placeholder] The vision: a small plane, her parents in the back, the map going gold beneath the wings.',
+        'This upcoming Sunday, she takes her discovery flight.',
+        'It is the first step toward a horizon not very far ahead.',
+        'Within a year, she wants to be in the cockpit of a small plane,',
+        'flying her parents to different corners of the US and Canada.',
+        'Turning a distant view into her next destination.',
       ],
-      images: [{ src: 'assets/pilot-vision.jpg', alt: 'flying with her parents — envisioned' }],
+      images: [{ src: 'assets/pilot-vision.svg', alt: 'flying with her parents — envisioned' }],
     },
     pawhearth: {
       title: 'Pawhearth',

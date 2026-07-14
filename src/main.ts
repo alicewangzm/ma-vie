@@ -186,13 +186,21 @@ const skipStepBtn = createButton(cornerBar, 'skip step ⏭', 'wl-corner', () => 
 skipStepBtn.setAttribute('aria-label', 'skip the current step');
 skipStepBtn.style.display = 'none';
 
-// mute toggle — always visible
-const muteBtn = createButton(cornerBar, 'sound on', 'wl-corner', () => {
+// mute toggle — always visible; inline-SVG speaker reflects the state
+const speakerSvg = (muted: boolean): string =>
+  muted
+    ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="m22 9-6 6M16 9l6 6"/></svg>'
+    : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5 6 9H3v6h3l5 4z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>';
+const muteBtn = createButton(cornerBar, '', 'wl-corner', () => {
   audio.start();
-  muteBtn.textContent = audio.toggleMute() ? 'sound off' : 'sound on';
+  const muted = audio.toggleMute();
+  muteBtn.innerHTML = `${speakerSvg(muted)}<span>sound</span>`;
+  muteBtn.setAttribute('aria-pressed', String(muted));
 });
+muteBtn.innerHTML = `${speakerSvg(false)}<span>sound</span>`;
 muteBtn.classList.add('visible');
 muteBtn.setAttribute('aria-label', 'toggle sound');
+muteBtn.setAttribute('aria-pressed', 'false');
 
 // per-chapter chrome: joysticks + skip-step in walkable chapters only
 const WALKABLE = new Set([

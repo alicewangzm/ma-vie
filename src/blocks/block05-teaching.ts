@@ -72,7 +72,7 @@ class Block05Teaching implements StoryBlock {
   private kindle(): void {
     this.warm = true;
     // the classroom board — placeholder until Stage 3 art
-    this.board = makePanel('Math · Science · Technology', 'Teacher', '#3b6d8a');
+    this.board = makePanel('Science · Technology · Math', 'Teacher', '#3b6d8a');
     this.board.mesh.position.set(4.5, 2, -12); // rises into place
     this.board.mesh.scale.setScalar(1.6);
     this.board.mesh.lookAt(this.ctx.camera.position);
