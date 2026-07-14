@@ -8,7 +8,7 @@
 
 **Live:** [ma-vie.alicewang0022.workers.dev](https://ma-vie.alicewang0022.workers.dev)
 
-Built in 2 days with Vite + TypeScript + vanilla Three.js. No React, no frameworks.
+V1 built in 3.5 days with Vite + TypeScript + vanilla Three.js. No React, no frameworks.
 
 ## Architecture — chained story blocks
 
