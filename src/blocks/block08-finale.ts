@@ -1,7 +1,4 @@
 import * as THREE from 'three';
-import { FontLoader } from 'three/examples/jsm/loaders/FontLoader.js';
-import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry.js';
-import helvetiker from 'three/examples/fonts/helvetiker_bold.typeface.json';
 import type { StoryBlock } from '../core/StoryBlock';
 import type { WorldContext } from '../core/WorldContext';
 import { createWisp, pulseWisp, type Wisp } from '../render/wisp';
@@ -11,7 +8,7 @@ import { openCloudModal } from '../ui/cloudModal';
 import { finaleContent } from '../content/block08';
 
 type Phase =
-  | 'vision' // A — Google + SF, faded & blinking (third person)
+  | 'vision' // A —  SF, faded & blinking (third person)
   | 'reveal' // B — "So — who is Alice?" (voice flips to first person)
   | 'titles' // B — rotating title card
   | 'outro' // B — "and a little bit of everything."
@@ -20,7 +17,6 @@ type Phase =
   | 'reward' // E — gold droplet + wishes
   | 'goodbye'; // F — thanks, goodbyes, signoff, links
 
-const GOOGLE_COLORS = ['#4285f4', '#ea4335', '#fbbc05', '#4285f4', '#34a853', '#ea4335'];
 const PORTRAIT_DOTS = 24; // 24×24 pixel-art grid of alice.jpg
 const PORTRAIT_URL = 'assets/alice.jpg';
 const CARD_SECONDS = 2;
@@ -211,7 +207,7 @@ class Block08Finale implements StoryBlock {
   }
 
   /**
-   * The vision on the horizon: a real 3D Google wordmark over a San
+   * The vision on the horizon: a real 3D wordmark over a San
    * Francisco skyline — Transamerica pyramid, Salesforce curve, the flat
    * downtown blocks. Faded (not yet reality) but steady, no flicker.
    */
@@ -376,42 +372,6 @@ class Block08Finale implements StoryBlock {
     bridge.scale.setScalar(1.4);
     bridge.rotation.y = -0.18; // recedes gently, like the postcard shot
     merged.add(bridge);
-
-    // the 3D GOOGLE wordmark floating above the city
-    const font = new FontLoader().parse(
-      helvetiker as unknown as Parameters<FontLoader['parse']>[0],
-    );
-    let cursor = 0;
-    const letters: { geo: TextGeometry; mat: THREE.MeshBasicMaterial; width: number }[] = [];
-    'Google'.split('').forEach((ch, i) => {
-      const geo = new TextGeometry(ch, {
-        font,
-        size: 4.6,
-        depth: 1.4,
-        curveSegments: 6,
-        bevelEnabled: false,
-      });
-      geo.computeBoundingBox();
-      const width = geo.boundingBox!.max.x - geo.boundingBox!.min.x;
-      const mat = new THREE.MeshBasicMaterial({
-        // brand colors washed toward the warm sky — a vision, not a sign
-        color: new THREE.Color(GOOGLE_COLORS[i]).lerp(new THREE.Color('#f5efe6'), 0.45),
-        transparent: true,
-        opacity: 0,
-        fog: false,
-      });
-      this.disposables.push(geo, mat);
-      letters.push({ geo, mat, width });
-      cursor += width + 0.7;
-    });
-    let x = -cursor / 2 - 14; // centered over the city, which sits left of frame
-    for (const l of letters) {
-      const mesh = new THREE.Mesh(l.geo, l.mat);
-      mesh.position.set(x, 25, -78); // hovering just above the towers, clear of the star tracker
-      merged.add(mesh);
-      this.letterMats.push(l.mat);
-      x += l.width + 0.7;
-    }
 
     this.skyline = merged;
     this.ctx.scene.add(merged);

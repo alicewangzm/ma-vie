@@ -218,11 +218,8 @@ export const finaleContent = {
   /** Part F — goodbye + signoff. */
   thanks: [
     'Thank you for wandering through a little of my life.',
-    'No pressure at all...',
-    'Even if making this dream a reality is just one "Offer" button away. 😉 (No pressure, JUST kidding!)',
     'Hope you enjoyed it.',
-    'Thank you, Ran — for sharing this amazing opportunity!',
-    'And thank you, everyone, for watching until the very end.',
+    'Thank you, for watching until the very end.',
   ],
   goodbyes: ['再见', 'See you next time', 'À bientôt', 'Ciao'],
   signoff: [
